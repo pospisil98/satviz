@@ -6,9 +6,12 @@ import {StyleSheet} from 'react-native';
 
 import {
   ViroARScene,
-  ViroText,
   ViroConstants,
+  ViroARImageMarker,
+  ViroARTrackingTargets,
 } from 'react-viro';
+
+import Globe from './components/Globe'
 
 export default class HelloWorldSceneAR extends Component {
 
@@ -27,7 +30,9 @@ export default class HelloWorldSceneAR extends Component {
   render() {
     return (
       <ViroARScene onTrackingUpdated={this._onInitialized} >
-        <ViroText text={this.state.text} scale={[.5, .5, .5]} position={[0, 0, -1]} style={styles.helloWorldTextStyle} />
+        <ViroARImageMarker target={"targetOne"} >
+              <Globe />
+          </ViroARImageMarker>
       </ViroARScene>
     );
   }
@@ -42,6 +47,14 @@ export default class HelloWorldSceneAR extends Component {
     }
   }
 }
+
+ViroARTrackingTargets.createTargets({
+  "targetOne" : {
+    source : require('./res/earth.png'),
+    orientation : "Up",
+    physicalWidth : 0.2 // real world width in meters
+  },
+});
 
 var styles = StyleSheet.create({
   helloWorldTextStyle: {
