@@ -20,6 +20,10 @@ import {
 import SpaceTrack from '../SpaceTrack';
 import SatelliteObject from '../SatelliteObject';
 
+import FlashMessage from "react-native-flash-message";
+import { showMessage, hideMessage } from "react-native-flash-message";
+
+
 var satellite = require('satellite.js');
 
 export default class Globe extends React.Component {
@@ -93,7 +97,6 @@ export default class Globe extends React.Component {
     }
 
     updatePositions() {
-        console.log("UPDATE POS");
         this.setState(prevState => {
             const list = prevState.satelites.map(
                 item => item.updatePosition(this.time)
@@ -104,7 +107,7 @@ export default class Globe extends React.Component {
           });
 
         // increase time for faster simulation
-        this.time = new Date(this.time.getTime() + 10 * 60000);
+        this.time = new Date(this.time.getTime() + 10 * 6);
     }
 
     convertTLEtoSatrecCollection() {
@@ -123,6 +126,13 @@ export default class Globe extends React.Component {
         this.setState(prevState => ({ satelites: [...satelliteObjects] }));
     }
 
+    _onClick = (id) => {
+        showMessage({
+            message: "Clicked on sat wit ID: " + id,
+            type: "info",
+          });
+    }
+
     render() {
         const modelList = this.state.satelites.map((sat) => {
             return (
@@ -137,6 +147,10 @@ export default class Globe extends React.Component {
                     scale={sat.scale}
                     rotation={sat.rotation}
                     type="OBJ"
+
+                    onClick={() => {
+                        this._onClick(sat.id);
+                    }}
                 />
             )
           })
@@ -153,6 +167,8 @@ export default class Globe extends React.Component {
                         scale={[0.025, 0.025, 0.025]}
                         rotation={[180, 0, -180]}
                         type="OBJ"
+
+                        onClick={(position, source) => {console.log("Clicked on earth " + position);}}
                     />
                 </ViroNode>
             );
@@ -168,6 +184,8 @@ export default class Globe extends React.Component {
                         scale={[0.025, 0.025, 0.025]}
                         rotation={[180, 0, -180]}
                         type="OBJ"
+
+                        onClick={(position, source)=> {console.log("Clicked on earth " + position);}}
                     />
     
                     {modelList}

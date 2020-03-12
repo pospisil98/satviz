@@ -140,6 +140,18 @@ export default class satviz extends Component {
     this.setState({selectedItemsManual: []});
   }
 
+  /*render() {
+    return (
+      <View style={styles.container}>
+          <ViroARSceneNavigator 
+            style={styles.arView}
+            autofocus={true}
+            initialScene={{scene: InitialARScene}}
+          />
+      </View>
+    );
+  }*/
+
   render() {
     return (
       <View style={styles.container}>                 
@@ -351,16 +363,6 @@ export default class satviz extends Component {
       </View>
     );
   }
-
-  /*
-  render() {
-    return (
-      <ViroARSceneNavigator
-        autofocus={true}
-        initialScene={{scene: InitialARScene}} />
-    );
-  }
-  */
 }
 
 module.exports = satviz

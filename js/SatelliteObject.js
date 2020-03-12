@@ -1,7 +1,7 @@
 'use-strict';
 
 var descriptions = {
-    25544: "ISS",
+ //   25544: "ISS",
     28129: "GPS"
 }
 
