@@ -54,16 +54,15 @@ export default class Globe extends React.Component {
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
                 this.setState(prevState => ({ loading: false }));
             });
+    }
 
-        // function binding
-        this.moveFunc = this.moveFunc.bind(this);
-        this.parseData = this.parseData.bind(this);
-        this.convertTLEtoSatrecCollection = this.convertTLEtoSatrecCollection.bind(this);
-        this.updatePositions = this.updatePositions.bind(this);
+    componentDidMount() {
+        // start timer which tries to parse data every 500 ms
+        this.parseTimer = setInterval(this.parseData, 500);
     }
 
     // test function used for circular movement
-    moveFunc() {
+    moveFunc = () => {
         var R = 0.5;
 
         var X = R * Math.cos(this.state.phi)
@@ -77,12 +76,7 @@ export default class Globe extends React.Component {
         }));
     }
 
-    componentDidMount() {
-        // start timer which tries to parse data every 500 ms
-        this.parseTimer = setInterval(this.parseData, 500);
-    }
-
-    parseData() {
+    parseData = () => {
         // check if we have data loaded
         if (!this.state.loading) {
             // stop running parse function
@@ -96,7 +90,7 @@ export default class Globe extends React.Component {
         }
     }
 
-    updatePositions() {
+    updatePositions = () => {
         this.setState(prevState => {
             const list = prevState.satelites.map(
                 item => item.updatePosition(this.time)
@@ -110,7 +104,7 @@ export default class Globe extends React.Component {
         this.time = new Date(this.time.getTime() + 10 * 6);
     }
 
-    convertTLEtoSatrecCollection() {
+    convertTLEtoSatrecCollection = () => {
         var tleIndex = 0;
         var idIndex = 0;
         var satrec;
@@ -168,7 +162,9 @@ export default class Globe extends React.Component {
                         rotation={[180, 0, -180]}
                         type="OBJ"
 
-                        onClick={(position, source) => {console.log("Clicked on earth " + position);}}
+                        onClick={() => {
+                            this._onClick("earth");
+                        }}
                     />
                 </ViroNode>
             );
@@ -185,43 +181,16 @@ export default class Globe extends React.Component {
                         rotation={[180, 0, -180]}
                         type="OBJ"
 
-                        onClick={(position, source)=> {console.log("Clicked on earth " + position);}}
+                        onClick={() => {
+                            this._onClick("earth");
+                        }}
                     />
     
                     {modelList}
                 </ViroNode>
               )
         }
-    }
-
-    /*
-    render() {
-        return (
-            <ViroNode position={[0,0.5,0]}>
-                <ViroAmbientLight color="#FFFFFF" />
-
-                <Viro3DObject source={require('./res/earth.obj')}
-                    resources={[require('./res/earth.mtl'),
-                                require('./res/earth_texture.png')]}
-                    position={[0.0, 0.0, 0.0]}
-                    scale={[0.05, 0.05, 0.05]}
-                    rotation={[180, 0, -180]}
-                    type="OBJ"
-                />
-
-                <ViroSphere
-                    heightSegmentCount={20}
-                    widthSegmentCount={20}
-                    radius={0.1}
-                    position={[0.3, 0.3, 0.3]}
-                    materials={["red"]}
-                />
-            </ViroNode>
-        );
-    }
-    */
-    
-    
+    } 
 }
 
 ViroMaterials.createMaterials({

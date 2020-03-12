@@ -50,13 +50,6 @@ export default class SatelliteObject {
         this._position = [0.0, 0.0, 0.0];
         this._scale = scales[this._description];
         this._rotation = rotations[this._description];
-        
-
-        // bind this to functions
-        this.getDescription = this.getDescription.bind(this);
-        this.updatePosition = this.updatePosition.bind(this);
-        this.mapPositionToRange = this.mapPositionToRange.bind(this);
-        this.clampCoord = this.clampCoord.bind(this);
     }
 
     get id() { return this._id; }
@@ -87,7 +80,7 @@ export default class SatelliteObject {
     set rotation(value) { this._rotation = value; }
 
 
-    getDescription() {
+    getDescription = () => {
         if (this.id in descriptions) {
             return descriptions[this.id];
         } else {
@@ -95,7 +88,7 @@ export default class SatelliteObject {
         }
     }
 
-    updatePosition(datetime) {
+    updatePosition  = (datetime) => {
         var newPosition = satellite.propagate(this._satelliteRecord, datetime).position;
         var recalc = this.mapPositionToRange(newPosition);
 
@@ -105,7 +98,7 @@ export default class SatelliteObject {
         this._position = recalc;
     }
 
-    mapPositionToRange(value) {
+    mapPositionToRange = (value) => {
         const denominator = 100000;
 
         x = this.clampCoord(value.x/denominator);
@@ -115,7 +108,7 @@ export default class SatelliteObject {
         return [x, y, z];
     }
 
-    clampCoord(value) {
+    clampCoord = (value) => {
         const earthStart = 0.0;
 
         if (value > 0) {
