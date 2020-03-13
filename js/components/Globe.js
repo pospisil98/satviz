@@ -123,6 +123,8 @@ export default class Globe extends React.Component {
             message: "Clicked on sat wit ID: " + id,
             type: "info",
           });
+          
+        this.props.satelliteClickCallback(id);
     }
 
     renderGlobe = () => {

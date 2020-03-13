@@ -31,13 +31,15 @@ export default class HelloWorldSceneAR extends Component {
     return (
       <ViroARScene onTrackingUpdated={this._onInitialized} >
         <ViroARImageMarker target={"targetOne"} >
-              <Globe />
+              <Globe satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback} />
           </ViroARImageMarker>
       </ViroARScene>
     );
   }
 
   _onInitialized(state, reason) {
+    console.log("VOLEEEE " + this.props.arSceneNavigator.viroAppProps.satelliteClickCallback)
+
     if (state == ViroConstants.TRACKING_NORMAL) {
       this.setState({
         text : "Hello World!"

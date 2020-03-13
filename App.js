@@ -96,10 +96,14 @@ export default class satviz extends Component {
     this.setState({ helpModalVisible: !this.state.helpModalVisible });
   };
 
+  satelliteModalSetIDCallback = (id) => {
+    this.toggleSatelliteModal(id);
+  }
+
   toggleSatelliteModal = (satelliteID) => {
     this.setState({ 
       satelliteModalVisible: !this.state.satelliteModalVisible,
-      satelliteModalID: satelliteID
+      satelliteModalID: satelliteID,
     });
   };
 
@@ -160,6 +164,7 @@ export default class satviz extends Component {
           style={styles.arView}
           autofocus={true}
           initialScene={{scene: InitialARScene}}
+          viroAppProps = {{satelliteClickCallback: this.satelliteModalSetIDCallback,}}
         />     
         
         <Modal 
