@@ -125,7 +125,33 @@ export default class Globe extends React.Component {
           });
     }
 
-    renderGlobe = (modelList) => {
+    renderGlobe = () => {
+        let modelList;
+
+        if (!this.state.loading) {
+            modelList = this.state.satelites.map((sat) => {
+                return (
+                    <Viro3DObject 
+                        key={sat.id}
+                        source={sat.modelPath}
+                        resources={[
+                            sat.materialPath,
+                            sat.texturePath
+                        ]}
+                        position={sat.position}
+                        scale={sat.scale}
+                        rotation={sat.rotation}
+                        type="OBJ"
+                        
+                        highAccuracyEvents={true}
+                        onClick={() => {
+                            this.onModelClick(sat.id);
+                        }}
+                    />
+                )
+              })    
+        }
+
         return(
             <ViroNode position={[0,0.2,0]}>
                     <ViroAmbientLight color="#FFFFFF" />
@@ -149,37 +175,11 @@ export default class Globe extends React.Component {
     }
 
     render() {
-        const modelList = this.state.satelites.map((sat) => {
-            return (
-                <Viro3DObject 
-                    key={sat.id}
-                    source={sat.modelPath}
-                    resources={[
-                        sat.materialPath,
-                        sat.texturePath
-                    ]}
-                    position={sat.position}
-                    scale={sat.scale}
-                    rotation={sat.rotation}
-                    type="OBJ"
-                    
-                    highAccuracyEvents={true}
-                    onClick={() => {
-                        this.onModelClick(sat.id);
-                    }}
-                />
-            )
-          })
-
-        if (this.state.loading) {
-            return (
-                this.renderGlobe()
-            );
-        } else {
-            return (
-                this.renderGlobe(modelList)
-            );
-        }
+        return (
+            <View>
+                {this.renderGlobe()}
+            </View>
+        );
     } 
 }
 
