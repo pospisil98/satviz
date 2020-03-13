@@ -98,10 +98,8 @@ export default class Globe extends React.Component {
             return {
               list,
             };
-          });
-
-        // increase time for faster simulation
-        this.time = new Date(this.time.getTime() + 10 * 6);
+        });
+        this.time = new Date(this.time.getTime());
     }
 
     convertTLEtoSatrecCollection = () => {
@@ -120,11 +118,34 @@ export default class Globe extends React.Component {
         this.setState(prevState => ({ satelites: [...satelliteObjects] }));
     }
 
-    _onClick = (id) => {
+    onModelClick = (id) => {
         showMessage({
             message: "Clicked on sat wit ID: " + id,
             type: "info",
           });
+    }
+
+    renderGlobe = (modelList) => {
+        return(
+            <ViroNode position={[0,0.2,0]}>
+                    <ViroAmbientLight color="#FFFFFF" />
+    
+                    <Viro3DObject source={require('../res/earth.obj')}
+                        resources={[require('../res/earth.mtl'),
+                                    require('../res/earth_texture.png')]}
+                        position={[0.0, 0.0, 0.0]}
+                        scale={[0.025, 0.025, 0.025]}
+                        rotation={[180, 0, -180]}
+                        type="OBJ"
+
+                        onClick={() => {
+                            this.onModelClick("earth");
+                        }}
+                    />
+    
+                    {modelList}
+                </ViroNode>
+        );
     }
 
     render() {
@@ -141,9 +162,10 @@ export default class Globe extends React.Component {
                     scale={sat.scale}
                     rotation={sat.rotation}
                     type="OBJ"
-
+                    
+                    highAccuracyEvents={true}
                     onClick={() => {
-                        this._onClick(sat.id);
+                        this.onModelClick(sat.id);
                     }}
                 />
             )
@@ -151,44 +173,12 @@ export default class Globe extends React.Component {
 
         if (this.state.loading) {
             return (
-                <ViroNode position={[0,0.2,0]}>
-                    <ViroAmbientLight color="#FFFFFF" />
-
-                    <Viro3DObject source={require('../res/earth.obj')}
-                        resources={[require('../res/earth.mtl'),
-                                    require('../res/earth_texture.png')]}
-                        position={[0.0, 0.0, 0.0]}
-                        scale={[0.025, 0.025, 0.025]}
-                        rotation={[180, 0, -180]}
-                        type="OBJ"
-
-                        onClick={() => {
-                            this._onClick("earth");
-                        }}
-                    />
-                </ViroNode>
+                this.renderGlobe()
             );
         } else {
             return (
-                <ViroNode position={[0,0.2,0]}>
-                    <ViroAmbientLight color="#FFFFFF" />
-    
-                    <Viro3DObject source={require('../res/earth.obj')}
-                        resources={[require('../res/earth.mtl'),
-                                    require('../res/earth_texture.png')]}
-                        position={[0.0, 0.0, 0.0]}
-                        scale={[0.025, 0.025, 0.025]}
-                        rotation={[180, 0, -180]}
-                        type="OBJ"
-
-                        onClick={() => {
-                            this._onClick("earth");
-                        }}
-                    />
-    
-                    {modelList}
-                </ViroNode>
-              )
+                this.renderGlobe(modelList)
+            );
         }
     } 
 }
