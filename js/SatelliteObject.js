@@ -39,46 +39,18 @@ var satellite = require('satellite.js');
 
 export default class SatelliteObject {
     constructor(id, satelliteRecord) {
-        this._id = id;
-        this._satelliteRecord = satelliteRecord;
+        this.id = id;
+        this.satelliteRecord = satelliteRecord;
 
-        this._description = this.getDescription();
-        this._modelPath = models[this._description];
-        this._materialPath = materials[this._description];
-        this._texturePath = textures[this._description];
+        this.description = this.getDescription();
+        this.modelPath = models[this.description];
+        this.materialPath = materials[this.description];
+        this.texturePath = textures[this.description];
 
-        this._position = [0.0, 0.0, 0.0];
-        this._scale = scales[this._description];
-        this._rotation = rotations[this._description];
+        this.position = [0.0, 0.0, 0.0];
+        this.scale = scales[this.description];
+        this.rotation = rotations[this.description];
     }
-
-    get id() { return this._id; }
-    set id(value) { this._id = value; }
-
-    get satelliteRecord() { return this._satelliteRecord; }
-    set satelliteRecord(value) { this._satelliteRecord = value; }
-
-    get description() { return this._description; }
-    set description(value) { this._description = value; }
-
-    get modelPath() { return this._modelPath; }
-    set modelPath(value) { this._modelPath = value; }
-
-    get materialPath() { return this._materialPath; }
-    set materialPath(value) { this._materialPath = value; }
-    
-    get texturePath() { return this._texturePath; }
-    set texturePath(value) { this._texturePath = value; }
-
-    get position() { return this._position; }
-    set position(value) { this._position = value; }
-
-    get scale() { return this._scale; }
-    set scale(value) { this._scale = value; }
-    
-    get rotation() { return this._rotation; }
-    set rotation(value) { this._rotation = value; }
-
 
     getDescription = () => {
         if (this.id in descriptions) {
@@ -89,13 +61,10 @@ export default class SatelliteObject {
     }
 
     updatePosition  = (datetime) => {
-        var newPosition = satellite.propagate(this._satelliteRecord, datetime).position;
+        var newPosition = satellite.propagate(this.satelliteRecord, datetime).position;
         var recalc = this.mapPositionToRange(newPosition);
 
-        //console.log("NEW POS");
-        //console.log(recalc);
-
-        this._position = recalc;
+        this.position = recalc;
     }
 
     mapPositionToRange = (value) => {
