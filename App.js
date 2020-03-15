@@ -80,6 +80,7 @@ export default class satviz extends Component {
       
       satelliteModalVisible: false,
       satelliteModalID: 0,
+      satelliteModalSatellite: null,
 
       slidingPanelToggled: false,
       slidingPanelText: "Click to reveal satellite selection!",
@@ -96,14 +97,20 @@ export default class satviz extends Component {
     this.setState({ helpModalVisible: !this.state.helpModalVisible });
   };
 
-  satelliteModalSetIDCallback = (id) => {
-    this.toggleSatelliteModal(id);
+  satelliteModalSetIDCallback = (sat) => {
+    console.log(sat);
+
+    this.setState({ 
+      satelliteModalID: sat.id,
+      satelliteModalSatellite: sat,
+    });
+
+    this.toggleSatelliteModal();
   }
 
-  toggleSatelliteModal = (satelliteID) => {
+  toggleSatelliteModal = () => {
     this.setState({ 
       satelliteModalVisible: !this.state.satelliteModalVisible,
-      satelliteModalID: satelliteID,
     });
   };
 
@@ -144,18 +151,6 @@ export default class satviz extends Component {
     this.setState({selectedItemsManual: []});
   }
 
-  /*render() {
-    return (
-      <View style={styles.container}>
-          <ViroARSceneNavigator 
-            style={styles.arView}
-            autofocus={true}
-            initialScene={{scene: InitialARScene}}
-          />
-      </View>
-    );
-  }*/
-
   render() {
     return (
       <View style={styles.container}>                 
@@ -193,7 +188,7 @@ export default class satviz extends Component {
             }
 
             <CustomInfoModal 
-              satelliteID={this.state.satelliteModalID} 
+              satellite={this.state.satelliteModalSatellite} 
               isModalVisible={this.state.satelliteModalVisible} 
               closeModal={() => this.toggleSatelliteModal()}
             >

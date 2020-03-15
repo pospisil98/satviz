@@ -272,7 +272,7 @@ export default class SpaceTrack {
             .then(response => response.text())
             // .then((text) => text.length ? JSON.parse(text) : {})
             .then((result) => {
-                console.log("Fetched");
+                //console.log("Fetched");
                 //console.log(result);
 
                 return result;
@@ -313,7 +313,7 @@ export default class SpaceTrack {
     }
 
     static convertIDs(IDs) {
-        console.log("Converting array to comma separated values.")
+        //console.log("Converting array to comma separated values.")
 
         ret = '';
 
@@ -329,7 +329,7 @@ export default class SpaceTrack {
             }
         }
 
-        console.log("IDs: " + ret);
+        //console.log("IDs: " + ret);
 
         return ret;
     }

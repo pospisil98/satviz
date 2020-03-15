@@ -8,7 +8,7 @@ import {
 
 import Modal from "react-native-modal";
 
-export default class CustominfoModal extends Component {
+export default class CustomInfoModal extends Component {
     constructor() {
         super(); 
 
@@ -18,31 +18,28 @@ export default class CustominfoModal extends Component {
                 latitude: 0,
                 longitude: 0,
                 height: 0,
-                speed: 0,
+                velocity: 0,
             },
         };
     }
 
-    getDataFromID = (satelliteID) => {   
-        
-        if (satelliteID === 'undefined') {
-            satelliteID = 0;
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.satellite && this.state.data.id != this.props.satellite[0].id) {
+            this.updateSateliteData();
         }
-
-        let temp = {};
-        temp['id'] = satelliteID;
-        temp['latitude'] = 50.075539;
-        temp['longitude'] = 14.437800;
-        temp['height'] = 600;
-        temp['speed'] = 2400;
-        
-        return temp;
     }
 
+    updateSateliteData = () => {   
+        console.log(this.props.satellite[0]);
+        let temp = this.props.satellite[0].getDataForInfoModal();
+        temp['id'] = this.props.satellite[0].id;
+
+        console.log(temp);
+
+        this.setState({ data: temp });
+    }
 
     render() {
-        let data = this.getDataFromID(this.props.satelliteID);
-
         if (!this.props.isModalVisible) {
             return <View></View>
         }
@@ -55,11 +52,11 @@ export default class CustominfoModal extends Component {
                 >
                     <View style={styles.helpModal}>
                         <View style={{ flex: 1 }}>
-                            <Text>ID: {data['id'].toString()}</Text>
-                            <Text>Latitude: {data['latitude'].toString()}</Text>
-                            <Text>Longitude: {data['longitude'].toString()}</Text>
-                            <Text>Height: {data['height'].toString()}</Text>
-                            <Text>Speed: {data['speed'].toString()}</Text>
+                            <Text>ID: {this.state.data['id']}</Text>
+                            <Text>Latitude: {this.state.data['latitude']}</Text>
+                            <Text>Longitude: {this.state.data['longitude']}</Text>
+                            <Text>Height: {this.state.data['height']}</Text>
+                            <Text>Speed: {this.state.data['velocity']}</Text>
                         </View>
                     </View>
                 </Modal>

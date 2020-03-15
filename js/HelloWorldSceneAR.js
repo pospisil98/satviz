@@ -38,8 +38,6 @@ export default class HelloWorldSceneAR extends Component {
   }
 
   _onInitialized(state, reason) {
-    console.log("VOLEEEE " + this.props.arSceneNavigator.viroAppProps.satelliteClickCallback)
-
     if (state == ViroConstants.TRACKING_NORMAL) {
       this.setState({
         text : "Hello World!"

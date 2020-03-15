@@ -93,7 +93,7 @@ export default class Globe extends React.Component {
     updatePositions = () => {
         this.setState(prevState => {
             const list = prevState.satelites.map(
-                item => item.updatePosition(this.time)
+                satellite => satellite.updatePosition(this.time)
                 );
             return {
               list,
@@ -118,13 +118,19 @@ export default class Globe extends React.Component {
         this.setState(prevState => ({ satelites: [...satelliteObjects] }));
     }
 
+    selectSatelliteObjectById = (id) => {
+        return this.state.satelites.filter((sat) => {
+            return sat.id == id;
+        })
+    }
+
     onModelClick = (id) => {
         showMessage({
             message: "Clicked on sat wit ID: " + id,
             type: "info",
           });
-          
-        this.props.satelliteClickCallback(id);
+
+        this.props.satelliteClickCallback(this.selectSatelliteObjectById(id));
     }
 
     renderGlobe = () => {
@@ -165,10 +171,6 @@ export default class Globe extends React.Component {
                         scale={[0.025, 0.025, 0.025]}
                         rotation={[180, 0, -180]}
                         type="OBJ"
-
-                        onClick={() => {
-                            this.onModelClick("earth");
-                        }}
                     />
     
                     {modelList}

@@ -77,6 +77,33 @@ export default class SatelliteObject {
         return [x, y, z];
     }
 
+    getDataForInfoModal = () => {
+        let now = new Date();
+
+        let positionAndVelocity = satellite.propagate(this.satelliteRecord, now);
+
+        let positionEci = positionAndVelocity.position;
+        let velocityEci = positionAndVelocity.velocity;
+        let speed = Math.sqrt(velocityEci.x^2 + velocityEci.y^2 +velocityEci.z^2);
+
+        let gmst = satellite.gstime(now);
+        let positionGd    = satellite.eciToGeodetic(positionEci, gmst);
+
+        let longitude = positionGd.longitude;
+        let latitude  = positionGd.latitude;
+        let height    = positionGd.height;
+
+        let longitudeStr = satellite.degreesLong(longitude);
+        let latitudeStr  = satellite.degreesLat(latitude);
+
+        return {
+            velocity: speed,
+            longitude: longitudeStr,
+            latitude: latitudeStr,
+            height: height,
+        }
+    }
+
     clampCoord = (value) => {
         const earthStart = 0.0;
 
