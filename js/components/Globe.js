@@ -125,10 +125,13 @@ export default class Globe extends React.Component {
     }
 
     onModelClick = (id) => {
+        /*
+            used only for debug purposes
         showMessage({
             message: "Clicked on sat wit ID: " + id,
             type: "info",
           });
+        */
 
         this.props.satelliteClickCallback(this.selectSatelliteObjectById(id));
     }

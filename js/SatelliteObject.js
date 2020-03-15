@@ -84,6 +84,7 @@ export default class SatelliteObject {
 
         let positionEci = positionAndVelocity.position;
         let velocityEci = positionAndVelocity.velocity;
+
         let speed = Math.sqrt(velocityEci.x^2 + velocityEci.y^2 +velocityEci.z^2);
 
         let gmst = satellite.gstime(now);
@@ -93,15 +94,14 @@ export default class SatelliteObject {
         let latitude  = positionGd.latitude;
         let height    = positionGd.height;
 
-        let longitudeStr = satellite.degreesLong(longitude);
-        let latitudeStr  = satellite.degreesLat(latitude);
-
-        return {
-            velocity: speed,
-            longitude: longitudeStr,
-            latitude: latitudeStr,
-            height: height,
+        let data = {
+            velocity: speed.toFixed(2).toString() + " km/s",
+            longitude: this.deg_to_dms(longitude),
+            latitude: this.deg_to_dms(latitude),
+            height: height.toFixed(2).toString() + " km",
         }
+
+        return data;
     }
 
     clampCoord = (value) => {
@@ -113,4 +113,24 @@ export default class SatelliteObject {
             return (value - earthStart);
         }
     }
+
+    /* https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript/5786627#5786627 */
+    deg_to_dms = (deg) => {
+        var d = Math.floor (deg);
+        var minfloat = (deg-d)*60;
+        var m = Math.floor(minfloat);
+        var secfloat = (minfloat-m)*60;
+        var s = Math.round(secfloat);
+        // After rounding, the seconds might become 60. These two
+        // if-tests are not necessary if no rounding is done.
+        if (s==60) {
+          m++;
+          s=0;
+        }
+        if (m==60) {
+          d++;
+          m=0;
+        }
+        return ("" + d + "° " + m + "' " + s + "''");
+     }
 }

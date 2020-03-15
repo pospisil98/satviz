@@ -37,6 +37,12 @@ export default class CustomInfoModal extends Component {
         console.log(temp);
 
         this.setState({ data: temp });
+
+        if (this.props.isModalVisible) {
+            setTimeout(() => {
+                this.updateSateliteData();
+            }, 500);
+        }
     }
 
     render() {
