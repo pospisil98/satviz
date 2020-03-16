@@ -27,13 +27,15 @@ import { showMessage, hideMessage } from "react-native-flash-message";
 
 import CustomInfoModal from './js/components/CustomInfoModal';
 
+import * as items from './js/res/selectCategories.json';
+
 const { width, height } = Dimensions.get('window');
+
+/*
 const items = [
-  // this is the parent or 'item'
   {
     name: 'Fruits',
     id: 0,
-    // these are the children or 'sub items'
     children: [
       {
         name: 'Apple',
@@ -62,6 +64,7 @@ const items = [
     ],
   },
 ];
+*/
 
 // Sets the default scene you want for AR and VR
 var InitialARScene = require('./js/HelloWorldSceneAR');
@@ -209,7 +212,7 @@ export default class satviz extends Component {
                 <View style={styles.slidingPanelLayoutStyle}>
                     <View>
                         <SectionedMultiSelect
-                        items={items}
+                        items={items.default}
                         uniqueKey="id"
                         subKey="children"
                         selectText="Choose from catogories.."
