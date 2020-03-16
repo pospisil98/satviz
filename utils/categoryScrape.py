@@ -53,10 +53,14 @@ for i in range(len(websites)):
         lineCounter += 1
         lineCounter %= 3
 
+    # sort by category name
+    children = sorted(children, key= lambda i: i['name'])
+
     parent['children'] = children
     select.append(parent)
 
-# print(json.dumps(select))
+# sort by parent name
+select = sorted(select, key= lambda i: i['name'])
 
 with open(savePath, 'w') as out:
     json.dump(select, out)
