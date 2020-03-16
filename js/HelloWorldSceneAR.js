@@ -9,6 +9,7 @@ import {
   ViroConstants,
   ViroARImageMarker,
   ViroARTrackingTargets,
+  ViroSpotLight,
 } from 'react-viro';
 
 import Globe from './components/Globe'
@@ -30,6 +31,10 @@ export default class HelloWorldSceneAR extends Component {
   render() {
     return (
       <ViroARScene onTrackingUpdated={this._onInitialized} >
+
+        <ViroSpotLight innerAngle={5} outerAngle={90} direction={[0,-1,-.2]}
+                  position={[0, 3, 1]} color="#ffffff" castsShadow={true} />
+
         <ViroARImageMarker target={"targetOne"} >
               <Globe satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback} />
           </ViroARImageMarker>

@@ -161,6 +161,7 @@ export default class satviz extends Component {
         <ViroARSceneNavigator
           style={styles.arView}
           autofocus={true}
+          shadowsEnabled={true}
           initialScene={{scene: InitialARScene}}
           viroAppProps = {{satelliteClickCallback: this.satelliteModalSetIDCallback,}}
         />     
