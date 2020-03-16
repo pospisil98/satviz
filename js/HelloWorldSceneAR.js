@@ -36,7 +36,10 @@ export default class HelloWorldSceneAR extends Component {
                   position={[0, 3, 1]} color="#ffffff" castsShadow={true} />
 
         <ViroARImageMarker target={"targetOne"} >
-              <Globe satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback} />
+              <Globe 
+                satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
+                satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
+              />
           </ViroARImageMarker>
       </ViroARScene>
     );

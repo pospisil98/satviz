@@ -38,27 +38,41 @@ export default class Globe extends React.Component {
             satelites: []
         }
 
+        /*
+         TODO: remove - moved to props 
         this.satelliteIDS = [
             25544, // ISS
             28129, // NAVSAT 54 GPS
             26483 
-        ];
+        ];*/
+
+        this.satelliteIDs = this.props.satelliteIDs;
 
         this.time = new Date();
         this.ST = new SpaceTrack();
 
         // call ST funtion to get data according to IDs
+        var t0 = performance.now();
         this.ST.testBothAsync(this.satelliteIDS)
             .then(data => {
                 // after getting data from function save them into tle variable and unset loading flag
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
                 this.setState(prevState => ({ loading: false }));
+                var t1 = performance.now();
+                console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
             });
     }
 
     componentDidMount() {
         // start timer which tries to parse data every 500 ms
         this.parseTimer = setInterval(this.parseData, 500);
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props != prevProps) {
+            console.log("SAT IDS");
+            console.log(this.props.satelliteIDs);
+        }
     }
 
     // test function used for circular movement

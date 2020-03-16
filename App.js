@@ -163,7 +163,10 @@ export default class satviz extends Component {
           autofocus={true}
           shadowsEnabled={true}
           initialScene={{scene: InitialARScene}}
-          viroAppProps = {{satelliteClickCallback: this.satelliteModalSetIDCallback,}}
+          viroAppProps = {{
+            satelliteClickCallback: this.satelliteModalSetIDCallback,
+            satelliteIDs:   this.state.selectedItems.concat(this.state.selectedItemsManual),
+          }}
         />     
         
         <Modal 
