@@ -87,8 +87,6 @@ export default class satviz extends Component {
 
       slidingPanelToggled: false,
       slidingPanelText: "Click to reveal satellite selection!",
-      
-      selectTextInputValue: "",
     };
   }
 
@@ -134,8 +132,10 @@ export default class satviz extends Component {
 
   addManual = () => {
     // TODO: rework to this.myTextInput.current instead of state?!    
-    if (this.state.selectedItemsManual.includes(this.state.selectTextInputValue) === false) {
-      this.setState({selectedItemsManual: this.state.selectedItemsManual.concat(this.state.selectTextInputValue)});
+    console.log(this.myTextInput.current._lastNativeText);
+
+    if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
+      this.setState({selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText)});
     } else {
       showMessage({
         message: "Satellite with this ID is already selected!",
@@ -252,7 +252,6 @@ export default class satviz extends Component {
                             placeholder="Choose manualy by satellite ID"
                             ref={this.myTextInput}
                             keyboardType='numeric'
-                            onChangeText={(selectTextInputValue) => this.setState({selectTextInputValue})}
                             value={this.state.text}
                           />
                           <View style={{width: '20%', }}>
