@@ -186,12 +186,6 @@ export default class satviz extends Component {
         </TouchableOpacity>
             
         <View style={styles.bodyViewStyle}>            
-            { 
-              this.state.selectedItemsManual.map((item, key) => (
-                <Text key={key} onPress={() => this.toggleSatelliteModal(item)}> { item } </Text>)
-              )
-            }
-
             <CustomInfoModal 
               satellite={this.state.satelliteModalSatellite} 
               isModalVisible={this.state.satelliteModalVisible} 
@@ -200,7 +194,6 @@ export default class satviz extends Component {
             </CustomInfoModal>
         </View>
       
-        
         <SlidingPanel
             headerLayoutHeight = {50}
             onAnimationStop={this.toggleSlidePanel}
@@ -213,7 +206,7 @@ export default class satviz extends Component {
             slidingPanelLayout = { () =>
                 <View style={styles.slidingPanelLayoutStyle}>
                     <View style={{flex: 1}}>
-                      <ScrollView>
+                      <ScrollView style={{flex: 1}}>
                         <SectionedMultiSelect
                         items={items.default}
                         uniqueKey="id"
@@ -360,7 +353,9 @@ export default class satviz extends Component {
                             ))
                           }
                           </View>
-                          </ScrollView>
+
+                          <View style={{paddingBottom: 400}}></View>
+                        </ScrollView>
                     </View>
                 </View>
             }
