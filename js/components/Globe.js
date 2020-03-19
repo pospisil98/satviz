@@ -20,6 +20,7 @@ import { showMessage, hideMessage } from "react-native-flash-message";
 
 
 var satellite = require('satellite.js');
+var Clock = require('timetravel').Clock;
 
 export default class Globe extends React.Component {
     constructor(props) {
@@ -38,6 +39,11 @@ export default class Globe extends React.Component {
 
         // start update positions every second
         this.moveTimer = setInterval(this.updatePositions, 1000);
+
+        this.clock = new Clock();
+        this.clock.stop();
+        this.clock.speed(100);
+        this.clock.start();
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -160,6 +166,7 @@ export default class Globe extends React.Component {
     }
 
     render() {
+        console.log('The time is', new Date(this.clock.time()));
         return (
             <View>
                 {this.renderGlobe()}
