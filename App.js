@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   FlatList,
+  ScrollView,
 } from 'react-native';
 
 import {
@@ -131,9 +132,6 @@ export default class satviz extends Component {
   };
 
   addManual = () => {
-    // TODO: rework to this.myTextInput.current instead of state?!    
-    console.log(this.myTextInput.current._lastNativeText);
-
     if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
       this.setState({selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText)});
     } else {
@@ -214,7 +212,8 @@ export default class satviz extends Component {
             
             slidingPanelLayout = { () =>
                 <View style={styles.slidingPanelLayoutStyle}>
-                    <View>
+                    <View style={{flex: 1}}>
+                      <ScrollView>
                         <SectionedMultiSelect
                         items={items.default}
                         uniqueKey="id"
@@ -361,6 +360,7 @@ export default class satviz extends Component {
                             ))
                           }
                           </View>
+                          </ScrollView>
                     </View>
                 </View>
             }

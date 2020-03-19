@@ -32,91 +32,58 @@ export default class Globe extends React.Component {
 
         this.state =  { 
             loadingDisplay: true,
-            loading: true,
             position: [-0.1, 0.1, 0.1],
             phi: 0,
-            satelites: []
+            satellites: []
         }
-
-        /*
-         TODO: remove - moved to props 
-        this.satelliteIDS = [
-            25544, // ISS
-            28129, // NAVSAT 54 GPS
-            26483 
-        ];*/
-
-        this.satelliteIDs = this.props.satelliteIDs;
-
         this.time = new Date();
         this.ST = new SpaceTrack();
 
-        // call ST funtion to get data according to IDs
-        var t0 = performance.now();
-        this.ST.testBothAsync(this.satelliteIDS)
-            .then(data => {
-                // after getting data from function save them into tle variable and unset loading flag
+        this.loading = false;
+
+        // start update positions every second
+        this.moveTimer = setInterval(this.updatePositions, 1000);
+    }
+
+    async componentDidUpdate(prevProps, prevState) {
+        if (this.props.satelliteIDs !== prevProps.satelliteIDs && prevProps.satelliteIDs) {
+            let difference = this.props.satelliteIDs.filter(x => !prevProps.satelliteIDs.includes(x));
+            
+            if (difference.length > 0)
+            {
+                // call ST funtion to get data according to newly added IDs
+                this.loading = true;
+                let data = await this.ST.testBothAsync(difference);
+                
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
-                this.setState(prevState => ({ loading: false }));
-                var t1 = performance.now();
-                console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-            });
-    }
-
-    componentDidMount() {
-        // start timer which tries to parse data every 500 ms
-        this.parseTimer = setInterval(this.parseData, 500);
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (this.props != prevProps) {
-            console.log("SAT IDS");
-            console.log(this.props.satelliteIDs);
+                this.parseData()
+            }
         }
-    }
-
-    // test function used for circular movement
-    moveFunc = () => {
-        var R = 0.5;
-
-        var X = R * Math.cos(this.state.phi)
-        var Y = R * Math.sin(this.state.phi)
-
-        var temp = this.state.phi + 0.01;
-         
-        this.setState(prevState => ({ 
-            phi: temp,
-            position: [X, 0, Y]
-        }));
     }
 
     parseData = () => {
-        // check if we have data loaded
-        if (!this.state.loading) {
-            // stop running parse function
-            clearInterval(this.parseTimer);
+        //gather new satellite objects
+        satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
+        keptFromCurrentObjects = this.state.satellites.filter(sat => this.props.satelliteIDs.includes(sat.id));
 
-            this.convertTLEtoSatrecCollection();
-
-            // start update positions every second
-            this.moveTimer = setInterval(this.updatePositions, 30);   
-            this.updatePositions(); 
-        }
+        // remove unwanted objects, add newly gathered
+        this.setState({ satellites: [...satelliteObjects, ...keptFromCurrentObjects] }, () => {this.loading = false;});
     }
 
     updatePositions = () => {
-        this.setState(prevState => {
-            const list = prevState.satelites.map(
-                satellite => satellite.updatePosition(this.time)
-                );
-            return {
-              list,
-            };
-        });
-        this.time = new Date(this.time.getTime());
+        if (this.state.satellites.length > 0)
+        {   
+            let copy = [...this.state.satellites]
+
+            copy.forEach((sat) => {
+                sat.updatePosition(new Date(Date.now()));
+            });
+
+            this.setState({satellites: copy});
+        }
     }
 
-    convertTLEtoSatrecCollection = () => {
+    convertTLEtoSatelliteObjectCollection = () => {
         var tleIndex = 0;
         var idIndex = 0;
         var satrec;
@@ -124,16 +91,15 @@ export default class Globe extends React.Component {
 
         for (tleIndex = 0; tleIndex < this.tle.length - 1; tleIndex += 2) {
             satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);
-
-            satelliteObjects.push(new SatelliteObject(this.satelliteIDS[idIndex], satrec))
+            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec))
             idIndex += 1;
         }
 
-        this.setState(prevState => ({ satelites: [...satelliteObjects] }));
+        return satelliteObjects;
     }
 
     selectSatelliteObjectById = (id) => {
-        return this.state.satelites.filter((sat) => {
+        return this.state.satellites.filter((sat) => {
             return sat.id == id;
         })
     }
@@ -153,8 +119,8 @@ export default class Globe extends React.Component {
     renderGlobe = () => {
         let modelList;
 
-        if (!this.state.loading) {
-            modelList = this.state.satelites.map((sat) => {
+        if (!this.loading) {
+            modelList = this.state.satellites.map((sat) => {
                 return (
                     <Viro3DObject 
                         key={sat.id}
@@ -202,6 +168,21 @@ export default class Globe extends React.Component {
             </View>
         );
     } 
+
+    // test function used for circular movement
+    moveFunc = () => {
+        var R = 0.5;
+
+        var X = R * Math.cos(this.state.phi)
+        var Y = R * Math.sin(this.state.phi)
+
+        var temp = this.state.phi + 0.01;
+            
+        this.setState(prevState => ({ 
+            phi: temp,
+            position: [X, 0, Y]
+        }));
+    }
 }
 
 ViroMaterials.createMaterials({

@@ -61,7 +61,16 @@ export default class SatelliteObject {
     }
 
     updatePosition  = (datetime) => {
+        console.log(datetime);
+
+        console.log("POS BEF");
+        console.log(this.position);
+
         var newPosition = satellite.propagate(this.satelliteRecord, datetime).position;
+
+        console.log("POS aft");
+        console.log(newPosition);
+
         var recalc = this.mapPositionToRange(newPosition);
 
         this.position = recalc;
