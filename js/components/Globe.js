@@ -48,26 +48,29 @@ export default class Globe extends React.Component {
     async componentDidUpdate(prevProps, prevState) {
         if (this.props.satelliteIDs !== prevProps.satelliteIDs && prevProps.satelliteIDs) {
             let difference = this.props.satelliteIDs.filter(x => !prevProps.satelliteIDs.includes(x));
+            let sats = [];
             
-            if (difference.length > 0)
-            {
+            if (difference.length > 0) {
                 // call ST funtion to get data according to newly added IDs
                 this.loading = true;
                 let data = await this.ST.testBothAsync(difference);
                 
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
-                this.parseData()
+                sats = this.parseData();
             }
+
+            keptFromCurrentObjects = this.state.satellites.filter(sat => this.props.satelliteIDs.includes(sat.id));
+
+            this.setState({satellites: [...sats, ...keptFromCurrentObjects]})
         }
     }
 
     parseData = () => {
         //gather new satellite objects
         satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
-        keptFromCurrentObjects = this.state.satellites.filter(sat => this.props.satelliteIDs.includes(sat.id));
+        this.loading = false;
 
-        // remove unwanted objects, add newly gathered
-        this.setState({ satellites: [...satelliteObjects, ...keptFromCurrentObjects] }, () => {this.loading = false;});
+        return satelliteObjects;
     }
 
     updatePositions = () => {
