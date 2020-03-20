@@ -165,6 +165,7 @@ export default class satviz extends Component {
           viroAppProps = {{
             satelliteClickCallback: this.satelliteModalSetIDCallback,
             satelliteIDs:   this.state.selectedItems.concat(this.state.selectedItemsManual),
+            timeScale: this.state.timeSpeedSliderValue,
           }}
         />     
         
@@ -360,7 +361,7 @@ export default class satviz extends Component {
                             <Slider
                               value={this.state.timeSpeedSliderValue}
                               minimumValue={1}
-                              maximumValue={20}
+                              maximumValue={1000}
 
                               onSlidingComplete={(val) => this.setState({timeSpeedSliderValue: val})}
                             />

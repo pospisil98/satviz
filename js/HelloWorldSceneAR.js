@@ -39,6 +39,7 @@ export default class HelloWorldSceneAR extends Component {
               <Globe 
                 satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
                 satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
+                timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
               />
           </ViroARImageMarker>
       </ViroARScene>

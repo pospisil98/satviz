@@ -38,12 +38,9 @@ export default class Globe extends React.Component {
         this.loading = false;
 
         // start update positions every second
-        this.moveTimer = setInterval(this.updatePositions, 1000);
+        this.moveTimer = setInterval(this.updatePositions, 500);
 
         this.clock = new Clock();
-        this.clock.stop();
-        this.clock.speed(100);
-        this.clock.start();
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -64,6 +61,12 @@ export default class Globe extends React.Component {
 
             this.setState({satellites: [...sats, ...keptFromCurrentObjects]})
         }
+
+        if (this.props.timeScale !== prevProps.timeScale) {
+            this.clock.stop();
+            this.clock.speed(this.props.timeScale).time(this.clock.time());
+            this.clock.start();
+        }
     }
 
     parseData = () => {
@@ -78,9 +81,11 @@ export default class Globe extends React.Component {
         if (this.state.satellites.length > 0)
         {   
             let copy = [...this.state.satellites]
+            
 
             copy.forEach((sat) => {
-                sat.updatePosition(new Date(Date.now()));
+                // sat.updatePosition(new Date(Date.now()));
+                sat.updatePosition(new Date(this.clock.time()));
             });
 
             this.setState({satellites: copy});
