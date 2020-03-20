@@ -7,6 +7,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-community/slider": "^1.1.4",
+    "jetifier": "^1.6.5",
     "react": "16.8.3",
     "react-native": "0.59.3",
     "react-native-flash-message": "^0.1.15",

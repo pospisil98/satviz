@@ -31,3 +31,7 @@ allprojects {
 		distributionUrl = distributionUrl.replace("bin", "all")
 	}
 }
+
+ext {
+    supportLibVersion = "28.0.0"
+}

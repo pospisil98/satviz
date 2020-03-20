@@ -155,9 +155,14 @@ android {
     }
 }
 
+
+
+
 dependencies {
+    implementation project(':react-native-community-slider')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.facebook.react:react-native:+'
     implementation project(':arcore_client') // remove this if AR not required
     implementation project(':gvr_common')

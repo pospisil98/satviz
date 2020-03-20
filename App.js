@@ -22,6 +22,7 @@ import SlidingPanel from 'react-native-sliding-up-down-panels';
 import SectionedMultiSelect from 'react-native-sectioned-multi-select';
 import Modal from "react-native-modal";
 import Icon from 'react-native-vector-icons/Feather';
+import Slider from '@react-native-community/slider';
 
 import FlashMessage from "react-native-flash-message";
 import { showMessage, hideMessage } from "react-native-flash-message";
@@ -352,6 +353,17 @@ export default class satviz extends Component {
                               </View>
                             ))
                           }
+                          </View>
+
+                          <View>
+                            <Text>Set time speed (x times normal) (1-20)</Text>
+                            <Slider
+                              value={this.state.timeSpeedSliderValue}
+                              minimumValue={1}
+                              maximumValue={20}
+
+                              onSlidingComplete={(val) => this.setState({timeSpeedSliderValue: val})}
+                            />
                           </View>
 
                           <View style={{paddingBottom: 400}}></View>
