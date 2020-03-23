@@ -38,9 +38,11 @@ var rotations = {
 var satellite = require('satellite.js');
 
 export default class SatelliteObject {
-    constructor(id, satelliteRecord) {
+    constructor(id, satelliteRecord, tle) {
         this.id = id;
+        this.tle = tle;
         this.satelliteRecord = satelliteRecord;
+        this.time = null;
 
         this.description = this.getDescription();
         this.modelPath = models[this.description];
@@ -48,8 +50,10 @@ export default class SatelliteObject {
         this.texturePath = textures[this.description];
 
         this.position = [0.0, 0.0, 0.0];
+        this.positionEci = null;
         this.scale = scales[this.description];
         this.rotation = rotations[this.description];
+        this.velocity = {}; 
     }
 
     getDescription = () => {
@@ -61,10 +65,12 @@ export default class SatelliteObject {
     }
 
     updatePosition  = (datetime) => {
-        var newPosition = satellite.propagate(this.satelliteRecord, datetime).position;
-        var recalc = this.mapPositionToRange(newPosition);
+        let propagation = satellite.propagate(this.satelliteRecord, datetime);
 
-        this.position = recalc;
+        this.time = datetime;
+        this.velocity = propagation.velocity;
+        this.positionEci = propagation.position;
+        this.position = this.mapPositionToRange(propagation.position);
     }
 
     mapPositionToRange = (value) => {
@@ -77,41 +83,68 @@ export default class SatelliteObject {
         return [x, y, z];
     }
 
+    formatSelectedDataForModal = (data) => {
+        let formated = {};
+        formated.id = data.id.toString(); // NORAD ID
+        formated.intlDes = data.intlDes.toString(); // INTL DESIGNATOR (year, number of launch, piece of launch)
+        formated.apogee = data.apogee.toFixed(2).toString() + ' km';
+        formated.perigee = data.perigee.toFixed(2).toString() + ' km';
+        formated.inclination = this.deg_to_dms(this.radians_to_degrees(data.inclination));
+        formated.latitude = this.deg_to_dms(data.positionGeodetic.latitude);
+        formated.longitude = this.deg_to_dms(data.positionGeodetic.longitude);
+        formated.height = data.positionGeodetic.height.toFixed(2).toString() + ' km';
+        formated.velocity = data.velocity.toFixed(2).toString() + ' km/s';
+        formated.period = data.period.toFixed(0).toString() + ' min';
+
+        return formated;
+    }
+
     getDataForInfoModal = () => {
-        let now = new Date();
+        let data = {};
+        data.id = this.id;
+        data.intlDes = this.getIntlDes();
+        data.inclination  = this.satelliteRecord.inclo;  //rads
+        data.eccentricity = this.satelliteRecord.ecco;
+        data.raan         = this.satelliteRecord.nodeo;   //rads
+        data.argPe        = this.satelliteRecord.argpo;  //rads
+        data.meanMotion   = this.satelliteRecord.no * 60 * 24 / (2 * Math.PI);     // convert rads/minute to rev/day
+        
+        data.semiMajorAxis = Math.pow(8681663.653 / data.meanMotion, (2/3));
+        data.semiMinorAxis = data.semiMajorAxis * Math.sqrt(1 - Math.pow(data.eccentricity, 2));   
+        data.apogee = data.semiMajorAxis * (1 + data.eccentricity) - 6371;
+        data.perigee = data.semiMajorAxis * (1 - data.eccentricity) - 6371;
+        data.period = 1440.0 / data.meanMotion;
 
-        let positionAndVelocity = satellite.propagate(this.satelliteRecord, now);
 
-        let positionEci = positionAndVelocity.position;
-        let velocityEci = positionAndVelocity.velocity;
+        let gmst = satellite.gstime(new Date(this.time));
+        data.positionGeodetic = satellite.eciToGeodetic(this.positionEci, gmst);
 
-        let speed = Math.sqrt(velocityEci.x^2 + velocityEci.y^2 +velocityEci.z^2);
+        data.velocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2) + Math.pow(this.velocity.z, 2));
 
-        let gmst = satellite.gstime(now);
-        let positionGd    = satellite.eciToGeodetic(positionEci, gmst);
-
-        let longitude = positionGd.longitude;
-        let latitude  = positionGd.latitude;
-        let height    = positionGd.height;
-
-        let data = {
-            velocity: speed.toFixed(2).toString() + " km/s",
-            longitude: this.deg_to_dms(longitude),
-            latitude: this.deg_to_dms(latitude),
-            height: height.toFixed(2).toString() + " km",
-        }
-
-        return data;
+        return this.formatSelectedDataForModal(data);
     }
 
     clampCoord = (value) => {
-        const earthStart = 0.0;
+        const earthStart = 0.003;
 
         if (value > 0) {
             return (value + earthStart);
         } else {
             return (value - earthStart);
         }
+    }
+    
+    getIntlDes = () => {
+        let des = '';
+
+        let year = this.tle[0].substring(9,11);
+        let prefix = (year > 50) ? '19' : '20';
+        year = prefix + year;
+
+        let rest = this.tle[0].substring(11,16);
+        des = year + '-' + rest;   
+
+        return des;
     }
 
     /* https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript/5786627#5786627 */
@@ -131,6 +164,10 @@ export default class SatelliteObject {
           d++;
           m=0;
         }
-        return ("" + d + "° " + m + "' " + s + "''");
+        return ("" + d + "° " + m + "' " + s + "\"");
      }
+
+     radians_to_degrees = (radians) => {
+        return radians * (180/Math.PI);
+    }
 }

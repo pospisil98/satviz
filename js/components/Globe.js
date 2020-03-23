@@ -100,7 +100,7 @@ export default class Globe extends React.Component {
 
         for (tleIndex = 0; tleIndex < this.tle.length - 1; tleIndex += 2) {
             satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);
-            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec))
+            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec, [this.tle[tleIndex], this.tle[tleIndex + 1]]))
             idIndex += 1;
         }
 

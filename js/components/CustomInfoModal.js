@@ -31,8 +31,8 @@ export default class CustomInfoModal extends Component {
 
     updateSateliteData = () => {   
         console.log(this.props.satellite[0]);
+
         let temp = this.props.satellite[0].getDataForInfoModal();
-        temp['id'] = this.props.satellite[0].id;
 
         console.log(temp);
 
@@ -58,11 +58,16 @@ export default class CustomInfoModal extends Component {
                 >
                     <View style={styles.helpModal}>
                         <View style={{ flex: 1 }}>
-                            <Text>ID: {this.state.data['id']}</Text>
-                            <Text>Latitude: {this.state.data['latitude']}</Text>
-                            <Text>Longitude: {this.state.data['longitude']}</Text>
-                            <Text>Height: {this.state.data['height']}</Text>
-                            <Text>Speed: {this.state.data['velocity']}</Text>
+                            <Text>NORAD ID: {this.state.data.id}</Text>
+                            <Text>Int'l Designator: {this.state.data.intlDes}</Text>
+                            <Text>Apogee: {this.state.data.apogee}</Text>
+                            <Text>Perigee: {this.state.data.perigee}</Text>
+                            <Text>Inclination: {this.state.data.inclination}</Text>
+                            <Text>Latitude: {this.state.data.latitude}</Text>
+                            <Text>Longitude: {this.state.data.longitude}</Text>
+                            <Text>Height: {this.state.data.height}</Text>
+                            <Text>Velocity: {this.state.data.velocity}</Text>
+                            <Text>Period: {this.state.data.period}</Text>
                         </View>
                     </View>
                 </Modal>
