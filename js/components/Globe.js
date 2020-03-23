@@ -171,7 +171,6 @@ export default class Globe extends React.Component {
     }
 
     render() {
-        console.log('The time is', new Date(this.clock.time()));
         return (
             <View>
                 {this.renderGlobe()}
