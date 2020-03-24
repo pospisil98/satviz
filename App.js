@@ -33,41 +33,6 @@ import * as items from './js/res/selectCategories.json';
 
 const { width, height } = Dimensions.get('window');
 
-/*
-const items = [
-  {
-    name: 'Fruits',
-    id: 0,
-    children: [
-      {
-        name: 'Apple',
-        id: 10,
-      },
-      {
-        name: 'Strawberry',
-        id: 17,
-      },
-      {
-        name: 'Pineapple',
-        id: 13,
-      },
-      {
-        name: 'Banana',
-        id: 14,
-      },
-      {
-        name: 'Watermelon',
-        id: 15,
-      },
-      {
-        name: 'Kiwi fruit',
-        id: 16,
-      },
-    ],
-  },
-];
-*/
-
 // Sets the default scene you want for AR and VR
 var InitialARScene = require('./js/HelloWorldSceneAR');
 
@@ -89,6 +54,9 @@ export default class satviz extends Component {
 
       slidingPanelToggled: false,
       slidingPanelText: "Click to reveal satellite selection!",
+
+      flashMessagePosition: "top",
+      flashMessageAutoHide: true,
     };
   }
 
@@ -120,11 +88,9 @@ export default class satviz extends Component {
 
   toggleSlidePanel = () => {
     var toggledBeforeChange = this.state.slidingPanelToggled;
-    //console.log("Bef change:  " + toggledBeforeChange);
 
     this.setState({ slidingPanelToggled: !toggledBeforeChange });
 
-    // console.log("Aft change: " + !toggledBeforeChange);
     if (!toggledBeforeChange) {
       this.setState({ slidingPanelText: "Click to hide satellite selection!" });
     } else {
@@ -136,9 +102,11 @@ export default class satviz extends Component {
     if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
       this.setState({selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText)});
     } else {
+      this.setFlashMesageToSelectionError();
+
       showMessage({
         message: "Satellite with this ID is already selected!",
-        type: "warning",
+        type: "danger",
       });
     }
 
@@ -151,6 +119,13 @@ export default class satviz extends Component {
 
   removeManualAll = () => {
     this.setState({selectedItemsManual: []});
+  }
+
+  setFlashMesageToSelectionError = () => {
+    this.setState({
+      flashMessageAutoHide: true,
+      flashMessagePosition: "top",
+    });
   }
 
   render() {
@@ -373,7 +348,11 @@ export default class satviz extends Component {
                 </View>
             }
         />
-        <FlashMessage position="top" />
+
+        <FlashMessage
+          position={this.state.flashMessagePosition}
+          autoHide={this.state.flashMessageAutoHide}
+        />
       </View>
     );
   }
