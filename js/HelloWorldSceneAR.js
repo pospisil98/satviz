@@ -10,6 +10,9 @@ import {
     ViroARImageMarker,
     ViroARTrackingTargets,
     ViroSpotLight,
+    ViroNode,
+    ViroMaterials,
+    ViroSphere,
 } from 'react-viro';
 
 import Globe from './components/Globe'
@@ -37,13 +40,14 @@ export default class HelloWorldSceneAR extends Component {
         // Set initial state here
         this.state = {
             text: "Initializing AR...",
+
             rotationAngle: 0,
+            globeDetected: false,
+            globePosition: [0.0, 0.0, 0.0],
         };
 
         this.tracking = [];
-
-        // bind 'this' to functions
-        this._onInitialized = this._onInitialized.bind(this);
+        this.positionModCount = 0;
     }
 
     getGlobeRotation = () => {
@@ -59,11 +63,30 @@ export default class HelloWorldSceneAR extends Component {
         return sum / this.tracking.length;
     }
 
-    
+    modifyGlobePosition = (position) => {
+        // move Z coord into center of globe
+        position[2] = position[2] - 0.1;
+
+        if (this.positionModCount === 0) {
+            this.setState({globePosition: position,});
+        } else {
+            let newPos = [];
+            newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
+            newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
+            newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
+
+            console.log(newPos);
+
+            this.setState({globePosition: newPos,});
+        }
+
+        this.positionModCount += 1;
+    }
+
     _onAnchorFound = (e, targetName) => {
-        // console.log("ANCHOR FOUND");
-        // console.log(e);
-        // console.log(targetName);
+        if (!this.state.globeDetected) {
+            this.setState({globeDetected: true});
+        }
     }
 
     _onAnchorUpdated = (e, targetName) => {
@@ -75,6 +98,9 @@ export default class HelloWorldSceneAR extends Component {
                 this.tracking = [...this.tracking, targetName];
                 changed = true;
             }
+
+            // update globe position according to detected position
+            this.modifyGlobePosition(e.position);
         } else if (e.trackingMethod === "lastKnownPose") {
             // remove from tracking
             if (this.tracking.includes(targetName)) {
@@ -91,13 +117,29 @@ export default class HelloWorldSceneAR extends Component {
         }
     }
 
-    _onInitialized(state, reason) {
+    _onInitialized = (state, reason) => {
         if (state == ViroConstants.TRACKING_NORMAL) {
             this.setState({
                 text: "Hello World!"
             });
         } else if (state == ViroConstants.TRACKING_NONE) {
             // Handle loss of tracking
+        }
+    }
+
+    renderSphere = () => {
+        if (this.state.globeDetected) {
+            return(
+                <ViroSphere
+                    heightSegmentCount={20}
+                    widthSegmentCount={20}
+                    radius={0.17}
+                    position={this.state.globePosition}
+                    materials={["mat"]}
+                />
+            );
+        } else {
+            return(<ViroNode></ViroNode>);
         }
     }
 
@@ -134,6 +176,11 @@ export default class HelloWorldSceneAR extends Component {
                 </ViroARImageMarker>
 
                 {this.renderTargets()}
+
+                {/*
+                    Renders sphere on place of globe
+                    this.renderSphere()
+                */}
             </ViroARScene>
         );
     }
@@ -190,6 +237,13 @@ ViroARTrackingTargets.createTargets({
         orientation: "Up",
         physicalWidth: 0.3,
     },
+});
+
+ViroMaterials.createMaterials({
+    mat: {
+        lightingModel: "Blinn",
+        diffuseColor: '#6e6e6e'
+    }
 });
 
 module.exports = HelloWorldSceneAR;
