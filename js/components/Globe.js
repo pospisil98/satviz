@@ -10,7 +10,7 @@ import {
     ViroNode,
     Viro3DObject,
     ViroAmbientLight,
-  } from 'react-viro';
+} from 'react-viro';
 
 import SpaceTrack from '../SpaceTrack';
 import SatelliteObject from '../SatelliteObject';
@@ -26,7 +26,7 @@ export default class Globe extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state =  { 
+        this.state = {
             loadingDisplay: true,
             position: [-0.1, 0.1, 0.1],
             phi: 0,
@@ -47,19 +47,19 @@ export default class Globe extends React.Component {
         if (this.props.satelliteIDs !== prevProps.satelliteIDs && prevProps.satelliteIDs) {
             let difference = this.props.satelliteIDs.filter(x => !prevProps.satelliteIDs.includes(x));
             let sats = [];
-            
+
             if (difference.length > 0) {
                 // call ST funtion to get data according to newly added IDs
                 this.loading = true;
                 let data = await this.ST.testBothAsync(difference);
-                
+
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
                 sats = this.parseData();
             }
 
             keptFromCurrentObjects = this.state.satellites.filter(sat => this.props.satelliteIDs.includes(sat.id));
 
-            this.setState({satellites: [...sats, ...keptFromCurrentObjects]})
+            this.setState({ satellites: [...sats, ...keptFromCurrentObjects] })
         }
 
         if (this.props.timeScale !== prevProps.timeScale) {
@@ -78,17 +78,16 @@ export default class Globe extends React.Component {
     }
 
     updatePositions = () => {
-        if (this.state.satellites.length > 0)
-        {   
+        if (this.state.satellites.length > 0) {
             let copy = [...this.state.satellites]
-            
+
 
             copy.forEach((sat) => {
                 // sat.updatePosition(new Date(Date.now()));
                 sat.updatePosition(new Date(this.clock.time()));
             });
 
-            this.setState({satellites: copy});
+            this.setState({ satellites: copy });
         }
     }
 
@@ -131,7 +130,7 @@ export default class Globe extends React.Component {
         if (!this.loading) {
             modelList = this.state.satellites.map((sat) => {
                 return (
-                    <Viro3DObject 
+                    <Viro3DObject
                         key={sat.id}
                         source={sat.modelPath}
                         resources={[
@@ -142,31 +141,31 @@ export default class Globe extends React.Component {
                         scale={sat.scale}
                         rotation={sat.rotation}
                         type="OBJ"
-                        
+
                         highAccuracyEvents={true}
                         onClick={() => {
                             this.onModelClick(sat.id);
                         }}
                     />
                 )
-              })    
+            })
         }
 
-        return(
-            <ViroNode position={[0,0.2,0]}>
-                    <ViroAmbientLight color="#FFFFFF" />
-    
-                    <Viro3DObject source={require('../res/earth.obj')}
-                        resources={[require('../res/earth.mtl'),
-                                    require('../res/earth_texture.png')]}
-                        position={[0.0, 0.0, 0.0]}
-                        scale={[0.025, 0.025, 0.025]}
-                        rotation={[180, 0, -180]}
-                        type="OBJ"
-                    />
-    
-                    {modelList}
-                </ViroNode>
+        return (
+            <ViroNode position={[0, 0.2, 0]}>
+                <ViroAmbientLight color="#FFFFFF" />
+
+                <Viro3DObject source={require('../res/earth.obj')}
+                    resources={[require('../res/earth.mtl'),
+                    require('../res/earth_texture.png')]}
+                    position={[0.0, 0.0, 0.0]}
+                    scale={[0.025, 0.025, 0.025]}
+                    rotation={[180, 0, -180]}
+                    type="OBJ"
+                />
+
+                {modelList}
+            </ViroNode>
         );
     }
 
@@ -176,7 +175,7 @@ export default class Globe extends React.Component {
                 {this.renderGlobe()}
             </View>
         );
-    } 
+    }
 
     // test function used for circular movement
     moveFunc = () => {
@@ -186,8 +185,8 @@ export default class Globe extends React.Component {
         var Y = R * Math.sin(this.state.phi)
 
         var temp = this.state.phi + 0.01;
-            
-        this.setState(prevState => ({ 
+
+        this.setState(prevState => ({
             phi: temp,
             position: [X, 0, Y]
         }));
@@ -196,8 +195,8 @@ export default class Globe extends React.Component {
 
 ViroMaterials.createMaterials({
     green: {
-       lightingModel: "Blinn",
-       diffuseTexture: require('../res/green.jpg'),
+        lightingModel: "Blinn",
+        diffuseTexture: require('../res/green.jpg'),
     },
     red: {
         lightingModel: "Blinn",

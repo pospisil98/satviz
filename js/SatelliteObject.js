@@ -1,7 +1,7 @@
 'use-strict';
 
 var descriptions = {
- //   25544: "ISS",
+    //   25544: "ISS",
     28129: "GPS"
 }
 
@@ -53,7 +53,7 @@ export default class SatelliteObject {
         this.positionEci = null;
         this.scale = scales[this.description];
         this.rotation = rotations[this.description];
-        this.velocity = {}; 
+        this.velocity = {};
     }
 
     getDescription = () => {
@@ -64,7 +64,7 @@ export default class SatelliteObject {
         }
     }
 
-    updatePosition  = (datetime) => {
+    updatePosition = (datetime) => {
         let propagation = satellite.propagate(this.satelliteRecord, datetime);
 
         this.time = datetime;
@@ -76,9 +76,9 @@ export default class SatelliteObject {
     mapPositionToRange = (value) => {
         const denominator = 100000;
 
-        x = this.clampCoord(value.x/denominator);
-        y = this.clampCoord(value.y/denominator);
-        z = this.clampCoord(value.z/denominator);       
+        x = this.clampCoord(value.x / denominator);
+        y = this.clampCoord(value.y / denominator);
+        z = this.clampCoord(value.z / denominator);
 
         return [x, y, z];
     }
@@ -103,14 +103,14 @@ export default class SatelliteObject {
         let data = {};
         data.id = this.id;
         data.intlDes = this.getIntlDes();
-        data.inclination  = this.satelliteRecord.inclo;  //rads
+        data.inclination = this.satelliteRecord.inclo;  //rads
         data.eccentricity = this.satelliteRecord.ecco;
-        data.raan         = this.satelliteRecord.nodeo;   //rads
-        data.argPe        = this.satelliteRecord.argpo;  //rads
-        data.meanMotion   = this.satelliteRecord.no * 60 * 24 / (2 * Math.PI);     // convert rads/minute to rev/day
-        
-        data.semiMajorAxis = Math.pow(8681663.653 / data.meanMotion, (2/3));
-        data.semiMinorAxis = data.semiMajorAxis * Math.sqrt(1 - Math.pow(data.eccentricity, 2));   
+        data.raan = this.satelliteRecord.nodeo;   //rads
+        data.argPe = this.satelliteRecord.argpo;  //rads
+        data.meanMotion = this.satelliteRecord.no * 60 * 24 / (2 * Math.PI);     // convert rads/minute to rev/day
+
+        data.semiMajorAxis = Math.pow(8681663.653 / data.meanMotion, (2 / 3));
+        data.semiMinorAxis = data.semiMajorAxis * Math.sqrt(1 - Math.pow(data.eccentricity, 2));
         data.apogee = data.semiMajorAxis * (1 + data.eccentricity) - 6371;
         data.perigee = data.semiMajorAxis * (1 - data.eccentricity) - 6371;
         data.period = 1440.0 / data.meanMotion;
@@ -133,41 +133,41 @@ export default class SatelliteObject {
             return (value - earthStart);
         }
     }
-    
+
     getIntlDes = () => {
         let des = '';
 
-        let year = this.tle[0].substring(9,11);
+        let year = this.tle[0].substring(9, 11);
         let prefix = (year > 50) ? '19' : '20';
         year = prefix + year;
 
-        let rest = this.tle[0].substring(11,16);
-        des = year + '-' + rest;   
+        let rest = this.tle[0].substring(11, 16);
+        des = year + '-' + rest;
 
         return des;
     }
 
     /* https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript/5786627#5786627 */
     deg_to_dms = (deg) => {
-        var d = Math.floor (deg);
-        var minfloat = (deg-d)*60;
+        var d = Math.floor(deg);
+        var minfloat = (deg - d) * 60;
         var m = Math.floor(minfloat);
-        var secfloat = (minfloat-m)*60;
+        var secfloat = (minfloat - m) * 60;
         var s = Math.round(secfloat);
         // After rounding, the seconds might become 60. These two
         // if-tests are not necessary if no rounding is done.
-        if (s==60) {
-          m++;
-          s=0;
+        if (s == 60) {
+            m++;
+            s = 0;
         }
-        if (m==60) {
-          d++;
-          m=0;
+        if (m == 60) {
+            d++;
+            m = 0;
         }
         return ("" + d + "° " + m + "' " + s + "\"");
-     }
+    }
 
-     radians_to_degrees = (radians) => {
-        return radians * (180/Math.PI);
+    radians_to_degrees = (radians) => {
+        return radians * (180 / Math.PI);
     }
 }

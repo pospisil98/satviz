@@ -1,7 +1,7 @@
 const CREDENTIALS = {
     username: 'pospivo1@fel.cvut.cz',
     password: '!6cpBH97VSniwT8'
-} 
+}
 
 const API = {
     dataFirst: 'https://www.space-track.org/basicspacedata/query/class/tle/format/tle/NORAD_CAT_ID/',
@@ -251,19 +251,19 @@ export default class SpaceTrack {
         console.log("Try to fetch request in testBoth");
         const request = new Request('https://www.space-track.org/ajaxauth/login', {
             method: 'POST',
-            credentials : 'include',
+            credentials: 'include',
             body: JSON.stringify({
-                identity : CREDENTIALS.username,
-                password : CREDENTIALS.password,
-                query : "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + idString + "/orderby/TLE_LINE1 ASC/format/tle"
+                identity: CREDENTIALS.username,
+                password: CREDENTIALS.password,
+                query: "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + idString + "/orderby/TLE_LINE1 ASC/format/tle"
             }),
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
-              },
+            },
         });
 
-        
+
         //console.log("Built request: ");
         //console.log(request);
 
@@ -281,7 +281,7 @@ export default class SpaceTrack {
                 console.log("Something broke :(");
                 console.error(error);
             }
-        );
+            );
     }
 
     async testBothAsync(idArray) {
@@ -289,16 +289,16 @@ export default class SpaceTrack {
 
         const request = new Request('https://www.space-track.org/ajaxauth/login', {
             method: 'POST',
-            credentials : 'include',
+            credentials: 'include',
             body: JSON.stringify({
-                identity : CREDENTIALS.username,
-                password : CREDENTIALS.password,
-                query : "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + idString + "/orderby/TLE_LINE1 ASC/format/tle"
+                identity: CREDENTIALS.username,
+                password: CREDENTIALS.password,
+                query: "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + idString + "/orderby/TLE_LINE1 ASC/format/tle"
             }),
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
-              },
+            },
         });
 
         try {
@@ -340,21 +340,21 @@ export default class SpaceTrack {
 
     static geodeticToEcef(lat, lon, elev) {
         const radius = 6378137;
-        const flattening = 1/298.257223563;
+        const flattening = 1 / 298.257223563;
         const ecc2 = (2 - flattening) * flattening;
 
         var h = elev === undefined ? 0 : elev;
         var rlat = lat / 180 * Math.PI;
         var rlon = lon / 180 * Math.PI;
-        
+
         var slat = Math.sin(rlat);
         var clat = Math.cos(rlat);
-        
-        var N = radius / Math.sqrt(1 - ecc2 * slat*slat);
-        
+
+        var N = radius / Math.sqrt(1 - ecc2 * slat * slat);
+
         var x = (N + h) * clat * Math.cos(rlon);
         var y = (N + h) * clat * Math.sin(rlon);
         var z = (N * (1 - ecc2) + h) * slat;
-        return [ x, y, z ];
+        return [x, y, z];
     }
 }

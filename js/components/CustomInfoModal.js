@@ -23,7 +23,7 @@ const messageDict = {
 
 export default class CustomInfoModal extends Component {
     constructor() {
-        super(); 
+        super();
 
         this.state = {
             data: {},
@@ -37,7 +37,7 @@ export default class CustomInfoModal extends Component {
         }
     }
 
-    updateSateliteData = () => {   
+    updateSateliteData = () => {
         let temp = this.props.satellite[0].getDataForInfoModal();
         this.setState({ data: temp });
 
@@ -49,24 +49,24 @@ export default class CustomInfoModal extends Component {
     }
 
     renderTextInfo = () => {
-        return(
+        return (
             <View style={{ flex: 1 }}>
-                <Text onPress={() => {this.setState({explanationRequest: "id"})}}>NORAD ID: {this.state.data.id}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "intlDes"})}}>Int'l Designator: {this.state.data.intlDes}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "apogee"})}}>Apogee: {this.state.data.apogee}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "perigee"})}}>Perigee: {this.state.data.perigee}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "inclination"})}}>Inclination: {this.state.data.inclination}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "latitude"})}}>Latitude: {this.state.data.latitude}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "longitude"})}}>Longitude: {this.state.data.longitude}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "height"})}}>Height: {this.state.data.height}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "velocity"})}}>Velocity: {this.state.data.velocity}</Text>
-                <Text onPress={() => {this.setState({explanationRequest: "period"})}}>Period: {this.state.data.period}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "id" }) }}>NORAD ID: {this.state.data.id}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "intlDes" }) }}>Int'l Designator: {this.state.data.intlDes}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "apogee" }) }}>Apogee: {this.state.data.apogee}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "perigee" }) }}>Perigee: {this.state.data.perigee}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "inclination" }) }}>Inclination: {this.state.data.inclination}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "latitude" }) }}>Latitude: {this.state.data.latitude}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "longitude" }) }}>Longitude: {this.state.data.longitude}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "height" }) }}>Height: {this.state.data.height}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "velocity" }) }}>Velocity: {this.state.data.velocity}</Text>
+                <Text onPress={() => { this.setState({ explanationRequest: "period" }) }}>Period: {this.state.data.period}</Text>
             </View>
         );
     }
 
     renderExplanation = () => {
-        return(
+        return (
             <Text>
                 {messageDict[this.state.explanationRequest]}
             </Text>
@@ -80,12 +80,12 @@ export default class CustomInfoModal extends Component {
 
         return (
             <View>
-                <Modal isVisible={this.props.isModalVisible} 
+                <Modal isVisible={this.props.isModalVisible}
                     useNativeDriver={true}
                     onBackdropPress={this.props.closeModal}
                 >
                     <View style={styles.helpModal}>
-                        {this.renderTextInfo()}  
+                        {this.renderTextInfo()}
                         {this.renderExplanation()}
                     </View>
                 </Modal>

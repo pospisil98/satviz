@@ -85,10 +85,8 @@ export default class HelloWorldSceneAR extends Component {
 
         if (changed) {
             let rotation = this.getGlobeRotation();
-            
-            console.log(this.tracking);
-            console.log("ROTATION: " + rotation );
-
+            // console.log(this.tracking);
+            // console.log("ROTATION: " + rotation );
             this.setState({rotationAngle: rotation});
         }
     }

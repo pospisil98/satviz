@@ -2,20 +2,20 @@
 
 import React, { Component } from 'react';
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  Dimensions,
-  Button,
-  TouchableWithoutFeedback,
-  TouchableOpacity,
-  FlatList,
-  ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+    Dimensions,
+    Button,
+    TouchableWithoutFeedback,
+    TouchableOpacity,
+    FlatList,
+    ScrollView,
 } from 'react-native';
 
 import {
-  ViroARSceneNavigator
+    ViroARSceneNavigator
 } from 'react-viro';
 
 import SlidingPanel from 'react-native-sliding-up-down-panels';
@@ -37,381 +37,381 @@ const { width, height } = Dimensions.get('window');
 var InitialARScene = require('./js/HelloWorldSceneAR');
 
 export default class satviz extends Component {
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    this.myTextInput = React.createRef();
+        this.myTextInput = React.createRef();
 
-    this.state = {
-      selectedItems: [],
-      selectedItemsManual: [],
+        this.state = {
+            selectedItems: [],
+            selectedItemsManual: [],
 
-      helpModalVisible: false,
-      
-      satelliteModalVisible: false,
-      satelliteModalID: 0,
-      satelliteModalSatellite: null,
+            helpModalVisible: false,
 
-      slidingPanelToggled: false,
-      slidingPanelText: "Click to reveal satellite selection!",
+            satelliteModalVisible: false,
+            satelliteModalID: 0,
+            satelliteModalSatellite: null,
 
-      flashMessagePosition: "top",
-      flashMessageAutoHide: true,
-    };
-  }
+            slidingPanelToggled: false,
+            slidingPanelText: "Click to reveal satellite selection!",
 
-  onSelectedItemsChange = (selectedItems) => {
-    this.setState({ selectedItems });
-  };
-
-  toggleModal = () => {
-    this.setState({ helpModalVisible: !this.state.helpModalVisible });
-  };
-
-  satelliteModalSetIDCallback = (sat) => {
-    console.log(sat);
-
-    this.setState({ 
-      satelliteModalID: sat.id,
-      satelliteModalSatellite: sat,
-    });
-
-    this.toggleSatelliteModal();
-  }
-
-  toggleSatelliteModal = () => {
-    this.setState({ 
-      satelliteModalVisible: !this.state.satelliteModalVisible,
-    });
-  };
-
-
-  toggleSlidePanel = () => {
-    var toggledBeforeChange = this.state.slidingPanelToggled;
-
-    this.setState({ slidingPanelToggled: !toggledBeforeChange });
-
-    if (!toggledBeforeChange) {
-      this.setState({ slidingPanelText: "Click to hide satellite selection!" });
-    } else {
-      this.setState({ slidingPanelText: "Click to reveal satellite selection!" });
-    } 
-  };
-
-  addManual = () => {
-    if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
-      this.setState({selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText)});
-    } else {
-      this.setFlashMesageToSelectionError();
-
-      showMessage({
-        message: "Satellite with this ID is already selected!",
-        type: "danger",
-      });
+            flashMessagePosition: "top",
+            flashMessageAutoHide: true,
+        };
     }
 
-    this.myTextInput.current.clear();
-  }
+    onSelectedItemsChange = (selectedItems) => {
+        this.setState({ selectedItems });
+    };
 
-  removeManual = (value) => {
-    this.setState({selectedItemsManual: this.state.selectedItemsManual.filter(e => e != value)})
-  }
+    toggleModal = () => {
+        this.setState({ helpModalVisible: !this.state.helpModalVisible });
+    };
 
-  removeManualAll = () => {
-    this.setState({selectedItemsManual: []});
-  }
+    satelliteModalSetIDCallback = (sat) => {
+        console.log(sat);
 
-  setFlashMesageToSelectionError = () => {
-    this.setState({
-      flashMessageAutoHide: true,
-      flashMessagePosition: "top",
-    });
-  }
+        this.setState({
+            satelliteModalID: sat.id,
+            satelliteModalSatellite: sat,
+        });
 
-  render() {
-    return (
-      <View style={styles.container}>                 
+        this.toggleSatelliteModal();
+    }
 
-        <ViroARSceneNavigator
-          style={styles.arView}
-          autofocus={true}
-          shadowsEnabled={true}
-          initialScene={{scene: InitialARScene}}
-          viroAppProps = {{
-            satelliteClickCallback: this.satelliteModalSetIDCallback,
-            satelliteIDs:   this.state.selectedItems.concat(this.state.selectedItemsManual),
-            timeScale: this.state.timeSpeedSliderValue,
-          }}
-        />     
-        
-        <Modal 
-          isVisible={this.state.helpModalVisible}
-          useNativeDriver={true}
-          onBackdropPress={this.toggleModal}
-        >
-          <View style={styles.helpModal}>
-            <Text>Informace o aplikaci</Text>
-            <Text>Stručné info o používání a že to je moje BP</Text>
-            <View style={styles.infoModalCloseButton}>
-              <Button title="Hide modal" onPress={this.toggleModal}/>
-            </View>
-          </View>
-        </Modal>
+    toggleSatelliteModal = () => {
+        this.setState({
+            satelliteModalVisible: !this.state.satelliteModalVisible,
+        });
+    };
 
-        <TouchableOpacity onPress={this.toggleModal} style={styles.modalIcon}>
-          <Icon name="info" size={30} color="grey"/>
-        </TouchableOpacity>
-            
-        <View style={styles.bodyViewStyle}>            
-            <CustomInfoModal 
-              satellite={this.state.satelliteModalSatellite} 
-              isModalVisible={this.state.satelliteModalVisible} 
-              closeModal={() => this.toggleSatelliteModal()}
-            >
-            </CustomInfoModal>
-        </View>
-      
-        <SlidingPanel
-            headerLayoutHeight = {50}
-            onAnimationStop={this.toggleSlidePanel}
-            headerLayout = { () =>
-                <View style={styles.headerLayoutStyle}>
-                  <Text style={styles.commonTextStyle}>{this.state.slidingPanelText}</Text>
-                </View>
-            }
-            
-            slidingPanelLayout = { () =>
-                <View style={styles.slidingPanelLayoutStyle}>
-                    <View style={{flex: 1}}>
-                      <ScrollView style={{flex: 1}}>
-                        <SectionedMultiSelect
-                        items={items.default}
-                        uniqueKey="id"
-                        subKey="children"
-                        selectText="Choose from catogories.."
-                        showDropDowns={true}
-                        readOnlyHeadings={false}
-                        selectChildren={true}
-                        showRemoveAll={true}
-                        onSelectedItemsChange={this.onSelectedItemsChange}
-                        selectedItems={this.state.selectedItems}
-                        />
 
-                        <View
-                          style={{
-                            borderBottomColor: 'black',
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            marginTop: 10,
-                            marginBottom: 10,
-                          }}
-                        />
+    toggleSlidePanel = () => {
+        var toggledBeforeChange = this.state.slidingPanelToggled;
 
-                        <View 
-                          style={{
-                            flexDirection: 'row',
-                            flexWrap: 'wrap',
-                          }}
-                        >
-                          <TextInput
-                            style={{
-                              height: 40,
-                              width: '70%',
-                              paddingLeft: '3%',
-                            }}
-                            placeholder="Choose manualy by satellite ID"
-                            ref={this.myTextInput}
-                            keyboardType='numeric'
-                            value={this.state.text}
-                          />
-                          <View style={{width: '20%', }}>
-                            <Button title="Add!" onPress={this.addManual}/>  
-                          </View>
+        this.setState({ slidingPanelToggled: !toggledBeforeChange });
+
+        if (!toggledBeforeChange) {
+            this.setState({ slidingPanelText: "Click to hide satellite selection!" });
+        } else {
+            this.setState({ slidingPanelText: "Click to reveal satellite selection!" });
+        }
+    };
+
+    addManual = () => {
+        if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
+            this.setState({ selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText) });
+        } else {
+            this.setFlashMesageToSelectionError();
+
+            showMessage({
+                message: "Satellite with this ID is already selected!",
+                type: "danger",
+            });
+        }
+
+        this.myTextInput.current.clear();
+    }
+
+    removeManual = (value) => {
+        this.setState({ selectedItemsManual: this.state.selectedItemsManual.filter(e => e != value) })
+    }
+
+    removeManualAll = () => {
+        this.setState({ selectedItemsManual: [] });
+    }
+
+    setFlashMesageToSelectionError = () => {
+        this.setState({
+            flashMessageAutoHide: true,
+            flashMessagePosition: "top",
+        });
+    }
+
+    render() {
+        return (
+            <View style={styles.container}>
+
+                <ViroARSceneNavigator
+                    style={styles.arView}
+                    autofocus={true}
+                    shadowsEnabled={true}
+                    initialScene={{ scene: InitialARScene }}
+                    viroAppProps={{
+                        satelliteClickCallback: this.satelliteModalSetIDCallback,
+                        satelliteIDs: this.state.selectedItems.concat(this.state.selectedItemsManual),
+                        timeScale: this.state.timeSpeedSliderValue,
+                    }}
+                />
+
+                <Modal
+                    isVisible={this.state.helpModalVisible}
+                    useNativeDriver={true}
+                    onBackdropPress={this.toggleModal}
+                >
+                    <View style={styles.helpModal}>
+                        <Text>Informace o aplikaci</Text>
+                        <Text>Stručné info o používání a že to je moje BP</Text>
+                        <View style={styles.infoModalCloseButton}>
+                            <Button title="Hide modal" onPress={this.toggleModal} />
                         </View>
-
-                          <View
-                            style={{
-                              flexWrap: 'wrap',
-                              alignItems: 'center',
-                              justifyContent: 'flex-start',
-                              flexDirection: 'row',
-                            }}
-                          >
-                          {
-                            this.state.selectedItemsManual.length > 1 ? (
-                              <View
-                                style={{
-                                  overflow: 'hidden',
-                                  justifyContent: 'center',
-                                  height: 34,
-                                  borderColor: colors.selectedBubble,
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  paddingLeft: 10,
-                                  margin: 3,
-                                  paddingTop: 0,
-                                  paddingRight: 10,
-                                  paddingBottom: 0,
-                                  borderRadius: 20,
-                                  borderWidth: 1,
-                                }}
-                              >
-                                <TouchableOpacity
-                                  onPress={() => {
-                                    this.removeManualAll()
-                                  }}
-                                  style={{
-                                    borderTopRightRadius: 20,
-                                    borderBottomRightRadius: 20,
-                                  }}
-                                >
-                                  <Text
-                                    style={{
-                                      color: colors.selectedBubble,
-                                      fontSize: 13,
-                                      marginRight: 0,
-                                    }}
-                                  >
-                                    Remove All
-                                  </Text>
-                                </TouchableOpacity>
-                              </View>
-                            ) : null
-                          }
-
-                          { 
-                            this.state.selectedItemsManual.map((item, key) => (
-                              <View
-                                style={{
-                                  overflow: 'hidden',
-                                  justifyContent: 'center',
-                                  height: 34,
-                                  borderWidth: 1,
-                                  borderRadius: 20,
-                                  borderColor: colors.selectedBubble,
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  paddingLeft: 10,
-                                  margin: 3,
-                                  paddingTop: 0,
-                                  paddingRight:  0,
-                                  paddingBottom: 0,
-                                  color: colors.selectedBubble,
-                                }}
-                                key={key}
-                              >
-                                <Text
-                                  numberOfLines={1}
-                                  style={{
-                                    fontSize: 13,
-                                    marginRight: 0,
-                                    color: colors.selectedBubble,
-                                  }}
-                                >
-                                  {item}
-                                </Text>
-                                <TouchableOpacity
-                                  onPress={() => this.removeManual(item)}
-                                  style={{
-                                    borderTopRightRadius: 20,
-                                    borderBottomRightRadius: 20,
-                                  }}
-                                >
-                                  <Icon
-                                    name="x"
-                                    style={{
-                                      fontSize: 16,
-                                      marginHorizontal: 6,
-                                      marginVertical: 7,
-                                      color: colors.selectedBubble,
-                                    }}
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            ))
-                          }
-                          </View>
-
-                          <View>
-                            <Text>Set time speed (x times normal) (1-20)</Text>
-                            <Slider
-                              value={this.state.timeSpeedSliderValue}
-                              minimumValue={1}
-                              maximumValue={1000}
-
-                              onSlidingComplete={(val) => this.setState({timeSpeedSliderValue: val})}
-                            />
-                          </View>
-
-                          <View style={{paddingBottom: 400}}></View>
-                        </ScrollView>
                     </View>
-                </View>
-            }
-        />
+                </Modal>
 
-        <FlashMessage
-          position={this.state.flashMessagePosition}
-          autoHide={this.state.flashMessageAutoHide}
-        />
-      </View>
-    );
-  }
+                <TouchableOpacity onPress={this.toggleModal} style={styles.modalIcon}>
+                    <Icon name="info" size={30} color="grey" />
+                </TouchableOpacity>
+
+                <View style={styles.bodyViewStyle}>
+                    <CustomInfoModal
+                        satellite={this.state.satelliteModalSatellite}
+                        isModalVisible={this.state.satelliteModalVisible}
+                        closeModal={() => this.toggleSatelliteModal()}
+                    >
+                    </CustomInfoModal>
+                </View>
+
+                <SlidingPanel
+                    headerLayoutHeight={50}
+                    onAnimationStop={this.toggleSlidePanel}
+                    headerLayout={() =>
+                        <View style={styles.headerLayoutStyle}>
+                            <Text style={styles.commonTextStyle}>{this.state.slidingPanelText}</Text>
+                        </View>
+                    }
+
+                    slidingPanelLayout={() =>
+                        <View style={styles.slidingPanelLayoutStyle}>
+                            <View style={{ flex: 1 }}>
+                                <ScrollView style={{ flex: 1 }}>
+                                    <SectionedMultiSelect
+                                        items={items.default}
+                                        uniqueKey="id"
+                                        subKey="children"
+                                        selectText="Choose from catogories.."
+                                        showDropDowns={true}
+                                        readOnlyHeadings={false}
+                                        selectChildren={true}
+                                        showRemoveAll={true}
+                                        onSelectedItemsChange={this.onSelectedItemsChange}
+                                        selectedItems={this.state.selectedItems}
+                                    />
+
+                                    <View
+                                        style={{
+                                            borderBottomColor: 'black',
+                                            borderBottomWidth: StyleSheet.hairlineWidth,
+                                            marginTop: 10,
+                                            marginBottom: 10,
+                                        }}
+                                    />
+
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            flexWrap: 'wrap',
+                                        }}
+                                    >
+                                        <TextInput
+                                            style={{
+                                                height: 40,
+                                                width: '70%',
+                                                paddingLeft: '3%',
+                                            }}
+                                            placeholder="Choose manualy by satellite ID"
+                                            ref={this.myTextInput}
+                                            keyboardType='numeric'
+                                            value={this.state.text}
+                                        />
+                                        <View style={{ width: '20%', }}>
+                                            <Button title="Add!" onPress={this.addManual} />
+                                        </View>
+                                    </View>
+
+                                    <View
+                                        style={{
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-start',
+                                            flexDirection: 'row',
+                                        }}
+                                    >
+                                        {
+                                            this.state.selectedItemsManual.length > 1 ? (
+                                                <View
+                                                    style={{
+                                                        overflow: 'hidden',
+                                                        justifyContent: 'center',
+                                                        height: 34,
+                                                        borderColor: colors.selectedBubble,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        paddingLeft: 10,
+                                                        margin: 3,
+                                                        paddingTop: 0,
+                                                        paddingRight: 10,
+                                                        paddingBottom: 0,
+                                                        borderRadius: 20,
+                                                        borderWidth: 1,
+                                                    }}
+                                                >
+                                                    <TouchableOpacity
+                                                        onPress={() => {
+                                                            this.removeManualAll()
+                                                        }}
+                                                        style={{
+                                                            borderTopRightRadius: 20,
+                                                            borderBottomRightRadius: 20,
+                                                        }}
+                                                    >
+                                                        <Text
+                                                            style={{
+                                                                color: colors.selectedBubble,
+                                                                fontSize: 13,
+                                                                marginRight: 0,
+                                                            }}
+                                                        >
+                                                            Remove All
+                                  </Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ) : null
+                                        }
+
+                                        {
+                                            this.state.selectedItemsManual.map((item, key) => (
+                                                <View
+                                                    style={{
+                                                        overflow: 'hidden',
+                                                        justifyContent: 'center',
+                                                        height: 34,
+                                                        borderWidth: 1,
+                                                        borderRadius: 20,
+                                                        borderColor: colors.selectedBubble,
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        paddingLeft: 10,
+                                                        margin: 3,
+                                                        paddingTop: 0,
+                                                        paddingRight: 0,
+                                                        paddingBottom: 0,
+                                                        color: colors.selectedBubble,
+                                                    }}
+                                                    key={key}
+                                                >
+                                                    <Text
+                                                        numberOfLines={1}
+                                                        style={{
+                                                            fontSize: 13,
+                                                            marginRight: 0,
+                                                            color: colors.selectedBubble,
+                                                        }}
+                                                    >
+                                                        {item}
+                                                    </Text>
+                                                    <TouchableOpacity
+                                                        onPress={() => this.removeManual(item)}
+                                                        style={{
+                                                            borderTopRightRadius: 20,
+                                                            borderBottomRightRadius: 20,
+                                                        }}
+                                                    >
+                                                        <Icon
+                                                            name="x"
+                                                            style={{
+                                                                fontSize: 16,
+                                                                marginHorizontal: 6,
+                                                                marginVertical: 7,
+                                                                color: colors.selectedBubble,
+                                                            }}
+                                                        />
+                                                    </TouchableOpacity>
+                                                </View>
+                                            ))
+                                        }
+                                    </View>
+
+                                    <View>
+                                        <Text>Set time speed (x times normal) (1-20)</Text>
+                                        <Slider
+                                            value={this.state.timeSpeedSliderValue}
+                                            minimumValue={1}
+                                            maximumValue={1000}
+
+                                            onSlidingComplete={(val) => this.setState({ timeSpeedSliderValue: val })}
+                                        />
+                                    </View>
+
+                                    <View style={{ paddingBottom: 400 }}></View>
+                                </ScrollView>
+                            </View>
+                        </View>
+                    }
+                />
+
+                <FlashMessage
+                    position={this.state.flashMessagePosition}
+                    autoHide={this.state.flashMessageAutoHide}
+                />
+            </View>
+        );
+    }
 }
 
 module.exports = satviz
 
 const colors = {
-  selectedBubble: '#848787',
+    selectedBubble: '#848787',
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  bodyViewStyle: {
-    flex: 1,
-    position: 'absolute',
-    justifyContent: 'center', 
-    alignItems: 'center',
-  },
-  arView: {
-    flex: 1,
-    position: 'absolute',
-    height: '100%',
-  },
-  headerLayoutStyle: {
-    width, 
-    height: 50, 
-    backgroundColor: 'grey', 
-    justifyContent: 'center', 
-    alignItems: 'center',
-  },
-  slidingPanelLayoutStyle: {
-    width, 
-    height, 
-    backgroundColor: '#ffffff', 
-  },
-  commonTextStyle: {
-    color: 'white', 
-    fontSize: 18,
-  },
+    container: {
+        flex: 1,
+    },
+    bodyViewStyle: {
+        flex: 1,
+        position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    arView: {
+        flex: 1,
+        position: 'absolute',
+        height: '100%',
+    },
+    headerLayoutStyle: {
+        width,
+        height: 50,
+        backgroundColor: 'grey',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    slidingPanelLayoutStyle: {
+        width,
+        height,
+        backgroundColor: '#ffffff',
+    },
+    commonTextStyle: {
+        color: 'white',
+        fontSize: 18,
+    },
 
-  modalIcon: {
-    position: 'absolute',
-    right: '5%',
-    top: '2%',
-  },
-  helpModal: {
-    backgroundColor: "white",
-    marginHorizontal: '10%',
-    height: '50%',
-    textAlign: 'center',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
+    modalIcon: {
+        position: 'absolute',
+        right: '5%',
+        top: '2%',
+    },
+    helpModal: {
+        backgroundColor: "white",
+        marginHorizontal: '10%',
+        height: '50%',
+        textAlign: 'center',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
 
-  infoModalCloseButton: {
-    marginTop: '30%',
-    width: '50%',
-  },
+    infoModalCloseButton: {
+        marginTop: '30%',
+        width: '50%',
+    },
 });
