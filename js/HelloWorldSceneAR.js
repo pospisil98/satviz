@@ -43,7 +43,7 @@ export default class HelloWorldSceneAR extends Component {
 
             rotationAngle: 0,
             globeDetected: false,
-            globePosition: [0.0, 0.0, 0.0],
+            globePosition: null,
         };
 
         this.tracking = [];
@@ -64,8 +64,11 @@ export default class HelloWorldSceneAR extends Component {
     }
 
     modifyGlobePosition = (position) => {
+        console.log("DETECTED POSITION");
+        console.log(position);
+
         // move Z coord into center of globe
-        position[2] = position[2] - 0.1;
+        position[2] = position[2] - 0.05;
 
         if (this.positionModCount === 0) {
             this.setState({globePosition: position,});
@@ -75,8 +78,9 @@ export default class HelloWorldSceneAR extends Component {
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
 
+            console.log("COMPUTED POS");
             console.log(newPos);
-
+            
             this.setState({globePosition: newPos,});
         }
 
@@ -160,6 +164,20 @@ export default class HelloWorldSceneAR extends Component {
         return targets;
     }
 
+    renderGlobe = () => {
+        if (this.state.globeDetected && this.globePosition !== null) {
+            return(
+                <ViroNode position={this.state.globePosition}>
+                    <Globe
+                        satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
+                        satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
+                        timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
+                    />
+                </ViroNode>
+            );
+        }
+    }
+
     render() {
         return (
             <ViroARScene onTrackingUpdated={this._onInitialized} >
@@ -177,7 +195,9 @@ export default class HelloWorldSceneAR extends Component {
 
                 {this.renderTargets()}
 
-                {this.renderSphere()}
+                {this.renderGlobe()}
+
+                {/*this.renderSphere()*/}
             </ViroARScene>
         );
     }

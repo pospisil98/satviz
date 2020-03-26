@@ -158,7 +158,8 @@ export default class Globe extends React.Component {
         let modelList = this.getSatellitesToRender();        
 
         return (
-            <ViroNode position={[0, 0.2, 0]}>
+            /*<ViroNode position={[0, 0.2, 0]}>*/
+            <ViroNode position={[0, 0, 0]}>
                 <ViroAmbientLight color="#FFFFFF" />
 
                 <Viro3DObject source={require('../res/earth.obj')}
