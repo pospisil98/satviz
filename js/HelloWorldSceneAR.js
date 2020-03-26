@@ -177,10 +177,7 @@ export default class HelloWorldSceneAR extends Component {
 
                 {this.renderTargets()}
 
-                {/*
-                    Renders sphere on place of globe
-                    this.renderSphere()
-                */}
+                {this.renderSphere()}
             </ViroARScene>
         );
     }

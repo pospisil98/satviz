@@ -124,7 +124,7 @@ export default class Globe extends React.Component {
         this.props.satelliteClickCallback(this.selectSatelliteObjectById(id));
     }
 
-    renderGlobe = () => {
+    getSatellitesToRender = () => {
         let modelList;
 
         if (!this.loading) {
@@ -150,6 +150,12 @@ export default class Globe extends React.Component {
                 )
             })
         }
+
+        return modelList;
+    }
+
+    renderGlobe = () => {
+        let modelList = this.getSatellitesToRender();        
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
