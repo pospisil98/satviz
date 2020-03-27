@@ -48,6 +48,8 @@ export default class HelloWorldSceneAR extends Component {
 
         this.tracking = [];
         this.positionModCount = 0;
+
+        this.renderDisabled = true;
     }
 
     getGlobeRotation = () => {
@@ -65,7 +67,7 @@ export default class HelloWorldSceneAR extends Component {
 
     modifyGlobePosition = (position) => {
         // move Z coord into center of globe
-        position[2] = position[2] - 0.05;
+        position[2] = position[2] - 0.07;
 
         if (this.positionModCount === 0) {
             this.setState({globePosition: position,});
@@ -88,6 +90,8 @@ export default class HelloWorldSceneAR extends Component {
         let changed = false;
 
         if (e.trackingMethod === "tracking") {
+            this.renderDisabled = false;
+
             if (targetName === "flatTarget") {
                 this.setState({globePosition: e.position,});
                 return;
@@ -163,15 +167,21 @@ export default class HelloWorldSceneAR extends Component {
     }
 
     renderGlobe = () => {
+        if (this.renderDisabled) {
+            return(<ViroNode></ViroNode>);
+        }
+
         let position = this.state.globePosition;
         let flatTarget = true;
+        let rotation = [0, 0, 0];
 
         if (this.state.globeDetected) {
             flatTarget = false;
+            rotation = [0, 0, this.state.rotationAngle];
         }
 
         return(
-            <ViroNode position={position}>
+            <ViroNode position={position} rotation={rotation}>
                 <Globe
                     satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
                     satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}

@@ -214,8 +214,6 @@ export default class Globe extends React.Component {
     }
 
     render() {
-        console.log("props");
-        console.log(this.props);
         return (
             <View>
                 {this.renderGlobe()}

@@ -71,8 +71,6 @@ export default class satviz extends Component {
     };
 
     satelliteModalSetIDCallback = (sat) => {
-        console.log(sat);
-
         this.setState({
             satelliteModalID: sat.id,
             satelliteModalSatellite: sat,
