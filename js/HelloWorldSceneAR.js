@@ -64,9 +64,6 @@ export default class HelloWorldSceneAR extends Component {
     }
 
     modifyGlobePosition = (position) => {
-        console.log("DETECTED POSITION");
-        console.log(position);
-
         // move Z coord into center of globe
         position[2] = position[2] - 0.05;
 
@@ -77,9 +74,6 @@ export default class HelloWorldSceneAR extends Component {
             newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
-
-            console.log("COMPUTED POS");
-            console.log(newPos);
             
             this.setState({globePosition: newPos,});
         }
@@ -88,15 +82,21 @@ export default class HelloWorldSceneAR extends Component {
     }
 
     _onAnchorFound = (e, targetName) => {
-        if (!this.state.globeDetected) {
-            this.setState({globeDetected: true});
-        }
     }
 
     _onAnchorUpdated = (e, targetName) => {
         let changed = false;
 
         if (e.trackingMethod === "tracking") {
+            if (targetName === "flatTarget") {
+                this.setState({globePosition: e.position,});
+                return;
+            }
+
+            if (!this.state.globeDetected && targetName !== "flatTarget") {
+                this.setState({globeDetected: true});
+            }
+
             // add target name to tracking if not there
             if (!this.tracking.includes(targetName)) {
                 this.tracking = [...this.tracking, targetName];
@@ -115,8 +115,6 @@ export default class HelloWorldSceneAR extends Component {
 
         if (changed) {
             let rotation = this.getGlobeRotation();
-            // console.log(this.tracking);
-            // console.log("ROTATION: " + rotation );
             this.setState({rotationAngle: rotation});
         }
     }
@@ -165,17 +163,23 @@ export default class HelloWorldSceneAR extends Component {
     }
 
     renderGlobe = () => {
-        if (this.state.globeDetected && this.globePosition !== null) {
-            return(
-                <ViroNode position={this.state.globePosition}>
-                    <Globe
-                        satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
-                        satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
-                        timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
-                    />
-                </ViroNode>
-            );
+        let position = this.state.globePosition;
+        let flatTarget = true;
+
+        if (this.state.globeDetected) {
+            flatTarget = false;
         }
+
+        return(
+            <ViroNode position={position}>
+                <Globe
+                    satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
+                    satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
+                    timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
+                    flatTarget={flatTarget}
+                />
+            </ViroNode>
+        );
     }
 
     render() {
@@ -185,13 +189,7 @@ export default class HelloWorldSceneAR extends Component {
                 <ViroSpotLight innerAngle={5} outerAngle={90} direction={[0, -1, -.2]}
                     position={[0, 3, 1]} color="#ffffff" castsShadow={true} />
 
-                <ViroARImageMarker target={"targetOne"} >
-                    <Globe
-                        satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
-                        satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
-                        timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
-                    />
-                </ViroARImageMarker>
+                <ViroARImageMarker target={"flatTarget"} onAnchorUpdated={(e) => this._onAnchorUpdated(e, "flatTarget")} />
 
                 {this.renderTargets()}
 
@@ -204,7 +202,7 @@ export default class HelloWorldSceneAR extends Component {
 }
 
 ViroARTrackingTargets.createTargets({
-    "targetOne": {
+    "flatTarget": {
         source: require('./res/targets/earthFlat.png'),
         orientation: "Up",
         physicalWidth: 0.2 // real world width in meters

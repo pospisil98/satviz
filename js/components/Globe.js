@@ -10,6 +10,7 @@ import {
     ViroNode,
     Viro3DObject,
     ViroAmbientLight,
+    ViroSphere,
 } from 'react-viro';
 
 import SpaceTrack from '../SpaceTrack';
@@ -154,17 +155,16 @@ export default class Globe extends React.Component {
         return modelList;
     }
 
-    renderGlobe = () => {
-        let modelList = this.getSatellitesToRender();        
+    renderFlatTargetGlobe = () => {
+        let modelList = this.getSatellitesToRender();
 
         return (
-            /*<ViroNode position={[0, 0.2, 0]}>*/
-            <ViroNode position={[0, 0, 0]}>
+            <ViroNode position={[0, 0.2, 0]}>
                 <ViroAmbientLight color="#FFFFFF" />
 
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
-                    require('../res/earth_texture.png')]}
+                        require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.025, 0.025, 0.025]}
                     rotation={[180, 0, -180]}
@@ -176,7 +176,46 @@ export default class Globe extends React.Component {
         );
     }
 
+    renderGlobeTargetGlobe = () => {
+        let modelList = this.getSatellitesToRender();
+
+        return (
+            <ViroNode position={[0, 0, 0]}>
+                <ViroAmbientLight color="#FFFFFF" />
+
+                {/*<Viro3DObject source={require('../res/earth.obj')}
+                    resources={[require('../res/earth.mtl'),
+                        require('../res/earth_texture.png')]}
+                    position={[0.0, 0.0, 0.0]}
+                    scale={[0.08, 0.08, 0.08]}
+                    rotation={[180, 0, -180]}
+                    type="OBJ"
+                />*/}
+
+                <ViroSphere
+                    heightSegmentCount={20}
+                    widthSegmentCount={20}
+                    radius={0.17}
+                    position={[0, 0, 0]}
+                    materials={["mat"]}
+                />
+
+                {modelList}
+            </ViroNode>
+        );
+    }
+
+    renderGlobe = () => {
+        if (this.props.flatTarget) {
+            return this.renderFlatTargetGlobe();
+        } else {
+            return  this.renderGlobeTargetGlobe();
+        }
+    }
+
     render() {
+        console.log("props");
+        console.log(this.props);
         return (
             <View>
                 {this.renderGlobe()}
@@ -216,5 +255,8 @@ ViroMaterials.createMaterials({
     iss: {
         lightingModel: "Blinn",
         diffuseColor: '#6e6e6e'
+    },
+    mat: {
+
     }
 });

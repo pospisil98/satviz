@@ -55,6 +55,8 @@ export default class satviz extends Component {
             slidingPanelToggled: false,
             slidingPanelText: "Click to reveal satellite selection!",
 
+            timeSpeedSliderValue: 1,
+
             flashMessagePosition: "top",
             flashMessageAutoHide: true,
         };
