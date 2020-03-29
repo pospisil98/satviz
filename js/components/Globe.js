@@ -183,15 +183,24 @@ export default class Globe extends React.Component {
             <ViroNode position={[0, 0, 0]}>
                 <ViroAmbientLight color="#FFFFFF" />
 
-                {/*<Viro3DObject source={require('../res/earth.obj')}
+                {/*
+                <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
                         require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.08, 0.08, 0.08]}
                     rotation={[180, 0, -180]}
                     type="OBJ"
-                />*/}
-
+                />
+                
+                <ViroSphere
+                    heightSegmentCount={20}
+                    widthSegmentCount={20}
+                    radius={0.17}
+                    position={[0, 0, 0]}
+                    materials={["mat"]}
+                />
+                */}
                 <ViroSphere
                     heightSegmentCount={20}
                     widthSegmentCount={20}
@@ -215,9 +224,9 @@ export default class Globe extends React.Component {
 
     render() {
         return (
-            <View>
+            <ViroNode>
                 {this.renderGlobe()}
-            </View>
+            </ViroNode>
         );
     }
 

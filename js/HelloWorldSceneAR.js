@@ -41,7 +41,7 @@ export default class HelloWorldSceneAR extends Component {
         this.state = {
             text: "Initializing AR...",
 
-            rotationAngle: 0,
+            globeRotation: [0, 0, 0],
             globeDetected: false,
             globePosition: null,
         };
@@ -54,7 +54,7 @@ export default class HelloWorldSceneAR extends Component {
 
     getGlobeRotation = () => {
         if (this.tracking.length === 0) {
-            return this.state.rotationAngle;
+            return this.state.globeRotation;
         }
 
         let sum = 0;
@@ -62,7 +62,7 @@ export default class HelloWorldSceneAR extends Component {
             sum += angles[element];
         });
 
-        return sum / this.tracking.length;
+        return [0, sum / this.tracking.length, 0];
     }
 
     modifyGlobePosition = (position) => {
@@ -72,10 +72,22 @@ export default class HelloWorldSceneAR extends Component {
         if (this.positionModCount === 0) {
             this.setState({globePosition: position,});
         } else {
+
+            if (this.positionModCount > 30) {
+                return;
+            }
+
             let newPos = [];
+            
             newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
+            
+            /*
+           newPos[0] = ((this.state.globePosition[0]) + position[0]) / 2;
+           newPos[1] = ((this.state.globePosition[1]) + position[1]) / 2;
+           newPos[2] = ((this.state.globePosition[2]) + position[2]) / 2;
+           */
             
             this.setState({globePosition: newPos,});
         }
@@ -93,7 +105,7 @@ export default class HelloWorldSceneAR extends Component {
             this.renderDisabled = false;
 
             if (targetName === "flatTarget") {
-                this.setState({globePosition: e.position,});
+                this.setState({globePosition: e.position, globeRotation: e.rotation});
                 return;
             }
 
@@ -119,7 +131,7 @@ export default class HelloWorldSceneAR extends Component {
 
         if (changed) {
             let rotation = this.getGlobeRotation();
-            this.setState({rotationAngle: rotation});
+            this.setState({globeRotation: rotation});
         }
     }
 
@@ -173,13 +185,12 @@ export default class HelloWorldSceneAR extends Component {
 
         let position = this.state.globePosition;
         let flatTarget = true;
-        let rotation = [0, 0, 0];
+        let rotation = this.state.globeRotation;
 
         if (this.state.globeDetected) {
             flatTarget = false;
-            rotation = [0, 0, this.state.rotationAngle];
         }
-
+        
         return(
             <ViroNode position={position} rotation={rotation}>
                 <Globe
