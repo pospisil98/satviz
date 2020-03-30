@@ -47,6 +47,7 @@ export default class HelloWorldSceneAR extends Component {
         };
 
         this.tracking = [];
+        this.lastDetected = null;
         this.positionModCount = 0;
 
         this.renderDisabled = true;
@@ -59,10 +60,14 @@ export default class HelloWorldSceneAR extends Component {
 
         let sum = 0;
         this.tracking.forEach(element => {
-            sum += angles[element];
+            // -15 is because of "default pose" of globe where africa is in front of camera
+            sum += (angles[element] - 15);
         });
 
-        return [0, sum / this.tracking.length, 0];
+        let angle = sum / this.tracking.length;
+
+        //negative angle is because rotation has opposite direction than angles on globe
+        return [0, -angle, 0];
     }
 
     modifyGlobePosition = (position) => {
@@ -72,8 +77,7 @@ export default class HelloWorldSceneAR extends Component {
         if (this.positionModCount === 0) {
             this.setState({globePosition: position,});
         } else {
-
-            if (this.positionModCount > 30) {
+            if (this.positionModCount > 3) {
                 return;
             }
 
@@ -115,7 +119,13 @@ export default class HelloWorldSceneAR extends Component {
 
             // add target name to tracking if not there
             if (!this.tracking.includes(targetName)) {
-                this.tracking = [...this.tracking, targetName];
+                this.lastDetected = targetName;
+                this.tracking.push(targetName);
+
+                if (this.tracking.length > 3) {
+                    this.tracking.shift();
+                }
+                
                 changed = true;
             }
 
@@ -130,6 +140,8 @@ export default class HelloWorldSceneAR extends Component {
         }
 
         if (changed) {
+            console.log(this.tracking);
+
             let rotation = this.getGlobeRotation();
             this.setState({globeRotation: rotation});
         }
@@ -190,7 +202,7 @@ export default class HelloWorldSceneAR extends Component {
         if (this.state.globeDetected) {
             flatTarget = false;
         }
-        
+
         return(
             <ViroNode position={position} rotation={rotation}>
                 <Globe
