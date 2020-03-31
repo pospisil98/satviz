@@ -100,7 +100,8 @@ export default class satviz extends Component {
 
     addManual = () => {
         if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
-            this.setState({ selectedItemsManual: this.state.selectedItemsManual.concat(this.myTextInput.current._lastNativeText) });
+
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.myTextInput.current._lastNativeText)});
         } else {
             this.setFlashMesageToSelectionError();
 
@@ -139,7 +140,7 @@ export default class satviz extends Component {
                     initialScene={{ scene: InitialARScene }}
                     viroAppProps={{
                         satelliteClickCallback: this.satelliteModalSetIDCallback,
-                        satelliteIDs: this.state.selectedItems.concat(this.state.selectedItemsManual),
+                        satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
                         timeScale: this.state.timeSpeedSliderValue,
                     }}
                 />

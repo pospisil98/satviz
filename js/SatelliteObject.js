@@ -1,7 +1,7 @@
 'use-strict';
 
 var descriptions = {
-    //   25544: "ISS",
+    // 25544: "ISS",
     28129: "GPS"
 }
 
@@ -71,14 +71,29 @@ export default class SatelliteObject {
         this.velocity = propagation.velocity;
         this.positionEci = propagation.position;
         this.position = this.mapPositionToRange(propagation.position);
+
+        console.log("POSITION BEF");
+        console.log(propagation.position);
+        console.log("POSITION AFT");
+        console.log(this.position);
     }
 
     mapPositionToRange = (value) => {
-        const denominator = 100000;
+        const denominator = 25000;
+        const base = 10000;
 
-        x = this.clampCoord(value.x / denominator);
-        y = this.clampCoord(value.y / denominator);
-        z = this.clampCoord(value.z / denominator);
+        x = value.x / denominator;
+        y = value.y / denominator;
+        z = value.z / denominator;
+
+        /*
+        x = Math.log(Math.abs(value.x)) / Math.log(base);
+        y = Math.log(Math.abs(value.y)) / Math.log(base);
+        z = Math.log(Math.abs(value.z)) / Math.log(base);
+
+        value.x < 0 ? x = -x : x = x;
+        value.y < 0 ? y = -y : y = y;
+        value.z < 0 ? z = -z : z = z; */
 
         return [x, y, z];
     }
@@ -90,8 +105,8 @@ export default class SatelliteObject {
         formated.apogee = data.apogee.toFixed(2).toString() + ' km';
         formated.perigee = data.perigee.toFixed(2).toString() + ' km';
         formated.inclination = this.deg_to_dms(this.radians_to_degrees(data.inclination));
-        formated.latitude = this.deg_to_dms(data.positionGeodetic.latitude);
-        formated.longitude = this.deg_to_dms(data.positionGeodetic.longitude);
+        formated.latitude = satellite.degreesLat(data.positionGeodetic.latitude).toFixed(3);
+        formated.longitude = satellite.degreesLong(data.positionGeodetic.longitude).toFixed(3);
         formated.height = data.positionGeodetic.height.toFixed(2).toString() + ' km';
         formated.velocity = data.velocity.toFixed(2).toString() + ' km/s';
         formated.period = data.period.toFixed(0).toString() + ' min';
@@ -122,16 +137,6 @@ export default class SatelliteObject {
         data.velocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2) + Math.pow(this.velocity.z, 2));
 
         return this.formatSelectedDataForModal(data);
-    }
-
-    clampCoord = (value) => {
-        const earthStart = 0.003;
-
-        if (value > 0) {
-            return (value + earthStart);
-        } else {
-            return (value - earthStart);
-        }
     }
 
     getIntlDes = () => {

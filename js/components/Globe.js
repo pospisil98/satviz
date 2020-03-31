@@ -34,13 +34,21 @@ export default class Globe extends React.Component {
             phi: 0,
             satellites: []
         }
+
+        this.modelListRotation = [0, 0, 0];
+        if (this.props.flatTarget) {
+            this.modelListRotation = [0, 0, 0];
+        } else {
+            this.modelListRotation = [0, 70, 0];
+        }
+
         this.time = new Date();
         this.ST = new SpaceTrack();
 
         this.loading = false;
 
         // start update positions every second
-        this.moveTimer = setInterval(this.updatePositions, 500);
+        this.moveTimer = setInterval(this.updatePositions, 300);
 
         this.clock = new Clock();
     }
@@ -172,7 +180,9 @@ export default class Globe extends React.Component {
                     type="OBJ"
                 />
 
-                {modelList}
+                <ViroNode rotation={this.modelListRotation}>
+                    {modelList}
+                </ViroNode>
             </ViroNode>
         );
     }
@@ -211,7 +221,9 @@ export default class Globe extends React.Component {
                     type="OBJ"
                 />
 
-                {modelList}
+                <ViroNode rotation={this.modelListRotation} scale={[3, 3, 3]}>
+                    {modelList}
+                </ViroNode>
             </ViroNode>
         );
     }

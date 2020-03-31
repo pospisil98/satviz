@@ -44,6 +44,10 @@ export default class HelloWorldSceneAR extends Component {
             globeRotation: [0, 0, 0],
             globeDetected: false,
             globePosition: null,
+
+            // only for rerender on props change
+            satelliteIDs: [],
+            timeScale: 1
         };
 
         this.tracking = [];
@@ -51,6 +55,15 @@ export default class HelloWorldSceneAR extends Component {
         this.positionModCount = 0;
 
         this.renderDisabled = true;
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if ((this.state.satelliteIDs != this.props.arSceneNavigator.viroAppProps.satelliteIDs) || (this.state.timeScale != this.props.arSceneNavigator.viroAppProps.timeScale)) {
+            this.setState({
+                satelliteIDs: this.props.arSceneNavigator.viroAppProps.satelliteIDs,
+                timeScale: this.props.arSceneNavigator.viroAppProps.timeScale,
+            })
+        }
     }
 
     getGlobeRotation = () => {
@@ -207,8 +220,8 @@ export default class HelloWorldSceneAR extends Component {
             <ViroNode position={position} rotation={rotation}>
                 <Globe
                     satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
-                    satelliteIDs={this.props.arSceneNavigator.viroAppProps.satelliteIDs}
-                    timeScale={this.props.arSceneNavigator.viroAppProps.timeScale}
+                    satelliteIDs={this.state.satelliteIDs}
+                    timeScale={this.state.timeScale}
                     flatTarget={flatTarget}
                 />
             </ViroNode>
