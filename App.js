@@ -201,7 +201,7 @@ export default class satviz extends Component {
                                         style={{
                                             borderBottomColor: 'black',
                                             borderBottomWidth: StyleSheet.hairlineWidth,
-                                            marginTop: 10,
+                                            marginTop: 0,
                                             marginBottom: 10,
                                         }}
                                     />
@@ -331,14 +331,23 @@ export default class satviz extends Component {
                                         }
                                     </View>
 
-                                    <View>
-                                        <Text>Set time speed (x times normal) (1-20)</Text>
+                                    <View
+                                        style={{
+                                            borderBottomColor: 'black',
+                                            borderBottomWidth: StyleSheet.hairlineWidth,
+                                            marginTop: 10,
+                                            marginBottom: 10,
+                                        }}
+                                    />
+
+                                    <View style={{marginHorizontal: "3%",}}>
+                                        <Text>Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)</Text>
                                         <Slider
                                             value={this.state.timeSpeedSliderValue}
                                             minimumValue={1}
                                             maximumValue={1000}
 
-                                            onSlidingComplete={(val) => this.setState({ timeSpeedSliderValue: val })}
+                                            onValueChange={(val) => this.setState({ timeSpeedSliderValue: val })}
                                         />
                                     </View>
 
