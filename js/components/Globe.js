@@ -172,8 +172,8 @@ export default class Globe extends React.Component {
                     resources={[require('../res/earth.mtl'),
                         require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
-                    scale={[0.025, 0.025, 0.025]}
-                    rotation={[180, 0, -180]}
+                    scale={[0.04, 0.04, 0.04]}
+                    rotation={[180, 180, -180]}
                     type="OBJ"
                 />
 
