@@ -143,14 +143,11 @@ export default class Globe extends React.Component {
                     <Viro3DObject
                         key={sat.id}
                         source={sat.modelPath}
-                        resources={[
-                            sat.materialPath,
-                            sat.texturePath
-                        ]}
+                        resources={sat.resources}
                         position={sat.position}
                         scale={sat.scale}
                         rotation={sat.rotation}
-                        type="OBJ"
+                        type={sat.modelType}
 
                         highAccuracyEvents={true}
                         onClick={() => {
@@ -221,7 +218,7 @@ export default class Globe extends React.Component {
                     type="OBJ"
                 />
 
-                <ViroNode rotation={this.modelListRotation} scale={[3, 3, 3]}>
+                <ViroNode rotation={this.modelListRotation} scale={[3, 3, 3]} position={[0, 0, 0]} scalePivot={[0, 0, 0]}>
                     {modelList}
                 </ViroNode>
             </ViroNode>

@@ -1,30 +1,28 @@
 'use-strict';
 
 var descriptions = {
-    // 25544: "ISS",
+    25544: "ISS",
     28129: "GPS"
 }
 
 var models = {
-    "ISS": require('./res/models/iss/ISS.obj'),
+    "ISS": require('./res/models/iss/ISS.glb'),
     "GPS": require('./res/models/gps/gps.obj'),
     "DEFAULT": require('./res/models/Satellite.obj')
 }
 
 var materials = {
-    "ISS": require('./res/models/Satellite.mtl'),
     "GPS": require('./res/models/gps/gps.mtl'),
     "DEFAULT": require('./res/models/Satellite.mtl'),
 }
 
 var textures = {
-    "ISS": require('./res/models/Satellite.mtl'),
     "GPS": require('./res/models/Satellite.mtl'),
     "DEFAULT": require('./res/models/Satellite.mtl'),
 }
 
 var scales = {
-    "ISS": [0.001, 0.001, 0.001],
+    "ISS": [0.08, 0.08, 0.08],
     "GPS": [0.01, 0.01, 0.01],
     "DEFAULT": [0.01, 0.01, 0.01],
 }
@@ -33,6 +31,11 @@ var rotations = {
     "ISS": [0, 90, 0],
     "GPS": [0.0, 0.0, 0.0],
     "DEFAULT": [0.0, 0.0, 0.0],
+}
+
+var modelTypes = {
+    "ISS": "GLB",
+    "DEFAULT": "OBJ",
 }
 
 var satellite = require('satellite.js');
@@ -46,14 +49,47 @@ export default class SatelliteObject {
 
         this.description = this.getDescription();
         this.modelPath = models[this.description];
-        this.materialPath = materials[this.description];
-        this.texturePath = textures[this.description];
+        this.modelType = modelTypes[this.description];
+        this.resources = this.getResources();
 
         this.position = [0.0, 0.0, 0.0];
         this.positionEci = null;
         this.scale = scales[this.description];
         this.rotation = rotations[this.description];
         this.velocity = {};
+    }
+
+    getResources = () => {
+        let material = this.getMaterialPath();
+        let texture = this.getTexturePath();
+
+        let resources = [];
+
+        if (material !== null) {
+            resources = [...resources, material];
+        }
+
+        if (texture !== null) {
+            resources = [...resources, texture];
+        }
+
+        return resources;
+    }
+
+    getMaterialPath = () => {
+        if (this.description in materials) {
+            return materials[this.description];
+        } else {
+            return null;
+        }
+    }
+
+    getTexturePath = () => {
+        if (this.description in textures) {
+            return textures[this.description];
+        } else {
+            return null;
+        }
     }
 
     getDescription = () => {
@@ -71,11 +107,6 @@ export default class SatelliteObject {
         this.velocity = propagation.velocity;
         this.positionEci = propagation.position;
         this.position = this.mapPositionToRange(propagation.position);
-
-        console.log("POSITION BEF");
-        console.log(propagation.position);
-        console.log("POSITION AFT");
-        console.log(this.position);
     }
 
     mapPositionToRange = (value) => {
