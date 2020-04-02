@@ -129,7 +129,7 @@ for i in range(len(websites)):
             satid = decoded[2:7]
         elif lineCounter == 2:
             children.append({
-                'name': name + " ID:" + satid,
+                'name': name.strip(),
                 'id': satid,
             })
 
