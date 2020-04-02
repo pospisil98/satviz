@@ -202,13 +202,9 @@ export default class Globe extends React.Component {
         );
     }
 
-    renderGlobeTargetGlobe = () => {
-        let modelList = this.getSatellitesToRender();
-
-        return (
-            <ViroNode>
-                <ViroAmbientLight color="#FFFFFF" />
-
+    renderVirtualGlobe = () => {
+        if (this.props.renderVirtualGlobe) {
+            return (
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
                         require('../res/earth_texture.png')]}
@@ -217,6 +213,29 @@ export default class Globe extends React.Component {
                     rotation={[180, -150, -180]}  // rotated that africa is towards camera
                     type="OBJ"
                 />
+            );
+        } else {
+            return (
+                <ViroSphere
+                    heightSegmentCount={20}
+                    widthSegmentCount={20}
+                    radius={0.2}
+                    position={[0, 0, 0]}
+                    materials={["occlusive"]}
+                    renderingOrder={-1}
+                />
+            );
+        }
+    }
+
+    renderGlobeTargetGlobe = () => {
+        let modelList = this.getSatellitesToRender();
+
+        return (
+            <ViroNode>
+                <ViroAmbientLight color="#FFFFFF" />
+
+                {this.renderVirtualGlobe()}
 
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
@@ -279,7 +298,8 @@ ViroMaterials.createMaterials({
         lightingModel: "Blinn",
         diffuseColor: '#6e6e6e'
     },
-    mat: {
-
+    occlusive: {
+        diffuseColor: "#FFFFFFFF",
+        colorWriteMask: ["None"],
     }
 });

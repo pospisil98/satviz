@@ -223,6 +223,7 @@ export default class HelloWorldSceneAR extends Component {
                     satelliteIDs={this.state.satelliteIDs}
                     timeScale={this.state.timeScale}
                     flatTarget={flatTarget}
+                    renderVirtualGlobe={true}
                 />
             </ViroNode>
         );
