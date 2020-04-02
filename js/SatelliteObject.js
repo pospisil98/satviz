@@ -2,29 +2,59 @@
 
 var descriptions = {
     25544: "ISS",
-    28129: "GPS"
+    
+    24876: "GPS",
+    25933: "GPS",
+    26360: "GPS",
+    26407: "GPS",
+    26605: "GPS",
+    27663: "GPS",
+    27704: "GPS",
+    28129: "GPS",
+    28190: "GPS",
+    28361: "GPS",
+    28474: "GPS",
+    28874: "GPS",
+    29486: "GPS",
+    29601: "GPS",
+    32260: "GPS",
+    32384: "GPS",
+    32711: "GPS",
+    35752: "GPS",
+    36585: "GPS",
+    37753: "GPS",
+    38833: "GPS",
+    39166: "GPS",
+    39533: "GPS",
+    39741: "GPS",
+    40105: "GPS",
+    40294: "GPS",
+    40534: "GPS",
+    40730: "GPS",
+    41019: "GPS",
+    41328: "GPS",
+    43873: "GPS",
+
+
 }
 
 var models = {
     "ISS": require('./res/models/iss/ISS.glb'),
     "GPS": require('./res/models/gps/gps.obj'),
-    "DEFAULT": require('./res/models/Satellite.obj')
 }
 
 var materials = {
     "GPS": require('./res/models/gps/gps.mtl'),
-    "DEFAULT": require('./res/models/Satellite.mtl'),
 }
 
 var textures = {
     "GPS": require('./res/models/Satellite.mtl'),
-    "DEFAULT": require('./res/models/Satellite.mtl'),
 }
 
 var scales = {
-    "ISS": [0.08, 0.08, 0.08],
-    "GPS": [0.01, 0.01, 0.01],
-    "DEFAULT": [0.01, 0.01, 0.01],
+    "ISS": [0.1, 0.1, 0.1],
+    "GPS": [0.03, 0.03, 0.03],
+    "DEFAULT": [0.0005, 0.0005, 0.0005],
 }
 
 var rotations = {
@@ -35,7 +65,7 @@ var rotations = {
 
 var modelTypes = {
     "ISS": "GLB",
-    "DEFAULT": "OBJ",
+    "GPS": "OBJ",
 }
 
 var satellite = require('satellite.js');
@@ -66,11 +96,11 @@ export default class SatelliteObject {
         let resources = [];
 
         if (material !== null) {
-            resources = [...resources, material];
+            resources.push(material);
         }
 
         if (texture !== null) {
-            resources = [...resources, texture];
+            resources.push(texture);
         }
 
         return resources;

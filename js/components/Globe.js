@@ -48,7 +48,7 @@ export default class Globe extends React.Component {
         this.loading = false;
 
         // start update positions every second
-        this.moveTimer = setInterval(this.updatePositions, 300);
+        this.moveTimer = setInterval(this.updatePositions, 100);
 
         this.clock = new Clock();
     }
@@ -139,6 +139,24 @@ export default class Globe extends React.Component {
 
         if (!this.loading) {
             modelList = this.state.satellites.map((sat) => {
+                if (sat.description === "DEFAULT") {
+                    return (
+                        <ViroSphere
+                            key={sat.id}
+                            heightSegmentCount={20}
+                            widthSegmentCount={20}
+                            radius={0.03}
+                            position={sat.position}
+                            materials={["gray"]}
+
+                            highAccuracyEvents={true}
+                            onClick={() => {
+                                this.onModelClick(sat.id);
+                            }}
+                        />
+                    );
+                }
+
                 return (
                     <Viro3DObject
                         key={sat.id}
@@ -166,7 +184,7 @@ export default class Globe extends React.Component {
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
-                <ViroAmbientLight color="#FFFFFF" />
+                <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000}/>
 
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
@@ -188,27 +206,9 @@ export default class Globe extends React.Component {
         let modelList = this.getSatellitesToRender();
 
         return (
-            <ViroNode position={[0, 0, 0]}>
+            <ViroNode>
                 <ViroAmbientLight color="#FFFFFF" />
 
-                {/*
-                <Viro3DObject source={require('../res/earth.obj')}
-                    resources={[require('../res/earth.mtl'),
-                        require('../res/earth_texture.png')]}
-                    position={[0.0, 0.0, 0.0]}
-                    scale={[0.08, 0.08, 0.08]}
-                    rotation={[180, 0, -180]}
-                    type="OBJ"
-                />
-
-                <ViroSphere
-                    heightSegmentCount={20}
-                    widthSegmentCount={20}
-                    radius={0.17}
-                    position={[0, 0, 0]}
-                    materials={["mat"]}
-                />
-                */}
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
                         require('../res/earth_texture.png')]}
@@ -218,7 +218,7 @@ export default class Globe extends React.Component {
                     type="OBJ"
                 />
 
-                <ViroNode rotation={this.modelListRotation} scale={[3, 3, 3]} position={[0, 0, 0]} scalePivot={[0, 0, 0]}>
+                <ViroNode rotation={this.modelListRotation}>
                     {modelList}
                 </ViroNode>
             </ViroNode>
@@ -258,6 +258,11 @@ export default class Globe extends React.Component {
 }
 
 ViroMaterials.createMaterials({
+    gray: {
+        shininess: 2.0,
+        lightingModel: "Lambert",
+        diffuseColor: "#A9A9A9",
+    },
     green: {
         lightingModel: "Blinn",
         diffuseTexture: require('../res/green.jpg'),
