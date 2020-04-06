@@ -44,6 +44,8 @@ export default class satviz extends Component {
 
         this.state = {
             selectedItems: [],
+            maxItems: false,
+
             selectedItemsManual: [],
 
             helpModalVisible: false,
@@ -60,11 +62,27 @@ export default class satviz extends Component {
             flashMessagePosition: "top",
             flashMessageAutoHide: true,
         };
+
+        this.maxSelectedItems = 50;
     }
 
     onSelectedItemsChange = (selectedItems) => {
-        this.setState({ selectedItems });
-    };
+        if (selectedItems.length >= this.maxSelectedItems) {
+            if (selectedItems.length === this.maxSelectedItems) {
+                this.setState({ selectedItems })
+            }
+
+            this.setState({
+                maxItems: true,
+            })
+            return;
+        }
+
+        this.setState({ 
+            selectedItems,
+            maxItems: false,
+        })
+    }
 
     toggleModal = () => {
         this.setState({ helpModalVisible: !this.state.helpModalVisible });
@@ -218,6 +236,7 @@ export default class satviz extends Component {
                                         showRemoveAll={true}
                                         onSelectedItemsChange={this.onSelectedItemsChange}
                                         selectedItems={this.state.selectedItems}
+                                        confirmText={`${this.state.maxItems ? 'Max satellites selected' : 'Confirm'}`}
                                     />
 
                                     <View
