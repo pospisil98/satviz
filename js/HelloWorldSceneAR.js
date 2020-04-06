@@ -224,6 +224,7 @@ export default class HelloWorldSceneAR extends Component {
                     timeScale={this.state.timeScale}
                     flatTarget={flatTarget}
                     renderVirtualGlobe={true}
+                    removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
                 />
             </ViroNode>
         );

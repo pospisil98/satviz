@@ -91,13 +91,39 @@ export default class Globe extends React.Component {
         if (this.state.satellites.length > 0) {
             let copy = [...this.state.satellites]
 
+            // nemusím mazat ty satelity složitě ze selected nahoře (asi musim)
+            // ale měl ybch je taky smazat ze satellites = zachovat si id a pak to protřídit jinak se poseru
+            // ověřit si jak to funguje!!!
+
+            // update: myslim si že ybch je měl smazat jak ze satelites - pro další kolo tak i pomocí callbacku v props ze selected
+            let removeIDs = [];
 
             copy.forEach((sat) => {
-                // sat.updatePosition(new Date(Date.now()));
-                sat.updatePosition(new Date(this.clock.time()));
+                // there could be problem with satrec => sat.satrec.error > 0
+                try {
+                    sat.updatePosition(new Date(this.clock.time()));
+                } catch (error) {
+                    removeIDs.push(sat.id);
+                    this.props.removeSatelliteCallback(sat.id);
+                }
             });
 
-            this.setState({ satellites: copy });
+            // console.log("IDs to remove");
+            // console.log(removeIDs);
+
+            let cleaned = [...copy];
+            // console.log("satellites before cleaning");
+            // console.log(cleaned);
+            removeIDs.forEach(id => {
+                cleaned = cleaned.filter(sat => sat.id !== id);
+                // console.log("one cleaning iteration");
+                // console.log(cleaned);
+            });
+
+            // console.log("cleaning finished");
+            // console.log(cleaned);
+
+            this.setState({ satellites: cleaned });
         }
     }
 

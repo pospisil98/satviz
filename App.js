@@ -122,6 +122,27 @@ export default class satviz extends Component {
         this.setState({ selectedItemsManual: [] });
     }
 
+    removeSatelliteWithError = (satID) => {
+        // try to remove from selected in category
+        if (this.state.selectedItems.includes(satID)) {
+            let arr = this.state.selectedItems.filter(e => e !== satID);
+
+            this.setState({selectedItems: arr});
+        }
+
+        // try to remove from selected manually
+        if (this.state.selectedItemsManual.includes(satID)) {
+            let arr = this.state.selectedItemsManual.filter(e => e !== satID);
+
+            this.setState({selectedItemsManual: arr});
+        }
+
+        showMessage({
+            message: "Satellite with ID " + satID + " had to be removed from your selection because of internal problem with calculating its position.",
+            type: "warning",
+        });
+    }
+
     setFlashMesageToSelectionError = () => {
         this.setState({
             flashMessageAutoHide: true,
@@ -142,6 +163,7 @@ export default class satviz extends Component {
                         satelliteClickCallback: this.satelliteModalSetIDCallback,
                         satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
                         timeScale: this.state.timeSpeedSliderValue,
+                        removeSatelliteCallback: this.removeSatelliteWithError,
                     }}
                 />
 
