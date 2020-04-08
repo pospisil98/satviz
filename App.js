@@ -383,8 +383,8 @@ export default class satviz extends Component {
                                         uniqueKey="id"
                                         subKey="children"
                                         selectText="Choose from ground segments..."
-                                        showDropDowns={true}
-                                        readOnlyHeadings={false}
+                                        showDropDowns={false}
+                                        readOnlyHeadings={true}
                                         selectChildren={true}
                                         // expandDropDowns={true} // causes weird bug at bottom part of screen
                                         showRemoveAll={true}
