@@ -1,0 +1,142 @@
+[
+    {
+        "name": "Control Stations & Ground Antennas",
+        "id": 1,
+        "children": [
+            {
+                "name": "MCS Schriever AFB Colorado",
+                "id": 11
+            },
+            {
+                "name": "Alternate MCS Vandenberg AFB California",
+                "id": 12
+            },
+            {
+                "name": "Ground Antenna Cape Canaveral",
+                "id": 13
+            },
+            {
+                "name": "Ground Antenna Ascension",
+                "id": 14
+            },
+            {
+                "name": "Ground Antenna Diego Garcia",
+                "id": 15
+            },
+            {
+                "name": "Ground Antenna Kwajalein",
+                "id": 16
+            }
+        ]
+    },
+    {
+        "name": "Air Force Monitor Stations",
+        "id": 2,
+        "children": [
+            {
+                "name": "AFMS Hawaii",
+                "id": 21
+            },
+            {
+                "name": "AFMS Schriever AFB Colorado",
+                "id": 22
+            },
+            {
+                "name": "AFMS Cape Canaveral",
+                "id": 23
+            },
+            {
+                "name": "AFMS Ascension",
+                "id": 24
+            },
+            {
+                "name": "AFMS Diego Garcia",
+                "id": 25
+            },
+            {
+                "name": "AFMS Kwajalein",
+                "id": 26
+            }
+        ]
+    },
+    {
+        "name": "AFSCN Remote Tracking Station",
+        "id": 3,
+        "children": [
+            {
+                "name": "RTS Greenland",
+                "id": 31
+            },
+            {
+                "name": "RTS New Hampshire",
+                "id": 32
+            },
+            {
+                "name": "RTS Vandenberg AFB California",
+                "id": 33
+            },
+            {
+                "name": "RTS Hawaii",
+                "id": 34
+            },
+            {
+                "name": "RTS United Kingdom",
+                "id": 35
+            },
+            {
+                "name": "RTS Diego Garcia",
+                "id": 36
+            },
+            {
+                "name": "RTS Guam",
+                "id": 37
+            }
+        ]
+    },
+    {
+        "name": "NGA Monitor Station",
+        "id": 4,
+        "children": [
+            {
+                "name": "MS Alaska",
+                "id": 41
+            },
+            {
+                "name": "MS USNO Washington",
+                "id": 42
+            },
+            {
+                "name": "MS Ecuador",
+                "id": 43
+            },
+            {
+                "name": "MS Uruguay",
+                "id": 44
+            },
+            {
+                "name": "MS United Kingdom",
+                "id": 45
+            },
+            {
+                "name": "MS South Africa",
+                "id": 46
+            },
+            {
+                "name": "MS Bahrain",
+                "id": 47
+            },
+            {
+                "name": "MS South Korea",
+                "id": 48
+            },
+            {
+                "name": "MS Australia",
+                "id": 49
+            },
+            {
+                "name": "MS New Zealand",
+                "id": 50
+            }
+        ]
+    }
+]
