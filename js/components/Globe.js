@@ -37,7 +37,7 @@ export default class Globe extends React.Component {
 
         this.modelListRotation = [0, 0, 0];
         if (this.props.flatTarget) {
-            this.modelListRotation = [0, 0, 0];
+            this.modelListRotation = [0, -143, 0];
         } else {
             this.modelListRotation = [0, 70, 0];
         }
@@ -168,7 +168,8 @@ export default class Globe extends React.Component {
         y = coordsOriginal.y / denominator;
         z = coordsOriginal.z / denominator;
 
-        return [x, y, z];
+        // conversion from eci to viro coords
+        return [y, z, x];
     }
 
     getGroundSegmentToRender = () => {
