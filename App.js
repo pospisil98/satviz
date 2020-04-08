@@ -29,6 +29,8 @@ import { showMessage, hideMessage } from "react-native-flash-message";
 
 import CustomInfoModal from './js/components/CustomInfoModal';
 
+import CoordConverter from './utils/coordsConverter'
+
 import * as satelliteSelectItems from './js/res/selectCategories.json';
 import * as groundSegmentSelectItems from './js/res/selectGroundSegment.json';
 
@@ -187,6 +189,7 @@ export default class satviz extends Component {
                     viroAppProps={{
                         satelliteClickCallback: this.satelliteModalSetIDCallback,
                         satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
+                        groundSegmentIDs: this.state.selectedItemsGroundSegment,
                         timeScale: this.state.timeSpeedSliderValue,
                         removeSatelliteCallback: this.removeSatelliteWithError,
                     }}
@@ -397,7 +400,6 @@ export default class satviz extends Component {
                                             value={this.state.timeSpeedSliderValue}
                                             minimumValue={1}
                                             maximumValue={1000}
-
                                             onValueChange={(val) => this.setState({ timeSpeedSliderValue: val })}
                                         />
                                     </View>

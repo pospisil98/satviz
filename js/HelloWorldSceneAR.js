@@ -221,6 +221,7 @@ export default class HelloWorldSceneAR extends Component {
                 <Globe
                     satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
                     satelliteIDs={this.state.satelliteIDs}
+                    groundSegmentIDs={this.props.arSceneNavigator.viroAppProps.groundSegmentIDs}
                     timeScale={this.state.timeScale}
                     flatTarget={flatTarget}
                     renderVirtualGlobe={true}

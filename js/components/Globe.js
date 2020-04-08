@@ -91,15 +91,9 @@ export default class Globe extends React.Component {
         if (this.state.satellites.length > 0) {
             let copy = [...this.state.satellites]
 
-            // nemusím mazat ty satelity složitě ze selected nahoře (asi musim)
-            // ale měl ybch je taky smazat ze satellites = zachovat si id a pak to protřídit jinak se poseru
-            // ověřit si jak to funguje!!!
-
-            // update: myslim si že ybch je měl smazat jak ze satelites - pro další kolo tak i pomocí callbacku v props ze selected
             let removeIDs = [];
 
             copy.forEach((sat) => {
-                // there could be problem with satrec => sat.satrec.error > 0
                 try {
                     sat.updatePosition(new Date(this.clock.time()));
                 } catch (error) {
@@ -108,20 +102,10 @@ export default class Globe extends React.Component {
                 }
             });
 
-            // console.log("IDs to remove");
-            // console.log(removeIDs);
-
             let cleaned = [...copy];
-            // console.log("satellites before cleaning");
-            // console.log(cleaned);
             removeIDs.forEach(id => {
                 cleaned = cleaned.filter(sat => sat.id !== id);
-                // console.log("one cleaning iteration");
-                // console.log(cleaned);
             });
-
-            // console.log("cleaning finished");
-            // console.log(cleaned);
 
             this.setState({ satellites: cleaned });
         }
@@ -149,15 +133,66 @@ export default class Globe extends React.Component {
     }
 
     onModelClick = (id) => {
-        /*
-            used only for debug purposes
-        showMessage({
-            message: "Clicked on sat wit ID: " + id,
-            type: "info",
-          });
-        */
-
         this.props.satelliteClickCallback(this.selectSatelliteObjectById(id));
+    }
+
+    getMaterialForGroundSegment = (segmentID) => {
+        if (segmentID === 11) {
+            return "red";
+        } else if (segmentID === 12) {
+            return "gold";
+        } else if (segmentID >= 13 && segmentID <= 16) {
+            return "green";
+        } else if (segmentID >= 21 && segmentID <= 26) {
+            return "blue";
+        } else if (segmentID >= 31 && segmentID <= 37) {
+            return "yellow";
+        } else if (segmentID >= 41 && segmentID <= 50) {
+            return "purple";
+        }
+    }
+
+    getPositionForGroundSegment = (segmentID) => {
+        let denominator;
+
+        if (this.props.flatTarget) {
+            denominator = 80000;
+        } else {
+            denominator = 38500;
+        }
+
+        let city = groundSegmentIDtoCity[segmentID];
+        let coordsOriginal = groundSegmentEciCoords[city];
+
+        x = coordsOriginal.x / denominator;
+        y = coordsOriginal.y / denominator;
+        z = coordsOriginal.z / denominator;
+
+        return [x, y, z];
+    }
+
+    getGroundSegmentToRender = () => {
+        let segmentList;
+
+        if (!this.loading) {
+            segmentList = this.props.groundSegmentIDs.map((segmentID) => {
+                let materialName = this.getMaterialForGroundSegment(segmentID);
+                let position = this.getPositionForGroundSegment(segmentID);
+
+                return (
+                    <ViroSphere
+                        key={segmentID}
+                        heightSegmentCount={10}
+                        widthSegmentCount={10}
+                        radius={0.008}
+                        position={position}
+                        materials={[materialName]}
+                    />
+                );
+            });
+        }
+
+        return segmentList;
     }
 
     getSatellitesToRender = () => {
@@ -199,7 +234,7 @@ export default class Globe extends React.Component {
                         }}
                     />
                 )
-            })
+            });
         }
 
         return modelList;
@@ -207,14 +242,15 @@ export default class Globe extends React.Component {
 
     renderFlatTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
+        let groundSegmentList = this.getGroundSegmentToRender();
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
-                <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000}/>
+                <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000} />
 
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
-                        require('../res/earth_texture.png')]}
+                    require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.04, 0.04, 0.04]}
                     rotation={[180, 180, -180]}
@@ -223,6 +259,7 @@ export default class Globe extends React.Component {
 
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
+                    {groundSegmentList}
                 </ViroNode>
             </ViroNode>
         );
@@ -233,7 +270,7 @@ export default class Globe extends React.Component {
             return (
                 <Viro3DObject source={require('../res/earth.obj')}
                     resources={[require('../res/earth.mtl'),
-                        require('../res/earth_texture.png')]}
+                    require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.08, 0.08, 0.08]}
                     rotation={[180, -150, -180]}  // rotated that africa is towards camera
@@ -256,6 +293,7 @@ export default class Globe extends React.Component {
 
     renderGlobeTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
+        let groundSegmentList = this.getGroundSegmentToRender();
 
         return (
             <ViroNode>
@@ -265,6 +303,7 @@ export default class Globe extends React.Component {
 
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
+                    {groundSegmentList}
                 </ViroNode>
             </ViroNode>
         );
@@ -274,7 +313,7 @@ export default class Globe extends React.Component {
         if (this.props.flatTarget) {
             return this.renderFlatTargetGlobe();
         } else {
-            return  this.renderGlobeTargetGlobe();
+            return this.renderGlobeTargetGlobe();
         }
     }
 
@@ -302,19 +341,69 @@ export default class Globe extends React.Component {
     }
 }
 
+var groundSegmentEciCoords = {
+    "schriever": { "x": 3910.3096787548093, "y": 3080.3510329695946, "z": 3975.5813422691904 },
+    "vandenberg": { "x": 4856.790504752817, "y": 1985.1370670602403, "z": 3615.737268949631 },
+    "cape": { "x": 2619.008345543573, "y": 4961.851777391096, "z": 3024.8968340995298 },
+    "ascension": { "x": -3922.7604262692257, "y": 4952.862829619637, "z": -875.6544312352279 },
+    "diego": { "x": -5170.553732498662, "y": -3647.0385227647125, "z": -806.8053933403049 },
+    "kwajalein": { "x": 4093.666061017764, "y": -4796.201022830874, "z": 960.7141097469664 },
+    "hawaii": { "x": 5786.235355097538, "y": -1500.9790587172447, "z": 2219.0532011295636 },
+    "greenland": { "x": 410.97339412324754, "y": 1434.4349979707606, "z": 6181.170740804261 },
+    "hampshire": { "x": 1493.91674263956, "y": 4359.107545377384, "z": 4396.24767788034 },
+    "britain": { "x": -3078.574521370201, "y": 2465.378033770742, "z": 4996.687333000982 },
+    "guam": { "x": 1865.487956036825, "y": -5918.882386479585, "z": 1470.730166121755 },
+    "alaska": { "x": 3016.4701519528826, "y": -219.03495480709444, "z": 5597.555648180364 },
+    "washington": { "x": 2046.1450152058833, "y": 4528.634340221239, "z": 3986.0421024686416 },
+    "ecuador": { "x": 2779.402343452063, "y": 5740.560921023602, "z": -107.89682911058405 },
+    "uruguay": { "x": 304.42572961808673, "y": 5325.040877018454, "z": -3487.141934869165 },
+    "africa": { "x": -5848.400376263067, "y": 1424.0113052546715, "z": -2104.612547103142 },
+    "bahrain": { "x": -5582.67664844856, "y": -1318.6034421675904, "z": 2780.958250256032 },
+    "korea": { "x": 46.677236661753795, "y": -5091.781885528575, "z": 3829.3084077342232 },
+    "australia": { "x": 1033.5451370010423, "y": -5204.347927342779, "z": -3528.946706348021 },
+    "zealand": { "x": 3451.4932197311496, "y": -3264.5169253457175, "z": -4242.601519256618 }
+}
+
+var groundSegmentIDtoCity = {
+    11: "schriever",
+    12: "vandenberg",
+    13: "cape",
+    14: "ascension",
+    15: "diego",
+    16: "kwajalein",
+    
+    21: "hawaii",
+    22: "schriever",
+    23: "cape",
+    24: "ascension",
+    25: "diego",
+    26: "kwajalein",
+
+    31: "greenland",
+    32: "hampshire",
+    33: "vandenberg",
+    34: "hawaii",
+    35: "britain",
+    36: "diego",
+    37: "guam",
+
+    41: "alaska",
+    42: "washington",
+    43: "ecuador",
+    44: "uruguay",
+    45: "britain",
+    46: "africa",
+    47: "bahrain",
+    48: "korea",
+    49: "australia",
+    50: "zealand"
+}
+
 ViroMaterials.createMaterials({
     gray: {
         shininess: 2.0,
         lightingModel: "Lambert",
         diffuseColor: "#A9A9A9",
-    },
-    green: {
-        lightingModel: "Blinn",
-        diffuseTexture: require('../res/green.jpg'),
-    },
-    red: {
-        lightingModel: "Blinn",
-        diffuseTexture: require('../res/red.jpg'),
     },
     earth: {
         lightingModel: "Blinn",
@@ -327,5 +416,29 @@ ViroMaterials.createMaterials({
     occlusive: {
         diffuseColor: "#FFFFFFFF",
         colorWriteMask: ["None"],
+    },
+    red: {
+        lightingModel: "Blinn",
+        diffuseColor: '#AF0606'
+    },
+    gold: {
+        lightingModel: "Blinn",
+        diffuseColor: '#FFC300'
+    },
+    green: {
+        lightingModel: "Blinn",
+        diffuseColor: '#06AF48'
+    },
+    blue: {
+        lightingModel: "Blinn",
+        diffuseColor: '#067EAF'
+    },
+    yellow: {
+        lightingModel: "Blinn",
+        diffuseColor: '#F4F71A'
+    },
+    purple: {
+        lightingModel: "Blinn",
+        diffuseColor: '#7504AC'
     }
 });
