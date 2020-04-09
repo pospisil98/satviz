@@ -156,7 +156,8 @@ export default class SatelliteObject {
         value.y < 0 ? y = -y : y = y;
         value.z < 0 ? z = -z : z = z; */
 
-        return [x, y, z];
+        // conversion from eci to viro coords
+        return [y, z, x];   
     }
 
     formatSelectedDataForModal = (data) => {

@@ -39,7 +39,7 @@ export default class Globe extends React.Component {
         if (this.props.flatTarget) {
             this.modelListRotation = [0, -143, 0];
         } else {
-            this.modelListRotation = [0, 70, 0];
+            this.modelListRotation = [0, -173, 0];
         }
 
         this.time = new Date();
