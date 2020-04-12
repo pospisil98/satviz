@@ -201,6 +201,30 @@ export default class SatelliteObject {
         return this.formatSelectedDataForModal(data);
     }
 
+    getPointsForOrbit = (numSegments, currentDate) => {
+        // in minutes
+        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI)); 
+        let timeStep = orbitPeriod / numSegments;
+
+        let startDate = new Date(currentDate);
+        startDate.setMinutes(currentDate.getMinutes() - (orbitPeriod / 2));
+    
+
+        let positions = [];
+        for (let i = 0; i <= numSegments; i++) {
+            let date = new Date(startDate);
+            date.setMinutes(startDate.getMinutes() + (i * timeStep));
+            console.log(date);
+            let position = satellite.propagate(this.satelliteRecord, date).position;
+
+            positions.push(this.mapPositionToRange(position))
+        }
+
+        positions.push(positions[0]);
+
+        return positions;
+    }
+
     getIntlDes = () => {
         let des = '';
 

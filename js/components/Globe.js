@@ -11,7 +11,8 @@ import {
     Viro3DObject,
     ViroAmbientLight,
     ViroSphere,
-    ViroBox
+    ViroBox,
+    ViroPolyline,
 } from 'react-viro';
 
 import SpaceTrack from '../SpaceTrack';
@@ -32,7 +33,8 @@ export default class Globe extends React.Component {
             loadingDisplay: true,
             position: [-0.1, 0.1, 0.1],
             phi: 0,
-            satellites: []
+            satellites: [],
+            renderOrbitIDs: ["25544", ],
         }
 
         this.modelListRotation = [0, 0, 0];
@@ -46,6 +48,8 @@ export default class Globe extends React.Component {
         this.ST = new SpaceTrack();
 
         this.loading = false;
+
+        this.orbitSegmentCount = 100;
 
         // start update positions every second
         this.moveTimer = setInterval(this.updatePositions, 100);
@@ -241,9 +245,33 @@ export default class Globe extends React.Component {
         return modelList;
     }
 
+    getOrbitsToRender = () => {
+        let orbitList;
+
+        if (!this.loading) {
+            orbitList = this.state.satellites.map((sat) => {
+                if (this.state.renderOrbitIDs.includes(sat.id)) {
+                    let positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
+
+                    return (
+                        <ViroPolyline
+                            position={[0,0,0]}
+                            points={positions}
+                            thickness={0.005}
+                            materials={"red"}
+                        />
+                    );
+                }
+            });
+        }
+
+        return orbitList;
+    }
+
     renderFlatTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
         let groundSegmentList = this.getGroundSegmentToRender();
+        let orbits = this.getOrbitsToRender();
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
@@ -261,6 +289,7 @@ export default class Globe extends React.Component {
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
                     {groundSegmentList}
+                    {orbits}
                 </ViroNode>
             </ViroNode>
         );
