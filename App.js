@@ -59,6 +59,8 @@ export default class satviz extends Component {
             satelliteModalID: 0,
             satelliteModalSatellite: null,
 
+            groundSegmentModalVisible: false,
+
             slidingPanelToggled: false,
             slidingPanelText: "Click to reveal satellite selection!",
 
@@ -111,6 +113,12 @@ export default class satviz extends Component {
             satelliteModalVisible: !this.state.satelliteModalVisible,
         });
     };
+
+    toggleGroundSegmentModal = () => {
+        this.setState({
+            groundSegmentModalVisible: !this.state.groundSegmentModalVisible,
+        });
+    }
 
 
     toggleSlidePanel = () => {
@@ -205,6 +213,31 @@ export default class satviz extends Component {
                         <Text>Stručné info o používání a že to je moje BP</Text>
                         <View style={styles.infoModalCloseButton}>
                             <Button title="Hide modal" onPress={this.toggleModal} />
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal
+                    isVisible={this.state.groundSegmentModalVisible}
+                    useNativeDriver={true}
+                    onBackdropPress={this.toggleGroundSegmentModal}
+                >
+                    <View style={styles.groundSegmentModal}>
+                    <ScrollView>
+                        <Text>Master Control Stations and Alternate MCS</Text>
+                        <Text>The master control station, located at Schriever Air Force Base in Colorado Springs, Colorado, is responsible for overall management of the remote monitoring and transmission sites. GPS ephemeris being a tabulation of computed positions, velocities and derived right ascension and declination of GPS satellites at specific times, replace "position" with "ephemeris" because the Master Control Station computes not only position but also velocity, right ascension and declination parameters for eventual upload to GPS satellites.</Text>
+                    
+                        <Text>Monitor Stations</Text>
+                        <Text>Six monitor stations are located at Schriever Air Force Base in Colorado, Cape Canaveral, Florida, Hawaii, Ascension Island in the Atlantic Ocean, Diego Garcia Atoll in the Indian Ocean, and Kwajalein Island in the South Pacific Ocean.Six additional monitoring stations were added in 2005 in Argentina, Bahrain, United Kingdom, Ecuador, Washington DC, and Australia. Each of the monitor stations checks the exact altitude, position, speed, and overall health of the orbiting satellites. The control segment uses measurements collected by the monitor stations to predict the behavior of each satellite's orbit and clock. The prediction data is up-linked, or transmitted, to the satellites for transmission back to the users. The control segment also ensures that the GPS satellite orbits and clocks remain within acceptable limits. A station can track up to 11 satellites at a time. This "check-up" is performed twice a day, by each station, as the satellites complete their journeys around the earth. Noted variations, such as those caused by the gravity of the moon, sun and the pressure of solar radiation, are passed along to the master control station.</Text>
+                    
+                        <Text>Ground Antennas</Text>
+                        <Text>
+                            The Ground Antennas uplink data to the satellites via S-band radio signals. These data includes ephemerides and clock correction information transmitted within the Navigation Message, as well as command telemetry from the MCS.
+                            This information can be uploaded to each satellite three times per day, i.e., every 8 hours; nevertheless, it is usually updated just once a day.
+                        </Text>
+                    </ScrollView>
+                        <View style={styles.infoModalCloseButton}>
+                            <Button title="Hide modal" onPress={this.toggleGroundSegmentModal} />
                         </View>
                     </View>
                 </Modal>
@@ -377,20 +410,28 @@ export default class satviz extends Component {
                                     </View>
 
                                     <View style={styles.hairlineSplitLine}/>
-                                    
-                                    <SectionedMultiSelect
-                                        items={groundSegmentSelectItems.default}
-                                        uniqueKey="id"
-                                        subKey="children"
-                                        selectText="Choose from ground segments..."
-                                        showDropDowns={false}
-                                        readOnlyHeadings={true}
-                                        selectChildren={true}
-                                        // expandDropDowns={true} // causes weird bug at bottom part of screen
-                                        showRemoveAll={true}
-                                        onSelectedItemsChange={this.onGroundSegmentSelectedItemsChange}
-                                        selectedItems={this.state.selectedItemsGroundSegment}
-                                    />
+                                        <SectionedMultiSelect
+                                            items={groundSegmentSelectItems.default}
+                                            uniqueKey="id"
+                                            subKey="children"
+                                            selectText="Choose from ground segments..."
+                                            showDropDowns={false}
+                                            readOnlyHeadings={true}
+                                            selectChildren={true}
+                                            // expandDropDowns={true} // causes weird bug at bottom part of screen
+                                            showRemoveAll={true}
+                                            onSelectedItemsChange={this.onGroundSegmentSelectedItemsChange}
+                                            selectedItems={this.state.selectedItemsGroundSegment}
+                                            style={{
+                                                container: {
+                                                    width: '70%',
+                                                }
+                                            }}
+                                        />
+
+                                        <View style={{ width: '20%', }}>
+                                            <Button title="INFO" onPress={this.toggleGroundSegmentModal} />
+                                        </View>
 
                                     <View style={styles.hairlineSplitLine}/>
 
@@ -471,10 +512,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center'
     },
-
     infoModalCloseButton: {
         marginTop: '30%',
         width: '50%',
+    },
+
+    groundSegmentModal: {
+        backgroundColor: "white",
+        marginHorizontal: '10%',
+        height: '80%',
+        textAlign: 'right',
     },
 
     hairlineSplitLine: {
