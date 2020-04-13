@@ -201,6 +201,10 @@ export default class SatelliteObject {
         return this.formatSelectedDataForModal(data);
     }
 
+    getOrbitTime = () => {
+        return (1440.0 / this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));
+    }
+
     getPointsForOrbit = (numSegments, currentDate) => {
         // in minutes
         let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI)); 

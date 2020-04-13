@@ -50,6 +50,8 @@ export default class Globe extends React.Component {
         this.loading = false;
 
         this.orbitSegmentCount = 100;
+        this.orbitTimestamps = {};
+        this.orbitPoints = {};
 
         // start update positions every second
         this.moveTimer = setInterval(this.updatePositions, 100);
@@ -251,13 +253,38 @@ export default class Globe extends React.Component {
         return modelList;
     }
 
+    shouldUpdateOrbit = (satID, orbitTime) => {
+        if (!(satID in this.orbitTimestamps)) {
+            return true;
+        }
+
+        let maxtime = new Date(this.orbitTimestamps[satID]);
+        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);
+
+        if (this.clock.time() > maxtime) {
+            return true;
+        }
+
+        return false;
+    }
+
     getOrbitsToRender = () => {
         let orbitList;
 
         if (!this.loading) {
             orbitList = this.state.satellites.map((sat) => {
+                let orbitTime = sat.getOrbitTime();
                 if (this.state.orbits.includes(sat.id)) {
-                    let positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
+                    let positions;
+                    
+                    if (this.shouldUpdateOrbit(sat.id, orbitTime)) {
+                        positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
+                                            
+                        this.orbitPoints[sat.id] = positions;
+                        this.orbitTimestamps[sat.id] = this.clock.time();
+                    } else {
+                        positions = this.orbitPoints[sat.id];
+                    }
 
                     return (
                         <ViroPolyline
