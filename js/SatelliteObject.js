@@ -214,7 +214,6 @@ export default class SatelliteObject {
         for (let i = 0; i <= numSegments; i++) {
             let date = new Date(startDate);
             date.setMinutes(startDate.getMinutes() + (i * timeStep));
-            console.log(date);
             let position = satellite.propagate(this.satelliteRecord, date).position;
 
             positions.push(this.mapPositionToRange(position))

@@ -34,7 +34,7 @@ export default class Globe extends React.Component {
             position: [-0.1, 0.1, 0.1],
             phi: 0,
             satellites: [],
-            renderOrbitIDs: ["25544", ],
+            orbits: [],
         }
 
         this.modelListRotation = [0, 0, 0];
@@ -80,6 +80,12 @@ export default class Globe extends React.Component {
             this.clock.stop();
             this.clock.speed(this.props.timeScale).time(this.clock.time());
             this.clock.start();
+        }
+
+        if (this.props.orbitIDs !== prevProps.orbitIDs) {
+            this.setState({
+                orbits: [...this.props.orbitIDs],
+            });
         }
     }
 
@@ -250,15 +256,18 @@ export default class Globe extends React.Component {
 
         if (!this.loading) {
             orbitList = this.state.satellites.map((sat) => {
-                if (this.state.renderOrbitIDs.includes(sat.id)) {
+                if (this.state.orbits.includes(sat.id)) {
                     let positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
 
                     return (
                         <ViroPolyline
-                            position={[0,0,0]}
+                            key={sat.id}
+                            position={[0, 0, 0]}
                             points={positions}
-                            thickness={0.005}
+                            thickness={0.001}
                             materials={"red"}
+                            renderingOrder={-1}
+                            opacity={0.5}
                         />
                     );
                 }
@@ -401,7 +410,7 @@ var groundSegmentIDtoCity = {
     14: "ascension",
     15: "diego",
     16: "kwajalein",
-    
+
     21: "hawaii",
     22: "schriever",
     23: "cape",

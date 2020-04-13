@@ -59,6 +59,8 @@ export default class satviz extends Component {
             satelliteModalID: 0,
             satelliteModalSatellite: null,
 
+            orbitIDs: [],
+
             groundSegmentModalVisible: false,
 
             slidingPanelToggled: false,
@@ -185,6 +187,36 @@ export default class satviz extends Component {
         });
     }
 
+    isOrbitEnabledForSatelliteInModal = () => {
+        // type error protection
+        if (this.state.satelliteModalSatellite === null) {
+            return false;
+        }
+
+        return this.state.orbitIDs.includes(this.state.satelliteModalSatellite.id);
+    }
+
+    
+    toggleOrbitVisibility = (satelliteID) => {
+        // type error protection
+        if (this.state.satelliteModalSatellite === null) {
+            return;
+        }
+
+        if (this.state.orbitIDs.includes(satelliteID)) {
+            let arr = this.state.orbitIDs.filter(id => id != satelliteID);
+
+            this.setState({
+                orbitIDs: arr,
+            });
+        } else {
+            let current = [...this.state.orbitIDs];
+            this.setState({
+                orbitIDs: [...current, satelliteID],
+            });
+        }
+    }
+
     render() {
         return (
             <View style={styles.container}>
@@ -198,6 +230,7 @@ export default class satviz extends Component {
                         satelliteClickCallback: this.satelliteModalSetIDCallback,
                         satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
                         groundSegmentIDs: this.state.selectedItemsGroundSegment,
+                        orbitIDs: this.state.orbitIDs,
                         timeScale: this.state.timeSpeedSliderValue,
                         removeSatelliteCallback: this.removeSatelliteWithError,
                     }}
@@ -251,6 +284,8 @@ export default class satviz extends Component {
                         satellite={this.state.satelliteModalSatellite}
                         isModalVisible={this.state.satelliteModalVisible}
                         closeModal={() => this.toggleSatelliteModal()}
+                        orbitEnabled={this.isOrbitEnabledForSatelliteInModal()}
+                        orbitButtonCallback={this.toggleOrbitVisibility}
                     >
                     </CustomInfoModal>
                 </View>

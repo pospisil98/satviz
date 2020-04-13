@@ -4,7 +4,8 @@ import {
     StyleSheet,
     Text,
     View,
-    TouchableOpacity
+    TouchableOpacity,
+    Button
 } from 'react-native';
 
 import Modal from "react-native-modal";
@@ -33,6 +34,8 @@ export default class CustomInfoModal extends Component {
             explanationRequest: null,
 
             modalVisible: false,
+
+            buttonText: "Show orbit"
         };
     }
 
@@ -43,6 +46,18 @@ export default class CustomInfoModal extends Component {
 
         if (this.props.satellite && this.state.data.id != this.props.satellite[0].id) {
             this.updateSateliteData();
+        }
+
+        if (!this.props.orbitEnabled && this.state.buttonText != "Show orbit") {
+            this.setState({
+                buttonText: "Show orbit",
+            });
+        }
+        
+        if (this.props.orbitEnabled && this.state.buttonText != "Hide orbit") {
+            this.setState({
+                buttonText: "Hide orbit",
+            });
         }
     }
 
@@ -124,6 +139,16 @@ export default class CustomInfoModal extends Component {
 
                         {this.renderTextInfo()}
                         {this.renderExplanation()}
+
+                        <Button
+                            title={this.state.buttonText}
+                            onPress={() => {
+                                this.props.orbitButtonCallback(this.state.data.id);
+                                this.setState({
+                                    buttonText: "Hide orbit",
+                                })
+                            }}
+                        />
                     </View>
                 </Modal>
             </View>

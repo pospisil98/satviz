@@ -47,6 +47,7 @@ export default class HelloWorldSceneAR extends Component {
 
             // only for rerender on props change
             satelliteIDs: [],
+            orbitIDs: [],
             timeScale: 1
         };
 
@@ -63,6 +64,12 @@ export default class HelloWorldSceneAR extends Component {
                 satelliteIDs: this.props.arSceneNavigator.viroAppProps.satelliteIDs,
                 timeScale: this.props.arSceneNavigator.viroAppProps.timeScale,
             })
+        }
+
+        if (this.state.orbitIDs != this.props.arSceneNavigator.viroAppProps.orbitIDs) {
+            this.setState({
+                orbitIDs: this.props.arSceneNavigator.viroAppProps.orbitIDs,
+            });
         }
     }
 
@@ -226,6 +233,7 @@ export default class HelloWorldSceneAR extends Component {
                     flatTarget={flatTarget}
                     renderVirtualGlobe={true}
                     removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
+                    orbitIDs={this.state.orbitIDs}
                 />
             </ViroNode>
         );
