@@ -211,9 +211,7 @@ export default class SatelliteObject {
         let timeStep = orbitPeriod / numSegments;
 
         let startDate = new Date(currentDate);
-        startDate.setMinutes(currentDate.getMinutes() - (orbitPeriod / 2));
     
-
         let positions = [];
         for (let i = 0; i <= numSegments; i++) {
             let date = new Date(startDate);
