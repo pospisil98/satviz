@@ -250,31 +250,6 @@ export default class satviz extends Component {
                     </View>
                 </Modal>
 
-                <Modal
-                    isVisible={this.state.groundSegmentModalVisible}
-                    useNativeDriver={true}
-                    onBackdropPress={this.toggleGroundSegmentModal}
-                >
-                    <View style={styles.groundSegmentModal}>
-                    <ScrollView>
-                        <Text>Master Control Stations and Alternate MCS</Text>
-                        <Text>The master control station, located at Schriever Air Force Base in Colorado Springs, Colorado, is responsible for overall management of the remote monitoring and transmission sites. GPS ephemeris being a tabulation of computed positions, velocities and derived right ascension and declination of GPS satellites at specific times, replace "position" with "ephemeris" because the Master Control Station computes not only position but also velocity, right ascension and declination parameters for eventual upload to GPS satellites.</Text>
-                    
-                        <Text>Monitor Stations</Text>
-                        <Text>Six monitor stations are located at Schriever Air Force Base in Colorado, Cape Canaveral, Florida, Hawaii, Ascension Island in the Atlantic Ocean, Diego Garcia Atoll in the Indian Ocean, and Kwajalein Island in the South Pacific Ocean.Six additional monitoring stations were added in 2005 in Argentina, Bahrain, United Kingdom, Ecuador, Washington DC, and Australia. Each of the monitor stations checks the exact altitude, position, speed, and overall health of the orbiting satellites. The control segment uses measurements collected by the monitor stations to predict the behavior of each satellite's orbit and clock. The prediction data is up-linked, or transmitted, to the satellites for transmission back to the users. The control segment also ensures that the GPS satellite orbits and clocks remain within acceptable limits. A station can track up to 11 satellites at a time. This "check-up" is performed twice a day, by each station, as the satellites complete their journeys around the earth. Noted variations, such as those caused by the gravity of the moon, sun and the pressure of solar radiation, are passed along to the master control station.</Text>
-                    
-                        <Text>Ground Antennas</Text>
-                        <Text>
-                            The Ground Antennas uplink data to the satellites via S-band radio signals. These data includes ephemerides and clock correction information transmitted within the Navigation Message, as well as command telemetry from the MCS.
-                            This information can be uploaded to each satellite three times per day, i.e., every 8 hours; nevertheless, it is usually updated just once a day.
-                        </Text>
-                    </ScrollView>
-                        <View style={styles.infoModalCloseButton}>
-                            <Button title="Hide modal" onPress={this.toggleGroundSegmentModal} />
-                        </View>
-                    </View>
-                </Modal>
-
                 <TouchableOpacity onPress={this.toggleModal} style={styles.modalIcon}>
                     <Icon name="info" size={30} color="grey" />
                 </TouchableOpacity>
@@ -445,7 +420,10 @@ export default class satviz extends Component {
                                     </View>
 
                                     <View style={styles.hairlineSplitLine}/>
-                                        <SectionedMultiSelect
+                                    
+                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                                        <View style={{width: '80%'}}>
+                                            <SectionedMultiSelect
                                             items={groundSegmentSelectItems.default}
                                             uniqueKey="id"
                                             subKey="children"
@@ -463,14 +441,49 @@ export default class satviz extends Component {
                                                 }
                                             }}
                                         />
-
-                                        <View style={{ width: '20%', }}>
-                                            <Button title="INFO" onPress={this.toggleGroundSegmentModal} />
                                         </View>
+                                        <View stye={{width: '20%'}}>
+                                            <TouchableOpacity onPress={this.toggleGroundSegmentModal}>
+                                                <Icon name="info" size={30} color="black" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <View></View>
+                                    </View>
+                                    
+
+                                    <Modal
+                                        isVisible={this.state.groundSegmentModalVisible}
+                                        useNativeDriver={true}
+                                        onBackdropPress={this.toggleGroundSegmentModal}
+                                    >
+                                        <View style={styles.groundSegmentModal}>
+                                            <View style={{height: '90%'}}>
+                                                <ScrollView>
+                                                    <Text style={styles.groundSegmentHeading}>Master Control Stations and Alternate MCS</Text>
+                                                    <Text style={styles.groundSegmentColors}>Red and Gold</Text>
+                                                    <Text style={styles.groundSegmentText}>The master control station, located at Schriever Air Force Base in Colorado Springs, Colorado, is responsible for overall management of the remote monitoring and transmission sites. GPS ephemeris being a tabulation of computed positions, velocities and derived right ascension and declination of GPS satellites at specific times, replace "position" with "ephemeris" because the Master Control Station computes not only position but also velocity, right ascension and declination parameters for eventual upload to GPS satellites.</Text>
+                                                
+                                                    <Text style={[styles.groundSegmentHeading, {marginTop: 5}]}>Monitor Stations</Text>
+                                                    <Text style={styles.groundSegmentColors}>AFMS blue, AFSCN yellow, NGA purple</Text>
+                                                    <Text style={styles.groundSegmentText}>Six monitor stations are located at Schriever Air Force Base in Colorado, Cape Canaveral, Florida, Hawaii, Ascension Island in the Atlantic Ocean, Diego Garcia Atoll in the Indian Ocean, and Kwajalein Island in the South Pacific Ocean.Six additional monitoring stations were added in 2005 in Argentina, Bahrain, United Kingdom, Ecuador, Washington DC, and Australia. Each of the monitor stations checks the exact altitude, position, speed, and overall health of the orbiting satellites. The control segment uses measurements collected by the monitor stations to predict the behavior of each satellite's orbit and clock. The prediction data is up-linked, or transmitted, to the satellites for transmission back to the users. The control segment also ensures that the GPS satellite orbits and clocks remain within acceptable limits. A station can track up to 11 satellites at a time. This "check-up" is performed twice a day, by each station, as the satellites complete their journeys around the earth. Noted variations, such as those caused by the gravity of the moon, sun and the pressure of solar radiation, are passed along to the master control station.</Text>
+                                                
+                                                    <Text style={[styles.groundSegmentHeading, {marginTop: 5}]}>Ground Antennas</Text>
+                                                    <Text style={styles.groundSegmentColors}>Green</Text>
+                                                    <Text style={styles.groundSegmentText}>
+                                                        The Ground Antennas uplink data to the satellites via S-band radio signals. These data includes ephemerides and clock correction information transmitted within the Navigation Message, as well as command telemetry from the MCS.
+                                                        This information can be uploaded to each satellite three times per day, i.e., every 8 hours; nevertheless, it is usually updated just once a day.
+                                                    </Text>
+                                                </ScrollView>
+                                            </View>
+                                            <View style={{width: '40%', justifyContent:'center', flex: 1,}}>
+                                                <Button title="Hide info" onPress={this.toggleGroundSegmentModal} />
+                                            </View>
+                                        </View>
+                                    </Modal>
 
                                     <View style={styles.hairlineSplitLine}/>
 
-                                    <View style={{marginHorizontal: "3%",}}>
+                                    <View style={{marginHorizontal: "3%"}}>
                                         <Text>Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)</Text>
                                         <Slider
                                             value={this.state.timeSpeedSliderValue}
@@ -557,6 +570,21 @@ const styles = StyleSheet.create({
         marginHorizontal: '10%',
         height: '80%',
         textAlign: 'right',
+        alignItems: 'center',
+        padding: '3%',
+        paddingBottom: 0,
+    },
+    groundSegmentHeading: {
+        fontWeight:'bold',
+        textAlign: 'center',
+        fontSize: 16
+    },
+    groundSegmentText: {
+        textAlign: 'justify',
+    },
+    groundSegmentColors: {
+        textAlign: 'center',
+        fontSize: 12
     },
 
     hairlineSplitLine: {

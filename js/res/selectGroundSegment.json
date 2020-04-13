@@ -4,12 +4,22 @@
         "id": 1,
         "children": [
             {
+                "name": "MCS/AMCS is visualized as red/gold dot",
+                "id": 3333,
+                "disabled": true
+            },
+            {
                 "name": "MCS Schriever AFB Colorado",
                 "id": 11
             },
             {
                 "name": "Alternate MCS Vandenberg AFB California",
                 "id": 12
+            },
+            {
+                "name": "GA are visualized as green dots",
+                "id": 33333,
+                "disabled": true
             },
             {
                 "name": "Ground Antenna Cape Canaveral",
@@ -33,6 +43,11 @@
         "name": "Air Force Monitor Stations",
         "id": 2,
         "children": [
+            {
+                "name": "AFMS are visualized as bluen dots",
+                "id": 333333,
+                "disabled": true
+            },
             {
                 "name": "AFMS Hawaii",
                 "id": 21
@@ -63,6 +78,11 @@
         "name": "AFSCN Remote Tracking Station",
         "id": 3,
         "children": [
+            {
+                "name": "AFSCN RTS are visualized as yellow dots",
+                "id": 3333333,
+                "disabled": true
+            },
             {
                 "name": "RTS Greenland",
                 "id": 31
@@ -97,6 +117,11 @@
         "name": "NGA Monitor Station",
         "id": 4,
         "children": [
+            {
+                "name": "NGA MS are visualized as yellow dots",
+                "id": 333343,
+                "disabled": true
+            },
             {
                 "name": "MS Alaska",
                 "id": 41
