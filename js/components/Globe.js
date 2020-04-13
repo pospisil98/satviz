@@ -307,7 +307,7 @@ export default class Globe extends React.Component {
     renderFlatTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
         let groundSegmentList = this.getGroundSegmentToRender();
-        let orbits = this.getOrbitsToRender();
+        let orbitsList = this.getOrbitsToRender();
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
@@ -325,7 +325,7 @@ export default class Globe extends React.Component {
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
                     {groundSegmentList}
-                    {orbits}
+                    {orbitsList}
                 </ViroNode>
             </ViroNode>
         );
@@ -360,6 +360,7 @@ export default class Globe extends React.Component {
     renderGlobeTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
         let groundSegmentList = this.getGroundSegmentToRender();
+        let orbitsList = this.getOrbitsToRender();
 
         return (
             <ViroNode>
@@ -370,6 +371,7 @@ export default class Globe extends React.Component {
                 <ViroNode rotation={this.modelListRotation}>
                     {modelList}
                     {groundSegmentList}
+                    {orbitsList}
                 </ViroNode>
             </ViroNode>
         );
