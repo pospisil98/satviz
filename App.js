@@ -21,7 +21,8 @@ import {
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import SectionedMultiSelect from 'react-native-sectioned-multi-select';
 import Modal from "react-native-modal";
-import Icon from 'react-native-vector-icons/Feather';
+import IconF from 'react-native-vector-icons/Feather';
+import IconM from 'react-native-vector-icons/MaterialIcons'
 import Slider from '@react-native-community/slider';
 
 import FlashMessage from "react-native-flash-message";
@@ -251,7 +252,7 @@ export default class satviz extends Component {
                 </Modal>
 
                 <TouchableOpacity onPress={this.toggleModal} style={styles.modalIcon}>
-                    <Icon name="info" size={30} color="grey" />
+                    <IconM name="help-outline" size={30} color="white" style={styles.iconShadow}/>
                 </TouchableOpacity>
 
                 <View style={styles.bodyViewStyle}>
@@ -273,31 +274,36 @@ export default class satviz extends Component {
                             <Text style={styles.commonTextStyle}>{this.state.slidingPanelText}</Text>
                         </View>
                     }
-
+                    allowDragging={true}
                     slidingPanelLayout={() =>
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={{ flex: 1 }}>
                                 <ScrollView style={{ flex: 1 }}>
-                                    <SectionedMultiSelect
-                                        items={satelliteSelectItems.default}
-                                        uniqueKey="id"
-                                        subKey="children"
-                                        selectText="Choose from catogories.."
-                                        showDropDowns={true}
-                                        readOnlyHeadings={false}
-                                        selectChildren={true}
-                                        showRemoveAll={true}
-                                        onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
-                                        selectedItems={this.state.selectedItems}
-                                        confirmText={`${this.state.maxItems ? 'Max satellites selected' : 'Confirm'}`}
-                                    />
+                                    <View style={{flex: 1, justifyContent: 'center'}}>
+                                        <SectionedMultiSelect
+                                            items={satelliteSelectItems.default}
+                                            uniqueKey="id"
+                                            subKey="children"
+                                            selectText="Choose from catogories.."
+                                            showDropDowns={true}
+                                            readOnlyHeadings={false}
+                                            selectChildren={true}
+                                            showRemoveAll={true}
+                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
+                                            selectedItems={this.state.selectedItems}
+                                            confirmText={`${this.state.maxItems ? 'Max satellites selected' : 'Confirm'}`}
+                                        />
+                                    </View>
 
-                                    <View style={styles.hairlineSplitLine}/>
+                                    <View style={[styles.hairlineSplitLine]}/>
 
                                     <View
                                         style={{
+                                            flex: 1,
                                             flexDirection: 'row',
                                             flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            marginVertical: 10,
                                         }}
                                     >
                                         <TextInput
@@ -306,12 +312,12 @@ export default class satviz extends Component {
                                                 width: '70%',
                                                 paddingLeft: '3%',
                                             }}
-                                            placeholder="Choose manualy by satellite ID"
+                                            placeholder="Choose by typing satellite ID"
                                             ref={this.myTextInput}
                                             keyboardType='numeric'
                                             value={this.state.text}
                                         />
-                                        <View style={{ width: '20%', }}>
+                                        <View style={{ width: '20%'}}>
                                             <Button title="Add!" onPress={this.addManual} />
                                         </View>
                                     </View>
@@ -404,7 +410,7 @@ export default class satviz extends Component {
                                                             borderBottomRightRadius: 20,
                                                         }}
                                                     >
-                                                        <Icon
+                                                        <IconF
                                                             name="x"
                                                             style={{
                                                                 fontSize: 16,
@@ -424,27 +430,22 @@ export default class satviz extends Component {
                                     <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
                                         <View style={{width: '80%'}}>
                                             <SectionedMultiSelect
-                                            items={groundSegmentSelectItems.default}
-                                            uniqueKey="id"
-                                            subKey="children"
-                                            selectText="Choose from ground segments..."
-                                            showDropDowns={false}
-                                            readOnlyHeadings={true}
-                                            selectChildren={true}
-                                            // expandDropDowns={true} // causes weird bug at bottom part of screen
-                                            showRemoveAll={true}
-                                            onSelectedItemsChange={this.onGroundSegmentSelectedItemsChange}
-                                            selectedItems={this.state.selectedItemsGroundSegment}
-                                            style={{
-                                                container: {
-                                                    width: '70%',
-                                                }
-                                            }}
-                                        />
+                                                items={groundSegmentSelectItems.default}
+                                                uniqueKey="id"
+                                                subKey="children"
+                                                selectText="Choose from ground segments..."
+                                                showDropDowns={false}
+                                                readOnlyHeadings={true}
+                                                selectChildren={true}
+                                                // expandDropDowns={true} // causes weird bug at bottom part of screen
+                                                showRemoveAll={true}
+                                                onSelectedItemsChange={this.onGroundSegmentSelectedItemsChange}
+                                                selectedItems={this.state.selectedItemsGroundSegment}
+                                            />
                                         </View>
-                                        <View stye={{width: '20%'}}>
+                                        <View style={{position: 'absolute', top: 15, right: 25}}>
                                             <TouchableOpacity onPress={this.toggleGroundSegmentModal}>
-                                                <Icon name="info" size={30} color="black" />
+                                                <IconF name="info" size={30} color="gray" style={styles.iconShadow}/>
                                             </TouchableOpacity>
                                         </View>
                                         <View></View>
@@ -481,9 +482,9 @@ export default class satviz extends Component {
                                         </View>
                                     </Modal>
 
-                                    <View style={styles.hairlineSplitLine}/>
+                                    <View style={[styles.hairlineSplitLine]}/>
 
-                                    <View style={{marginHorizontal: "3%"}}>
+                                    <View style={{marginHorizontal: 10, marginTop: 10}}>
                                         <Text>Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)</Text>
                                         <Slider
                                             value={this.state.timeSpeedSliderValue}
@@ -590,7 +591,13 @@ const styles = StyleSheet.create({
     hairlineSplitLine: {
         borderBottomColor: 'black',
         borderBottomWidth: StyleSheet.hairlineWidth,
-        marginTop: 10,
-        marginBottom: 10,
-    }
+    },
+
+
+
+    iconShadow: {
+        shadowOpacity: 2,
+        textShadowRadius: 2,
+        textShadowOffset:{width: 0,height: 0}
+    },
 });
