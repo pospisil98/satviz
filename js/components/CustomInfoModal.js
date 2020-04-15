@@ -113,6 +113,13 @@ export default class CustomInfoModal extends Component {
         );
     }
 
+    closeModalCallback = () => {
+        this.setState({
+            explanationRequest: null,
+        });
+        this.props.closeModal();
+    }
+
     renderExplanation = () => {
         return (
             <Text style={styles.explanation}>
@@ -130,10 +137,10 @@ export default class CustomInfoModal extends Component {
             <View>
                 <Modal isVisible={this.state.modalVisible}
                     useNativeDriver={true}
-                    onBackdropPress={this.props.closeModal}
+                    onBackdropPress={this.closeModalCallback}
                 >
                     <View style={styles.helpModal}>
-                    <TouchableOpacity onPress={this.props.closeModal} style={styles.modalCloseIcon}>
+                    <TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}>
                         <Icon name="close-a" size={20} color="grey" />
                     </TouchableOpacity>
 
