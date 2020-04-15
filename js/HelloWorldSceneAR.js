@@ -16,6 +16,7 @@ import {
 } from 'react-viro';
 
 import Globe from './components/Globe'
+import { showMessage, hideMessage } from "react-native-flash-message";
 
 const targetNames = ["africa", "atlantic", "australia", "china", "europe",
     "hawaii", "indonesia", "northAmerica", "southAmerica"];
@@ -52,6 +53,8 @@ export default class HelloWorldSceneAR extends Component {
         };
 
         this.tracking = [];
+        this.isTracking = false;
+
         this.lastDetected = null;
         this.positionModCount = 0;
 
@@ -162,19 +165,28 @@ export default class HelloWorldSceneAR extends Component {
         if (changed) {
             console.log(this.tracking);
 
+            if (this.tracking.length == 0 && this.isTracking == true ) {
+                this.isTracking = false;
+                showMessage({
+                    message: "Tracking lost :(",
+                    type: "warning",
+                });
+            }
+    
+            if (this.tracking.length != 0 && this.isTracking == false) {
+                this.isTracking = true;
+                showMessage({
+                    message: "Tracking established",
+                    type: "success",
+                });
+            }
+
             let rotation = this.getGlobeRotation();
             this.setState({globeRotation: rotation});
         }
     }
 
     _onInitialized = (state, reason) => {
-        if (state == ViroConstants.TRACKING_NORMAL) {
-            this.setState({
-                text: "Hello World!"
-            });
-        } else if (state == ViroConstants.TRACKING_NONE) {
-            // Handle loss of tracking
-        }
     }
 
     renderSphere = () => {
@@ -260,7 +272,7 @@ export default class HelloWorldSceneAR extends Component {
 
 ViroARTrackingTargets.createTargets({
     "flatTarget": {
-        source: require('./res/targets/earthFlat.png'),
+        source: require('./res/targets/earthFlat.jpeg'),
         orientation: "Up",
         physicalWidth: 0.2 // real world width in meters
     },
