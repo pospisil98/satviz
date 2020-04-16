@@ -34,7 +34,7 @@ export default class Globe extends React.Component {
             position: [-0.1, 0.1, 0.1],
             phi: 0,
             satellites: [],
-            orbits: [],
+            excludedOrbits: [],
         }
 
         this.modelListRotation = [0, 0, 0];
@@ -86,7 +86,7 @@ export default class Globe extends React.Component {
 
         if (this.props.orbitIDs !== prevProps.orbitIDs) {
             this.setState({
-                orbits: [...this.props.orbitIDs],
+                excludedOrbits: [...this.props.orbitIDs],
             });
         }
     }
@@ -274,7 +274,7 @@ export default class Globe extends React.Component {
         if (!this.loading) {
             orbitList = this.state.satellites.map((sat) => {
                 let orbitTime = sat.getOrbitTime();
-                if (this.state.orbits.includes(sat.id)) {
+                if (!this.state.excludedOrbits.includes(sat.id)) {
                     let positions;
                     
                     if (this.shouldUpdateOrbit(sat.id, orbitTime)) {

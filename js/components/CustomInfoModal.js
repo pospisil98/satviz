@@ -48,16 +48,12 @@ export default class CustomInfoModal extends Component {
             this.updateSateliteData();
         }
 
-        if (!this.props.orbitEnabled && this.state.buttonText != "Show orbit") {
-            this.setState({
-                buttonText: "Show orbit",
-            });
+        if (!this.props.orbitEnabled && this.state.buttonText != "Hide orbit") {
+            this.changeText();
         }
         
-        if (this.props.orbitEnabled && this.state.buttonText != "Hide orbit") {
-            this.setState({
-                buttonText: "Hide orbit",
-            });
+        if (this.props.orbitEnabled && this.state.buttonText != "Show orbit") {
+            this.changeText();
         }
     }
 
@@ -113,6 +109,19 @@ export default class CustomInfoModal extends Component {
         );
     }
 
+    changeText = () => {
+        let text;
+        if ( this.state.buttonText == "Show orbit") {
+            text = "Hide orbit";
+        } else {
+            text = "Show orbit";
+        }
+
+        this.setState({
+            buttonText: text,
+        });
+    }
+
     closeModalCallback = () => {
         this.setState({
             explanationRequest: null,
@@ -151,9 +160,7 @@ export default class CustomInfoModal extends Component {
                             title={this.state.buttonText}
                             onPress={() => {
                                 this.props.orbitButtonCallback(this.state.data.id);
-                                this.setState({
-                                    buttonText: "Hide orbit",
-                                })
+                                this.changeText();
                             }}
                         />
                     </View>
