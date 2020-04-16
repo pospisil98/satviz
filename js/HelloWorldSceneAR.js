@@ -252,7 +252,7 @@ export default class HelloWorldSceneAR extends Component {
                     groundSegmentIDs={this.props.arSceneNavigator.viroAppProps.groundSegmentIDs}
                     timeScale={this.state.timeScale}
                     flatTarget={flatTarget}
-                    renderVirtualGlobe={true}
+                    renderVirtualGlobe={false}
                     removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
                     orbitIDs={this.state.orbitIDs}
                     orbitOpacity={this.state.orbitOpacity}

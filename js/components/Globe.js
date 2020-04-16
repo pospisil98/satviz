@@ -351,15 +351,38 @@ export default class Globe extends React.Component {
                 />
             );
         } else {
+            /* 
+            <ViroSphere
+                        heightSegmentCount={20}
+                        widthSegmentCount={20}
+                        radius={0.17}
+                        position={[0, 0, 0]}
+                        materials={["gray"]}
+                        renderingOrder={-1}
+                        opacity={0.3}
+                    />
+            */
             return (
-                <ViroSphere
-                    heightSegmentCount={20}
-                    widthSegmentCount={20}
-                    radius={0.17}
-                    position={[0, 0, 0]}
-                    materials={["occlusive"]}
-                    renderingOrder={-1}
-                />
+                <ViroNode>
+                    <ViroSphere
+                        heightSegmentCount={20}
+                        widthSegmentCount={20}
+                        radius={0.17}
+                        position={[0, 0, 0]}
+                        materials={["occlusive"]}
+                        renderingOrder={-1}
+                    />
+
+                    <Viro3DObject source={require('../res/ghostEarth/untitled.obj')}
+                        resources={[require('../res/ghostEarth/untitled.mtl'),
+                        require('../res/ghostEarth/untitled.png')]}
+                        position={[0.0, 0.0, 0.0]}
+                        scale={[0.18, 0.18, 0.18]}
+                        rotation={[0, -175, 0]}  // rotated that africa is towards camera
+                        type="OBJ"
+                        opacity={0.3}
+                    />
+                </ViroNode>
             );
         }
     }
