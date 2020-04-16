@@ -250,21 +250,20 @@ export default class satviz extends Component {
                         <Text>Informace o aplikaci</Text>
                         <Text>Stručné info o používání a že to je moje BP</Text>
 
-                        <View style={{marginHorizontal: 10, marginTop: 10}}>
-                            <Text>Set orbits opacity (currently {Math.trunc(this.state.orbitOpacity).toString()})</Text>
-                            <Slider
-                                value={this.state.orbitOpacity}
-                                minimumValue={0}
-                                maximumValue={1}
-                                onValueChange={(val) => {
-                                    clearTimeout(this.opacitySliderTimeout);
-                                    this.opacitySliderTimeout = setTimeout(() => {
-                                      this.setState({orbitOpacity: val })
-                                    }, 100)
-                                  }
+                        <Text>Orbit opacity: </Text>
+                        <Slider
+                            value={this.state.orbitOpacity}
+                            minimumValue={0}
+                            maximumValue={1}
+                            onValueChange={(val) => {
+                                clearTimeout(this.opacitySliderTimeout);
+                                this.opacitySliderTimeout = setTimeout(() => {
+                                    this.setState({orbitOpacity: val })
+                                }, 100)
                                 }
-                            />
-                        </View>
+                            }
+                            style={{width: '90%'}}
+                        />
 
                         <View style={styles.infoModalCloseButton}>
                             <Button title="Hide modal" onPress={this.toggleModal} />
