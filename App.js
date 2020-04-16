@@ -61,6 +61,7 @@ export default class satviz extends Component {
             satelliteModalSatellite: null,
 
             orbitIDs: [],
+            orbitOpacity: 0.8,
 
             groundSegmentModalVisible: false,
 
@@ -72,6 +73,8 @@ export default class satviz extends Component {
             flashMessagePosition: "top",
             flashMessageAutoHide: true,
         };
+
+        this.opacitySliderTimeout;
 
         this.maxSelectedItems = 50;
     }
@@ -232,6 +235,7 @@ export default class satviz extends Component {
                         satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
                         groundSegmentIDs: this.state.selectedItemsGroundSegment,
                         orbitIDs: this.state.orbitIDs,
+                        orbitOpacity: this.state.orbitOpacity,
                         timeScale: this.state.timeSpeedSliderValue,
                         removeSatelliteCallback: this.removeSatelliteWithError,
                     }}
@@ -245,6 +249,23 @@ export default class satviz extends Component {
                     <View style={styles.helpModal}>
                         <Text>Informace o aplikaci</Text>
                         <Text>Stručné info o používání a že to je moje BP</Text>
+
+                        <View style={{marginHorizontal: 10, marginTop: 10}}>
+                            <Text>Set orbits opacity (currently {Math.trunc(this.state.orbitOpacity).toString()})</Text>
+                            <Slider
+                                value={this.state.orbitOpacity}
+                                minimumValue={0}
+                                maximumValue={1}
+                                onValueChange={(val) => {
+                                    clearTimeout(this.opacitySliderTimeout);
+                                    this.opacitySliderTimeout = setTimeout(() => {
+                                      this.setState({orbitOpacity: val })
+                                    }, 100)
+                                  }
+                                }
+                            />
+                        </View>
+
                         <View style={styles.infoModalCloseButton}>
                             <Button title="Hide modal" onPress={this.toggleModal} />
                         </View>

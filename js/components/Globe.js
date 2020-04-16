@@ -35,6 +35,7 @@ export default class Globe extends React.Component {
             phi: 0,
             satellites: [],
             excludedOrbits: [],
+            orbitOpacity: 0.8,
         }
 
         this.modelListRotation = [0, 0, 0];
@@ -87,6 +88,12 @@ export default class Globe extends React.Component {
         if (this.props.orbitIDs !== prevProps.orbitIDs) {
             this.setState({
                 excludedOrbits: [...this.props.orbitIDs],
+            });
+        }
+
+        if (this.props.orbitOpacity !== prevProps.orbitOpacity) {
+            this.setState({
+                orbitOpacity: this.props.orbitOpacity,
             });
         }
     }
@@ -294,7 +301,7 @@ export default class Globe extends React.Component {
                             thickness={0.001}
                             materials={"red"}
                             renderingOrder={-1}
-                            opacity={0.5}
+                            opacity={this.state.orbitOpacity}
                         />
                     );
                 }
