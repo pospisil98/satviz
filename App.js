@@ -509,7 +509,7 @@ export default class satviz extends Component {
                                         <Slider
                                             value={this.state.timeSpeedSliderValue}
                                             minimumValue={1}
-                                            maximumValue={1000}
+                                            maximumValue={10000}
                                             onValueChange={(val) => this.setState({ timeSpeedSliderValue: val })}
                                         />
                                     </View>

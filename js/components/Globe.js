@@ -36,6 +36,7 @@ export default class Globe extends React.Component {
             satellites: [],
             excludedOrbits: [],
             orbitOpacity: 0.8,
+            groundRotationCompensation: [0, 0, 0]
         }
 
         this.modelListRotation = [0, 0, 0];
@@ -54,10 +55,13 @@ export default class Globe extends React.Component {
         this.orbitTimestamps = {};
         this.orbitPoints = {};
 
+        this.clock = new Clock();
+
         // start update positions every second
         this.moveTimer = setInterval(this.updatePositions, 100);
 
-        this.clock = new Clock();
+        this.rotationTimer = setInterval(this.updateRotation, 30);
+        this.lastRotationTime = this.clock.time();
     }
 
     async componentDidUpdate(prevProps, prevState) {
@@ -128,6 +132,24 @@ export default class Globe extends React.Component {
 
             this.setState({ satellites: cleaned });
         }
+    }
+
+    updateRotation = () => {
+        const rotationPerSecond = 0.00417807901;
+
+        let now = this.clock.time();
+        let difference = (now - this.lastRotationTime);
+        this.lastRotationTime = now;
+
+        let additionalRotation = difference * (rotationPerSecond / 1000);
+
+        let rotation = (this.state.groundRotationCompensation[1] + additionalRotation);
+
+        rotation = rotation % 360;
+        
+        this.setState({
+            groundRotationCompensation: [0, rotation, 0],
+        });
     }
 
     convertTLEtoSatelliteObjectCollection = () => {
@@ -330,9 +352,12 @@ export default class Globe extends React.Component {
                 />
 
                 <ViroNode rotation={this.modelListRotation}>
-                    {modelList}
                     {groundSegmentList}
-                    {orbitsList}
+
+                    <ViroNode rotation={this.state.groundRotationCompensation}>
+                        {modelList}
+                        {orbitsList}
+                    </ViroNode>
                 </ViroNode>
             </ViroNode>
         );
@@ -399,9 +424,12 @@ export default class Globe extends React.Component {
                 {this.renderVirtualGlobe()}
 
                 <ViroNode rotation={this.modelListRotation}>
-                    {modelList}
                     {groundSegmentList}
-                    {orbitsList}
+
+                    <ViroNode rotation={this.state.groundRotationCompensation}>
+                        {modelList}
+                        {orbitsList}
+                    </ViroNode>
                 </ViroNode>
             </ViroNode>
         );
