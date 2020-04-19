@@ -139,17 +139,19 @@ export default class Globe extends React.Component {
 
         let now = this.clock.time();
         let difference = (now - this.lastRotationTime);
-        this.lastRotationTime = now;
 
         let additionalRotation = difference * (rotationPerSecond / 1000);
 
-        let rotation = (this.state.groundRotationCompensation[1] + additionalRotation);
-
+        let rotation = (-this.state.groundRotationCompensation[1] + additionalRotation);
         rotation = rotation % 360;
-        
-        this.setState({
-            groundRotationCompensation: [0, rotation, 0],
-        });
+
+        if (rotation > 1) {
+            this.setState({
+                groundRotationCompensation: [0, -rotation, 0],
+            });
+
+            this.lastRotationTime = now;
+        }
     }
 
     convertTLEtoSatelliteObjectCollection = () => {
