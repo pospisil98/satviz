@@ -11,6 +11,7 @@ import {
 import Modal from "react-native-modal";
 
 import Icon from 'react-native-vector-icons/Fontisto';
+import IconAnt from 'react-native-vector-icons/AntDesign'
 
 const messageDict = {
     id: "The NORAD Catalog Number or USSPACECOM object number is a sequential 5-digit number assigned by USSPACECOM to all Earth orbiting satellites in order of identification.",
@@ -25,6 +26,9 @@ const messageDict = {
     period: "Period is the amount of time to complete one revolution around the Earth.",
 }
 
+const showMessage = "Show orbit";
+const hideMessage = "Hide orbit";
+
 export default class CustomInfoModal extends Component {
     constructor() {
         super();
@@ -35,7 +39,7 @@ export default class CustomInfoModal extends Component {
 
             modalVisible: false,
 
-            buttonText: "Show orbit"
+            buttonText: hideMessage
         };
     }
 
@@ -48,12 +52,18 @@ export default class CustomInfoModal extends Component {
             this.updateSateliteData();
         }
 
-        if (!this.props.orbitEnabled && this.state.buttonText != "Hide orbit") {
-            this.changeText();
-        }
-        
-        if (this.props.orbitEnabled && this.state.buttonText != "Show orbit") {
-            this.changeText();
+        if (this.props.orbitEnabled != prevProps.orbitEnabled && prevProps.orbitEnabled) {
+            if (!this.props.orbitEnabled) {
+                this.setState({
+                    buttonText: hideMessage,
+                });
+            }
+            
+            if (this.props.orbitEnabled) {
+                this.setState({
+                    buttonText: showMessage,
+                });
+            }
         }
     }
 
@@ -105,16 +115,17 @@ export default class CustomInfoModal extends Component {
                 <Text onPress={() => { this.setState({ explanationRequest: "period" }) }}>
                     <Text style={styles.boldFont}>Period: </Text>{this.state.data.period}
                 </Text>
+                <Text style={{fontSize: 10, color: 'gray', marginTop: 5}}>By clicking on line you can get more info</Text>
             </View>
         );
     }
 
     changeText = () => {
         let text;
-        if ( this.state.buttonText == "Show orbit") {
-            text = "Hide orbit";
+        if (this.state.buttonText === showMessage) {
+            text = hideMessage;
         } else {
-            text = "Show orbit";
+            text = showMessage;
         }
 
         this.setState({
@@ -154,16 +165,18 @@ export default class CustomInfoModal extends Component {
                     </TouchableOpacity>
 
                         {this.renderTextInfo()}
-                        {this.renderExplanation()}
 
-                        <Button
-                            title={this.state.buttonText}
-                            onPress={() => {
-                                this.props.orbitButtonCallback(this.state.data.id);
-                                this.changeText();
-                            }}
-                            style={{marginTop: 5,}}
-                        />
+                        <View style={{marginTop: 10}}>
+                            <Button
+                                title={this.state.buttonText}
+                                onPress={() => {
+                                    this.props.orbitButtonCallback(this.state.data.id);
+                                    this.changeText();
+                                }}
+                            />
+                        </View>
+
+                        {this.renderExplanation()}
                     </View>
                 </Modal>
             </View>
