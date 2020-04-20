@@ -23,6 +23,7 @@ import SectionedMultiSelect from 'react-native-sectioned-multi-select';
 import Modal from "react-native-modal";
 import IconF from 'react-native-vector-icons/Feather';
 import IconM from 'react-native-vector-icons/MaterialIcons'
+import Icon from 'react-native-vector-icons/Fontisto';
 import Slider from '@react-native-community/slider';
 
 import FlashMessage from "react-native-flash-message";
@@ -247,9 +248,21 @@ export default class satviz extends Component {
                     onBackdropPress={this.toggleModal}
                 >
                     <View style={styles.helpModal}>
-                        <Text>Informace o aplikaci</Text>
-                        <Text>Stručné info o používání a že to je moje BP</Text>
+                        <TouchableOpacity onPress={this.toggleModal} style={styles.modalCloseIcon}>
+                            <Icon name="close-a" size={20} color="grey" />
+                        </TouchableOpacity>
 
+                        <Text style={styles.helpModalHeading}>About</Text>
+                        <Text style={{textAlign:'justify'}}>This application is used to visualize satellites orbiting the Earth in augmented reality. Along with the orbit visualization, it allows the display of basic satellite information (position, speed, ...) as well as the display of positions and information regarding the terrestrial GPS segment. </Text>
+
+
+                        <Text style={[styles.helpModalHeading, {marginTop: 10, textAlign: 'center'}]}>How To</Text>
+                        <Text>1. Detect target   </Text>
+                        <Text style={{textAlign: 'center'}}>2. Choose satellite or ground segment element from slide-up menu   </Text>
+                        <Text style={{textAlign: 'center'}}>3. Click on satellites to get more info   </Text>
+
+
+                        <Text style={[styles.helpModalHeading, {marginTop: 10}]}>Settings</Text>
                         <Text>Orbit opacity: </Text>
                         <Slider
                             value={this.state.orbitOpacity}
@@ -264,10 +277,6 @@ export default class satviz extends Component {
                             }
                             style={{width: '90%'}}
                         />
-
-                        <View style={styles.infoModalCloseButton}>
-                            <Button title="Hide modal" onPress={this.toggleModal} />
-                        </View>
                     </View>
                 </Modal>
 
@@ -576,14 +585,20 @@ const styles = StyleSheet.create({
     helpModal: {
         backgroundColor: "white",
         marginHorizontal: '10%',
+        padding: 15,
         height: '50%',
         textAlign: 'center',
-        justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
-    infoModalCloseButton: {
-        marginTop: '30%',
-        width: '50%',
+    helpModalHeading: {
+        fontWeight:'bold',
+        textAlign: 'center',
+        fontSize: 16
+    },
+    modalCloseIcon: {
+        position: 'absolute',
+        right: 9,
+        top: 9,
     },
 
     groundSegmentModal: {
