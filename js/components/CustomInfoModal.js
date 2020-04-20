@@ -148,7 +148,7 @@ export default class CustomInfoModal extends Component {
                     useNativeDriver={true}
                     onBackdropPress={this.closeModalCallback}
                 >
-                    <View style={styles.helpModal}>
+                    <View style={styles.infoModal}>
                     <TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}>
                         <Icon name="close-a" size={20} color="grey" />
                     </TouchableOpacity>
@@ -162,6 +162,7 @@ export default class CustomInfoModal extends Component {
                                 this.props.orbitButtonCallback(this.state.data.id);
                                 this.changeText();
                             }}
+                            style={{marginTop: 5,}}
                         />
                     </View>
                 </Modal>
@@ -171,10 +172,10 @@ export default class CustomInfoModal extends Component {
 }
 
 const styles = StyleSheet.create({
-    helpModal: {
+    infoModal: {
         backgroundColor: "white",
         marginHorizontal: '10%',
-        height: '50%',
+        height: '53%',
         paddingHorizontal: "5%",
     },
     modalCloseIcon: {

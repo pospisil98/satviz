@@ -270,10 +270,12 @@ export default class Globe extends React.Component {
                             position={sat.position}
                             materials={["gray"]}
 
-                            highAccuracyEvents={true}
+                            highAccuracyEvents={false}
                             onClick={() => {
                                 this.onModelClick(sat.id);
                             }}
+
+                            renderingOrder={10}
                         />
                     );
                 }
@@ -288,10 +290,12 @@ export default class Globe extends React.Component {
                         rotation={sat.rotation}
                         type={sat.modelType}
 
-                        highAccuracyEvents={true}
+                        highAccuracyEvents={false}
                         onClick={() => {
                             this.onModelClick(sat.id);
                         }}
+                        
+                        renderingOrder={10}
                     />
                 )
             });
@@ -340,7 +344,6 @@ export default class Globe extends React.Component {
                             points={positions}
                             thickness={0.001}
                             materials={"red"}
-                            renderingOrder={-1}
                             opacity={this.state.orbitOpacity}
                         />
                     );
