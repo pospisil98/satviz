@@ -242,9 +242,9 @@ export default class Globe extends React.Component {
                 return (
                     <ViroSphere
                         key={segmentID}
-                        heightSegmentCount={10}
-                        widthSegmentCount={10}
-                        radius={0.008}
+                        heightSegmentCount={8}
+                        widthSegmentCount={8}
+                        radius={0.006}
                         position={position}
                         materials={[materialName]}
                     />

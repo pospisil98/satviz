@@ -487,7 +487,7 @@ export default class satviz extends Component {
                                         onBackdropPress={this.toggleGroundSegmentModal}
                                     >
                                         <View style={styles.groundSegmentModal}>
-                                            <View style={{height: '90%'}}>
+                                            <View style={{height: '93%'}}>
                                                 <ScrollView>
                                                     <Text style={styles.groundSegmentHeading}>Master Control Stations and Alternate MCS</Text>
                                                     <Text style={styles.groundSegmentColors}>Red and Gold</Text>
@@ -505,7 +505,7 @@ export default class satviz extends Component {
                                                     </Text>
                                                 </ScrollView>
                                             </View>
-                                            <View style={{width: '40%', justifyContent:'center', flex: 1,}}>
+                                            <View style={{width: '40%', marginTop: 10}}>
                                                 <Button title="Hide info" onPress={this.toggleGroundSegmentModal} />
                                             </View>
                                         </View>
