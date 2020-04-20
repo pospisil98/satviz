@@ -34,6 +34,7 @@ export default class Globe extends React.Component {
             position: [-0.1, 0.1, 0.1],
             phi: 0,
             satellites: [],
+            currentSatelliteIDs: [],
             excludedOrbits: [],
             orbitOpacity: 0.8,
             groundRotationCompensation: [0, 0, 0]
@@ -65,22 +66,37 @@ export default class Globe extends React.Component {
     }
 
     async componentDidUpdate(prevProps, prevState) {
-        if (this.props.satelliteIDs !== prevProps.satelliteIDs && prevProps.satelliteIDs) {
-            let difference = this.props.satelliteIDs.filter(x => !prevProps.satelliteIDs.includes(x));
+        let propIDs;
+        if (this.props.satelliteIDs) {
+            propIDs = this.props.satelliteIDs.map(id => {
+                return ("00000" + id.toString()).slice(-5);
+            });
+        }
+
+        let areIDsSame = (propIDs.length === this.state.currentSatelliteIDs.length) && propIDs.every(value => this.state.currentSatelliteIDs.includes(value));
+
+        if (!areIDsSame && this.loading === false) {
+            let addition = propIDs.filter(x => !this.state.currentSatelliteIDs.includes(x));
+
             let sats = [];
 
-            if (difference.length > 0) {
+            if (addition.length > 0) {
                 // call ST funtion to get data according to newly added IDs
                 this.loading = true;
-                let data = await this.ST.testBothAsync(difference);
+                let data = await this.ST.testBothAsync(addition);
 
                 this.tle = SpaceTrack.convertTLEStringToArray(data);
                 sats = this.parseData();
             }
 
-            keptFromCurrentObjects = this.state.satellites.filter(sat => this.props.satelliteIDs.includes(sat.id));
+            keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));
+            
+            let curr = [...sats, ...keptFromCurrentObjects].map(sat => (sat.id).toString());
 
-            this.setState({ satellites: [...sats, ...keptFromCurrentObjects] })
+            this.setState({ 
+                satellites: [...sats, ...keptFromCurrentObjects],
+                currentSatelliteIDs: curr,
+            })
         }
 
         if (this.props.timeScale !== prevProps.timeScale) {
