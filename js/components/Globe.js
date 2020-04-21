@@ -1,9 +1,12 @@
+/** 
+ *  @fileOverview Globe component providing all the visualization.
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
 'use-strict';
 
 import React, { Component } from 'react';
-import {
-    View,
-} from 'react-native';
 
 import {
     ViroMaterials,
@@ -18,28 +21,37 @@ import {
 import SpaceTrack from '../SpaceTrack';
 import SatelliteObject from '../SatelliteObject';
 
-import FlashMessage from "react-native-flash-message";
-import { showMessage, hideMessage } from "react-native-flash-message";
-
 
 var satellite = require('satellite.js');
 var Clock = require('timetravel').Clock;
 
-export default class Globe extends React.Component {
+/**
+ * Component representing virtual globe with satellites.
+ */
+export default class Globe extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            loadingDisplay: true,
-            position: [-0.1, 0.1, 0.1],
-            phi: 0,
+            /** Currently visualized satellite objects
+             * @type {Array<Object>} */
             satellites: [],
+            /** Currently visualized satellite IDs
+             * @type {Array<string>} */
             currentSatelliteIDs: [],
+            /** IDs of sats without orbit rendered 
+             * @type {Array<string>} */
             excludedOrbits: [],
+            /** Opacity of orbit line
+             * @type {number} */
             orbitOpacity: 0.8,
+            /** Rotation around individual axis to compensate globe rotation
+             * @type {Array<number>} */
             groundRotationCompensation: [0, 0, 0]
         }
 
+        /** Compensation of model rotation on different targets
+         *  @type {Array<number>} */
         this.modelListRotation = [0, 0, 0];
         if (this.props.flatTarget) {
             this.modelListRotation = [0, -143, 0];
@@ -47,25 +59,42 @@ export default class Globe extends React.Component {
             this.modelListRotation = [0, -173, 0];
         }
 
-        this.time = new Date();
+        /** SpaceTrack object for getting data from Satellite Catalog
+         * @type {SpaceTrack} */
         this.ST = new SpaceTrack();
 
+        /** State of globe data loading
+         * @type {boolean} */
         this.loading = false;
 
+        /** Number of segments in one orbit
+         * @type {number} */
         this.orbitSegmentCount = 100;
+        /** Timestamps of orbits starting times 
+         * @type {Object<string, any>} */
         this.orbitTimestamps = {};
+        /** Points of satellite orbits 
+         * @type {Object<string, Array<Array<number>>> */
         this.orbitPoints = {};
 
+        /** Globe custom clock with special functions
+         * @type {Clock}
+         */
         this.clock = new Clock();
 
-        // start update positions every second
-        this.moveTimer = setInterval(this.updatePositions, 100);
-
-        this.rotationTimer = setInterval(this.updateRotation, 30);
+        /** Last globe rotation time for optimized rotating
+         * @type {Clock.time}
+         */
         this.lastRotationTime = this.clock.time();
+
+        /** Timer for satellite motion simulation */
+        this.moveTimer = setInterval(this.updatePositions, 100);
+        /** Timer for globe rotation simulation */
+        this.rotationTimer = setInterval(this.updateRotation, 30);
     }
 
     async componentDidUpdate(prevProps, prevState) {
+        // Fix for problem where numbers starting with zeros was casted to number
         let propIDs;
         if (this.props.satelliteIDs) {
             propIDs = this.props.satelliteIDs.map(id => {
@@ -73,6 +102,7 @@ export default class Globe extends React.Component {
             });
         }
 
+        // Check whether two arrays have same elements or not
         let areIDsSame = (propIDs.length === this.state.currentSatelliteIDs.length) && propIDs.every(value => this.state.currentSatelliteIDs.includes(value));
 
         if (!areIDsSame && this.loading === false) {
@@ -81,18 +111,20 @@ export default class Globe extends React.Component {
             let sats = [];
 
             if (addition.length > 0) {
-                // call ST funtion to get data according to newly added IDs
+                // Call ST funtion to get data according to newly added IDs
                 this.loading = true;
                 let data = await this.ST.getTLEs(addition);
 
-                // convert TLE string to line separated array
+                // Convert TLE string to line separated array
                 this.tle = data.split('\r\n');
                 
                 sats = this.parseData();
             }
 
+            // Get satellites which will be not removed from current ones
             keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));
             
+            // Get IDs of all visualized satellites
             let curr = [...sats, ...keptFromCurrentObjects].map(sat => (sat.id).toString());
 
             this.setState({ 
@@ -101,18 +133,19 @@ export default class Globe extends React.Component {
             })
         }
 
+        // Readjust custom clock speed 
         if (this.props.timeScale !== prevProps.timeScale) {
             this.clock.stop();
             this.clock.speed(this.props.timeScale).time(this.clock.time());
             this.clock.start();
         }
 
+        // Update state for component rerender
         if (this.props.orbitIDs !== prevProps.orbitIDs) {
             this.setState({
                 excludedOrbits: [...this.props.orbitIDs],
             });
         }
-
         if (this.props.orbitOpacity !== prevProps.orbitOpacity) {
             this.setState({
                 orbitOpacity: this.props.orbitOpacity,
@@ -120,18 +153,27 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Parses downloaded TLE data into satellite objects and stops loading of data.
+     * 
+     * @returns {Array<SatelliteObject>}
+     */
     parseData = () => {
-        //gather new satellite objects
         satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
         this.loading = false;
 
         return satelliteObjects;
     }
 
+    /**
+     * Updates positions of currently visualized satellites.
+     */
     updatePositions = () => {
         if (this.state.satellites.length > 0) {
             let copy = [...this.state.satellites]
 
+            // Sometime there is error in position propagation according to satellite.js documentation
+            // so its needed to store IDs of sats which will be later removed
             let removeIDs = [];
 
             copy.forEach((sat) => {
@@ -152,6 +194,9 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Updates rotation of earth (satellites) according to real globe rotation.
+     */
     updateRotation = () => {
         const rotationPerSecond = 0.00417807901;
 
@@ -163,6 +208,7 @@ export default class Globe extends React.Component {
         let rotation = (-this.state.groundRotationCompensation[1] + additionalRotation);
         rotation = rotation % 360;
 
+        // Rotate Earth only if rotation is > 1 degreee (faster timescales, or long realtime visualization)
         if (rotation > 1) {
             this.setState({
                 groundRotationCompensation: [0, -rotation, 0],
@@ -172,12 +218,18 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Converts downloaded TLE data to SatelliteObjects array.
+     * 
+     * @returns {Array<SatelliteObject>} Converted TLEs into SatelliteObjects
+     */
     convertTLEtoSatelliteObjectCollection = () => {
         var tleIndex = 0;
         var idIndex = 0;
         var satrec;
         var satelliteObjects = [];
 
+        // indexes are += 2 because each TLE has 2 lines
         for (tleIndex = 0; tleIndex < this.tle.length - 1; tleIndex += 2) {
             satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);
             satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec, [this.tle[tleIndex], this.tle[tleIndex + 1]]))
@@ -187,16 +239,26 @@ export default class Globe extends React.Component {
         return satelliteObjects;
     }
 
-    selectSatelliteObjectById = (id) => {
-        return this.state.satellites.filter((sat) => {
+    /**
+     * Processes click on visualized satelite.
+     * 
+     * @param {string} id ID of clicked satellite
+     */
+    onModelClick = (id) => {
+        let satelliteObject = this.state.satellites.filter((sat) => {
             return sat.id == id;
         })
+
+        this.props.satelliteClickCallback(sat);
     }
 
-    onModelClick = (id) => {
-        this.props.satelliteClickCallback(this.selectSatelliteObjectById(id));
-    }
-
+    /**
+     * Gets material for ground segment visualiziaton based on its ID.
+     * 
+     * @param {number} segmentID ID of ground segment
+     * 
+     * @returns {string} Material name
+     */
     getMaterialForGroundSegment = (segmentID) => {
         if (segmentID === 11) {
             return "red";
@@ -213,6 +275,13 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Gets position of ground segment with given ID for visualiziation.
+     * 
+     * @param {string} segmentID ID of segment
+     * 
+     * @returns {Array<number>} Position in ViroCoords
+     */
     getPositionForGroundSegment = (segmentID) => {
         let denominator;
 
@@ -229,10 +298,38 @@ export default class Globe extends React.Component {
         y = coordsOriginal.y / denominator;
         z = coordsOriginal.z / denominator;
 
-        // conversion from eci to viro coords
+        // Conversion from ECI to ViroCoords
         return [y, z, x];
     }
 
+    /**
+     * Decides whether enough time, one rotation, has passed for satellite orbit to be updated.
+     * 
+     * @param {string} satID ID of satellite orbit to be checked
+     * @param {Date} orbitTime Current time 
+     * 
+     * @returns {boolean} Decision whether to update or not
+     */
+    shouldUpdateOrbit = (satID, orbitTime) => {
+        if (!(satID in this.orbitTimestamps)) {
+            return true;
+        }
+
+        let maxtime = new Date(this.orbitTimestamps[satID]);
+        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);
+
+        if (this.clock.time() > maxtime) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Maps selected ground segment IDs to models for render.
+     * 
+     * @returns {Array<ViroSphere>} Array of 3D spheres as position visualization
+     */
     getGroundSegmentToRender = () => {
         let segmentList;
 
@@ -257,6 +354,11 @@ export default class Globe extends React.Component {
         return segmentList;
     }
 
+    /**
+     * Maps selected satellite IDs to models for render.
+     * 
+     * @returns {Array<ViroSphere|Viro3DObject>} Array of 3D models as satellite visualization
+     */
     getSatellitesToRender = () => {
         let modelList;
 
@@ -306,21 +408,11 @@ export default class Globe extends React.Component {
         return modelList;
     }
 
-    shouldUpdateOrbit = (satID, orbitTime) => {
-        if (!(satID in this.orbitTimestamps)) {
-            return true;
-        }
-
-        let maxtime = new Date(this.orbitTimestamps[satID]);
-        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);
-
-        if (this.clock.time() > maxtime) {
-            return true;
-        }
-
-        return false;
-    }
-
+    /**
+     * Maps selected satellite IDs (without excluded ones) to orbits for render.
+     * 
+     * @returns {Array<ViroPolyline>} Array of Viro Polylines - orbits
+     */
     getOrbitsToRender = () => {
         let orbitList;
 
@@ -356,6 +448,11 @@ export default class Globe extends React.Component {
         return orbitList;
     }
 
+    /**
+     * Renders flat target version of augumented globe.
+     * 
+     * @returns {ViroNode} Globe with all satelites and orbits.
+     */
     renderFlatTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
         let groundSegmentList = this.getGroundSegmentToRender();
@@ -386,6 +483,11 @@ export default class Globe extends React.Component {
         );
     }
 
+    /**
+     * Renders full 3D model of Earth or only its transparent version but with occlusive properties. 
+     * 
+     * @returns {<Viro3DObject|ViroNode} Globe for globe target
+     */
     renderVirtualGlobe = () => {
         if (this.props.renderVirtualGlobe) {
             return (
@@ -394,22 +496,12 @@ export default class Globe extends React.Component {
                     require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.08, 0.08, 0.08]}
-                    rotation={[180, -150, -180]}  // rotated that africa is towards camera
+                    rotation={[180, -150, -180]}  // Rotated that africa is towards camera
                     type="OBJ"
                 />
             );
         } else {
-            /* 
-            <ViroSphere
-                        heightSegmentCount={20}
-                        widthSegmentCount={20}
-                        radius={0.17}
-                        position={[0, 0, 0]}
-                        materials={["gray"]}
-                        renderingOrder={-1}
-                        opacity={0.3}
-                    />
-            */
+
             return (
                 <ViroNode>
                     <ViroSphere
@@ -435,6 +527,11 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Renders globe target version of augumented globe.
+     * 
+     * @returns {ViroNode} Globe with all satelites and orbits.
+     */
     renderGlobeTargetGlobe = () => {
         let modelList = this.getSatellitesToRender();
         let groundSegmentList = this.getGroundSegmentToRender();
@@ -458,6 +555,11 @@ export default class Globe extends React.Component {
         );
     }
 
+    /**
+     * Decides whether to render flat or globe target globe.
+     * 
+     * @returns {ViroNode} Correct globe with all orbits, satellites and ground segments.
+     */
     renderGlobe = () => {
         if (this.props.flatTarget) {
             return this.renderFlatTargetGlobe();
@@ -466,6 +568,11 @@ export default class Globe extends React.Component {
         }
     }
 
+    /**
+     * Renders whole component - visualization
+     * 
+     * @returns {ViroNode} Globe visualization
+     */
     render() {
         return (
             <ViroNode>
@@ -473,24 +580,15 @@ export default class Globe extends React.Component {
             </ViroNode>
         );
     }
-
-    // test function used for circular movement
-    moveFunc = () => {
-        var R = 0.5;
-
-        var X = R * Math.cos(this.state.phi)
-        var Y = R * Math.sin(this.state.phi)
-
-        var temp = this.state.phi + 0.01;
-
-        this.setState(prevState => ({
-            phi: temp,
-            position: [X, 0, Y]
-        }));
-    }
 }
 
-var groundSegmentEciCoords = {
+/**
+ * ECI cooardinates of cities with GPS ground segments.
+ * 
+ * @constant
+ * @type {Object<string, Object<string, number>>}
+ */
+const groundSegmentEciCoords = {
     "schriever": { "x": 3910.3096787548093, "y": 3080.3510329695946, "z": 3975.5813422691904 },
     "vandenberg": { "x": 4856.790504752817, "y": 1985.1370670602403, "z": 3615.737268949631 },
     "cape": { "x": 2619.008345543573, "y": 4961.851777391096, "z": 3024.8968340995298 },
@@ -513,7 +611,13 @@ var groundSegmentEciCoords = {
     "zealand": { "x": 3451.4932197311496, "y": -3264.5169253457175, "z": -4242.601519256618 }
 }
 
-var groundSegmentIDtoCity = {
+/**
+ * Specifies city of ground segment by ID.
+ * 
+ * @constant
+ * @type {Object<number, string>}
+ */
+const groundSegmentIDtoCity = {
     11: "schriever",
     12: "vandenberg",
     13: "cape",
@@ -548,6 +652,7 @@ var groundSegmentIDtoCity = {
     50: "zealand"
 }
 
+// Definition of materials for 3D objects rendering.
 ViroMaterials.createMaterials({
     gray: {
         shininess: 2.0,
