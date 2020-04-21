@@ -83,7 +83,7 @@ export default class Globe extends React.Component {
             if (addition.length > 0) {
                 // call ST funtion to get data according to newly added IDs
                 this.loading = true;
-                let data = await this.ST.testBothAsync(addition);
+                let data = await this.ST.getTLEs(addition);
 
                 // convert TLE string to line separated array
                 this.tle = data.split('\r\n');

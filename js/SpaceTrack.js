@@ -1,8 +1,27 @@
+/** 
+ *  @fileOverview Simple class for retrieving data from space-track.org website.
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
+
+ /**
+ * Credentials used for logging in.
+ * @constant
+ *
+ * @type {Object}
+ */
 const CREDENTIALS = {
     username: 'pospivo1@fel.cvut.cz',
     password: '!6cpBH97VSniwT8'
 }
 
+ /**
+ * URL addreses used by space-track.org API.
+ * @constant
+ *
+ * @type {Object}
+ */
 const API = {
     dataFirst: 'https://www.space-track.org/basicspacedata/query/class/tle/format/tle/NORAD_CAT_ID/',
     dataSecond: '/orderby/TLE_LINE1 ASC/limit/',
@@ -10,14 +29,20 @@ const API = {
     loginURL: 'https://www.space-track.org/ajaxauth/login',
 }
 
+/**
+ * A class representing space-track.org data getter.
+ */
 export default class SpaceTrack {
-    constructor() {
-        this.loggedIn = false;
-        this.loginInProgress = false;
-    }
-
-    async testBothAsync(idArray) {
-        idString = SpaceTrack.convertIDs(idArray);
+    /**
+     * Takes array of satellite IDs and returns TLE records for them.
+     * 
+     * @async
+     * @param {Array.<string>} idArray Array of satellite IDs
+     * 
+     * @returns {string} String of TLE records
+     */
+    getTLEs = async (idArray) => {
+        idString = this.convertIDs(idArray);
 
         const request = new Request('https://www.space-track.org/ajaxauth/login', {
             method: 'POST',
@@ -44,9 +69,14 @@ export default class SpaceTrack {
         }
     }
 
-    static convertIDs(IDs) {
-        //console.log("Converting array to comma separated values.")
-
+    /**
+     * Takes array of IDs and converts them to comma separated values string
+     * 
+     * @param {Array.<string>} IDs - Satellite IDs 
+     * 
+     * @returns {string} Converted values
+     */
+    convertIDs = (IDs) => {
         ret = '';
 
         if (Array.isArray(IDs) && IDs.length > 0) {
