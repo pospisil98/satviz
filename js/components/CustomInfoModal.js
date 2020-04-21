@@ -1,3 +1,9 @@
+/** 
+ *  @fileOverview Component for displaying info about selected satellite. 
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
 import React, { Component } from 'react';
 
 import {
@@ -11,8 +17,13 @@ import {
 import Modal from "react-native-modal";
 
 import Icon from 'react-native-vector-icons/Fontisto';
-import IconAnt from 'react-native-vector-icons/AntDesign'
 
+ /**
+ * Dictionary of term descriptions.
+ * @constant
+ *
+ * @type {Object<string, string>}
+ */
 const messageDict = {
     id: "The NORAD Catalog Number or USSPACECOM object number is a sequential 5-digit number assigned by USSPACECOM to all Earth orbiting satellites in order of identification.",
     intlDes: "The International Designator is an naming convention for satellites. It consists of the launch year, a 3-digit incrementing launch number of that year and up to a 3-letter code representing the sequential id of a piece in a launch. Only publicly known satellites are designated.",
@@ -26,47 +37,83 @@ const messageDict = {
     period: "Period is the amount of time to complete one revolution around the Earth.",
 }
 
-const showMessage = "Show orbit";
-const hideMessage = "Hide orbit";
+ /**
+ * Dictionary of orbit toggle button messages.
+ * @constant
+ *
+ * @type {Object<string, string>}
+ */
+const message = {
+    show: "Show orbit",
+    hide: "Hide orbit"
+}
 
+/**
+ * Component for displaying info about selected satellite.
+ * 
+ * 
+ */
 export default class CustomInfoModal extends Component {
     constructor() {
         super();
 
         this.state = {
+            /**
+             * Data for rendering information about satellite.
+             * 
+             * @type {Object<string, string>}
+             */
             data: {},
+
+            /**
+             * Selected term to be explained.
+             * 
+             * @type {string}
+             */
             explanationRequest: null,
 
+            /**
+             * State of component (modal) visibility - `true` means modal is visible
+             */
             modalVisible: false,
 
-            buttonText: hideMessage
+            /**
+             * Text of the orbit toggle button.
+             */
+            buttonText: message.hide,
         };
     }
 
     componentDidUpdate(prevProps, prevState) {
+        // update state to rerender component
         if (this.state.modalVisible != this.props.isModalVisible) {
             this.setState({modalVisible: this.props.isModalVisible});
         }
 
+        // update info when the sat ID is changed
         if (this.props.satellite && this.state.data.id != this.props.satellite[0].id) {
             this.updateSateliteData();
         }
 
+        // set apropriate text to orbit toggle button
         if (this.props.orbitEnabled != prevProps.orbitEnabled && prevProps.orbitEnabled) {
             if (!this.props.orbitEnabled) {
                 this.setState({
-                    buttonText: hideMessage,
+                    buttonText: message.hide,
                 });
             }
             
             if (this.props.orbitEnabled) {
                 this.setState({
-                    buttonText: showMessage,
+                    buttonText: message.show,
                 });
             }
         }
     }
 
+    /**
+     * Updates information about satellite.
+     */
     updateSateliteData = () => {
         let temp = this.props.satellite[0].getDataForInfoModal();
         this.setState({ data: temp });
@@ -78,10 +125,37 @@ export default class CustomInfoModal extends Component {
         }
     }
 
-    closeModal = () => {
-        this.setState({modalVisible: false,});
+    /**
+     * Alternates between toggle orbit button messages.
+     */
+    changeText = () => {
+        let text;
+        if (this.state.buttonText === message.show) {
+            text = message.hide;
+        } else {
+            text = message.show;
+        }
+
+        this.setState({
+            buttonText: text,
+        });
     }
 
+    /**
+     * Callback for closing modal window.
+     */
+    closeModalCallback = () => {
+        // next opening of modal will be without any explanation
+        this.setState({
+            explanationRequest: null,
+        });
+
+        this.props.closeModal();
+    }
+
+    /**
+     * Renders text info with satellite informations.
+     */
     renderTextInfo = () => {
         return (
             <View style={styles.textInfo}>
@@ -120,26 +194,9 @@ export default class CustomInfoModal extends Component {
         );
     }
 
-    changeText = () => {
-        let text;
-        if (this.state.buttonText === showMessage) {
-            text = hideMessage;
-        } else {
-            text = showMessage;
-        }
-
-        this.setState({
-            buttonText: text,
-        });
-    }
-
-    closeModalCallback = () => {
-        this.setState({
-            explanationRequest: null,
-        });
-        this.props.closeModal();
-    }
-
+    /**
+     * Renders selected term explanation.
+     */
     renderExplanation = () => {
         return (
             <Text style={styles.explanation}>
