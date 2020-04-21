@@ -1,4 +1,10 @@
-'use strict';
+/** 
+ *  @fileOverview Default AR scene of Satviz application. 
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
+'use-strict';
 
 import React, { Component } from 'react';
 
@@ -18,66 +24,74 @@ import {
 import Globe from './components/Globe'
 import { showMessage, hideMessage } from "react-native-flash-message";
 
-const targetNames = ["africa", "atlantic", "australia", "china", "europe",
-    "hawaii", "indonesia", "northAmerica", "southAmerica"];
-
-const angles = {
-    "africa": 15,
-    "atlantic": 340,
-    "australia": 135,
-    "china": 90,
-    "europe": 15,
-    "hawaii": 195,
-    "indonesia": 140,
-    "northAmerica": 260,
-    "southAmerica": 300,
-}
-
-
+/**
+ * Class representing default AR scene.
+ */
 export default class HelloWorldSceneAR extends Component {
     constructor() {
         super();
 
-        // Set initial state here
-        this.state = {
-            text: "Initializing AR...",
 
+        this.state = {
+            /** Rotation of globe based on real world 
+             * @type {Array.<number>} */
             globeRotation: [0, 0, 0],
+            /** State of detection true=globe target detected
+             * @type {boolean} */
             globeDetected: false,
+            /** Detected globe real world position 
+             * @type {Array.<number>|null} */
             globePosition: null,
 
-            // only for rerender on props change
+            /** IDs of selected satellites to render 
+             * @type {Array.<string>} */
             satelliteIDs: [],
 
+            /** IDs of satellites which should have orbit rendered 
+             * @type {Array.<string>} */
             orbitIDs: [],
+            /** Opacity of rendered orbits 
+             * @type {number} */
             orbitOpacity: 0.8,
             
+            /** Scale (multiply) of real time speed 
+             * @type {number} */
             timeScale: 1
         };
 
+        /** Names of currently tracked image targets 
+         * @type {Array.<string>} */
         this.tracking = [];
+        /** State of globe tracking 
+         * @type {boolean} */
         this.isTracking = false;
 
-        this.lastDetected = null;
+        /** Count of globe position recalculation 
+         * @type {number} */
         this.positionModCount = 0;
 
+        /** Switch for Globe rendering 
+         * @type {boolean} */
         this.renderDisabled = true;
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if ((this.state.satelliteIDs != this.props.arSceneNavigator.viroAppProps.satelliteIDs) || (this.state.timeScale != this.props.arSceneNavigator.viroAppProps.timeScale)) {
+        // Rerender on change of props
+        if (this.state.satelliteIDs != this.props.arSceneNavigator.viroAppProps.satelliteIDs) {
             this.setState({
                 satelliteIDs: this.props.arSceneNavigator.viroAppProps.satelliteIDs,
+            })
+        }
+        if (this.state.timeScale != this.props.arSceneNavigator.viroAppProps.timeScale) {
+            this.setState({
                 timeScale: this.props.arSceneNavigator.viroAppProps.timeScale,
             })
         }
-
         if (this.state.orbitIDs != this.props.arSceneNavigator.viroAppProps.orbitIDs) {
             this.setState({
                 orbitIDs: this.props.arSceneNavigator.viroAppProps.orbitIDs,
             });
         }
-
         if (this.state.orbitOpacity != this.props.arSceneNavigator.viroAppProps.orbitOpacity) {
             this.setState({
                 orbitOpacity: this.props.arSceneNavigator.viroAppProps.orbitOpacity,
@@ -85,6 +99,11 @@ export default class HelloWorldSceneAR extends Component {
         }
     }
 
+    /**
+     * Calculate globe rotation from tracking targets
+     * 
+     * @returns {Array.<number>} Rotation in format [0, Y rotation, 0]
+     */
     getGlobeRotation = () => {
         if (this.tracking.length === 0) {
             return this.state.globeRotation;
@@ -98,23 +117,28 @@ export default class HelloWorldSceneAR extends Component {
 
         let angle = sum / this.tracking.length;
 
-        //negative angle is because rotation has opposite direction than angles on globe
+        // Negative angle is because rotation has opposite direction than angles on globe
         return [0, -angle, 0];
     }
 
+    /**
+     * Modify globe position based on given position.
+     * 
+     * @param {Array.<number>} position Position to adjust globe position to
+     */
     modifyGlobePosition = (position) => {
         // move Z coord into center of globe
-        position[2] = position[2] - 0.07;
+        position[2] = position[2] - 0.085;
 
         if (this.positionModCount === 0) {
             this.setState({globePosition: position,});
         } else {
+            // Limit position modification to only first 4 attempts
             if (this.positionModCount > 3) {
                 return;
             }
 
             let newPos = [];
-            
             newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
@@ -131,15 +155,20 @@ export default class HelloWorldSceneAR extends Component {
         this.positionModCount += 1;
     }
 
-    _onAnchorFound = (e, targetName) => {
-    }
-
+    /**
+     * Function which is triggered everytime when imageTarget anchor changes.
+     * 
+     * @param {any} e Event which happened
+     * @param {string} targetName Name of updated target
+     */
     _onAnchorUpdated = (e, targetName) => {
         let changed = false;
 
         if (e.trackingMethod === "tracking") {
+            // Tracking something - render Globe
             this.renderDisabled = false;
 
+            // On flat target simply copy detected position and rotation
             if (targetName === "flatTarget") {
                 this.setState({globePosition: e.position, globeRotation: e.rotation});
                 return;
@@ -149,11 +178,11 @@ export default class HelloWorldSceneAR extends Component {
                 this.setState({globeDetected: true});
             }
 
-            // add target name to tracking if not there
+            // Add target name to tracking if not there
             if (!this.tracking.includes(targetName)) {
-                this.lastDetected = targetName;
                 this.tracking.push(targetName);
 
+                // Hold only last 3 targets
                 if (this.tracking.length > 3) {
                     this.tracking.shift();
                 }
@@ -161,19 +190,18 @@ export default class HelloWorldSceneAR extends Component {
                 changed = true;
             }
 
-            // update globe position according to detected position
+            // Update globe position according to detected position
             this.modifyGlobePosition(e.position);
         } else if (e.trackingMethod === "lastKnownPose") {
-            // remove from tracking
+            // LastKnownPose means that target is no longer available so remove it
             if (this.tracking.includes(targetName)) {
                 this.tracking = this.tracking.filter(e => e !== targetName);
                 changed = true;
             }
         }
 
+        // When some target has been changed get user know it and update rotation
         if (changed) {
-            console.log(this.tracking);
-
             if (this.tracking.length == 0 && this.isTracking == true ) {
                 this.isTracking = false;
                 showMessage({
@@ -195,25 +223,11 @@ export default class HelloWorldSceneAR extends Component {
         }
     }
 
-    _onInitialized = (state, reason) => {
-    }
-
-    renderSphere = () => {
-        if (this.state.globeDetected) {
-            return(
-                <ViroSphere
-                    heightSegmentCount={20}
-                    widthSegmentCount={20}
-                    radius={0.17}
-                    position={this.state.globePosition}
-                    materials={["mat"]}
-                />
-            );
-        } else {
-            return(<ViroNode></ViroNode>);
-        }
-    }
-
+    /**
+     * Maps all imageTarget names to ViroARImageMarker
+     * 
+     * @returns {Array.<ViroARImageMarker>} Array of AR image markers
+     */
     renderTargets = () => {
         let targets = [];
 
@@ -222,7 +236,6 @@ export default class HelloWorldSceneAR extends Component {
                 <ViroARImageMarker
                     key={name}
                     target={name}
-                    onAnchorFound={(e) => this._onAnchorFound(e, name)}
                     onAnchorUpdated={(e) => this._onAnchorUpdated(e, name)}
                 />
             )
@@ -231,6 +244,11 @@ export default class HelloWorldSceneAR extends Component {
         return targets;
     }
 
+    /**
+     * Returns Globe component with everything setu up to visualization
+     * 
+     * @returns {ViroNode} Globe with all properties set
+     */
     renderGlobe = () => {
         if (this.renderDisabled) {
             return(<ViroNode></ViroNode>);
@@ -261,6 +279,11 @@ export default class HelloWorldSceneAR extends Component {
         );
     }
 
+    /**
+     * Renders AR scene.
+     * 
+     * @returns {ViroARScene} ARscene with globe visualization 
+     */
     render() {
         return (
             <ViroARScene onTrackingUpdated={this._onInitialized} >
@@ -273,13 +296,39 @@ export default class HelloWorldSceneAR extends Component {
                 {this.renderTargets()}
 
                 {this.renderGlobe()}
-
-                {/*this.renderSphere()*/}
             </ViroARScene>
         );
     }
 }
 
+/**
+ * Names of imageTargets of globe
+ * @constant
+ * @type {Array.<string>}
+ */
+const targetNames = [
+    "africa", "atlantic", "australia", "china", "europe",
+    "hawaii", "indonesia", "northAmerica", "southAmerica"
+];
+
+/**
+ * Angles of rotation of center of imageTarget
+ * @constant
+ * @type {Object<string, number>}
+ */
+const angles = {
+    "africa": 15,
+    "atlantic": 340,
+    "australia": 135,
+    "china": 90,
+    "europe": 15,
+    "hawaii": 195,
+    "indonesia": 140,
+    "northAmerica": 260,
+    "southAmerica": 300,
+}
+
+// Definition of tracking targets for ARImageTargets
 ViroARTrackingTargets.createTargets({
     "flatTarget": {
         source: require('./res/targets/earthFlat.jpeg'),
