@@ -34,10 +34,10 @@ export default class Globe extends Component {
 
         this.state = {
             /** Currently visualized satellite objects
-             * @type {Array<Object>} */
+             * @type {Array.<Object>} */
             satellites: [],
             /** Currently visualized satellite IDs
-             * @type {Array<string>} */
+             * @type {Array.<string>} */
             currentSatelliteIDs: [],
             /** IDs of sats without orbit rendered 
              * @type {Array<string>} */
@@ -46,12 +46,12 @@ export default class Globe extends Component {
              * @type {number} */
             orbitOpacity: 0.8,
             /** Rotation around individual axis to compensate globe rotation
-             * @type {Array<number>} */
+             * @type {Array.<number>} */
             groundRotationCompensation: [0, 0, 0]
         }
 
         /** Compensation of model rotation on different targets
-         *  @type {Array<number>} */
+         *  @type {Array.<number>} */
         this.modelListRotation = [0, 0, 0];
         if (this.props.flatTarget) {
             this.modelListRotation = [0, -143, 0];
@@ -74,7 +74,7 @@ export default class Globe extends Component {
          * @type {Object<string, any>} */
         this.orbitTimestamps = {};
         /** Points of satellite orbits 
-         * @type {Object<string, Array<Array<number>>> */
+         * @type {Object<string, Array.<Array.<number>>> */
         this.orbitPoints = {};
 
         /** Globe custom clock with special functions
@@ -156,7 +156,7 @@ export default class Globe extends Component {
     /**
      * Parses downloaded TLE data into satellite objects and stops loading of data.
      * 
-     * @returns {Array<SatelliteObject>}
+     * @returns {Array.<SatelliteObject>}
      */
     parseData = () => {
         satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
@@ -221,7 +221,7 @@ export default class Globe extends Component {
     /**
      * Converts downloaded TLE data to SatelliteObjects array.
      * 
-     * @returns {Array<SatelliteObject>} Converted TLEs into SatelliteObjects
+     * @returns {Array.<SatelliteObject>} Converted TLEs into SatelliteObjects
      */
     convertTLEtoSatelliteObjectCollection = () => {
         var tleIndex = 0;
@@ -280,7 +280,7 @@ export default class Globe extends Component {
      * 
      * @param {string} segmentID ID of segment
      * 
-     * @returns {Array<number>} Position in ViroCoords
+     * @returns {Array.<number>} Position in ViroCoords
      */
     getPositionForGroundSegment = (segmentID) => {
         let denominator;
@@ -328,7 +328,7 @@ export default class Globe extends Component {
     /**
      * Maps selected ground segment IDs to models for render.
      * 
-     * @returns {Array<ViroSphere>} Array of 3D spheres as position visualization
+     * @returns {Array.<ViroSphere>} Array of 3D spheres as position visualization
      */
     getGroundSegmentToRender = () => {
         let segmentList;
@@ -357,7 +357,7 @@ export default class Globe extends Component {
     /**
      * Maps selected satellite IDs to models for render.
      * 
-     * @returns {Array<ViroSphere|Viro3DObject>} Array of 3D models as satellite visualization
+     * @returns {Array.<ViroSphere|Viro3DObject>} Array of 3D models as satellite visualization
      */
     getSatellitesToRender = () => {
         let modelList;
@@ -411,7 +411,7 @@ export default class Globe extends Component {
     /**
      * Maps selected satellite IDs (without excluded ones) to orbits for render.
      * 
-     * @returns {Array<ViroPolyline>} Array of Viro Polylines - orbits
+     * @returns {Array.<ViroPolyline>} Array of Viro Polylines - orbits
      */
     getOrbitsToRender = () => {
         let orbitList;
