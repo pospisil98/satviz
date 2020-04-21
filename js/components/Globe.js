@@ -85,7 +85,9 @@ export default class Globe extends React.Component {
                 this.loading = true;
                 let data = await this.ST.testBothAsync(addition);
 
-                this.tle = SpaceTrack.convertTLEStringToArray(data);
+                // convert TLE string to line separated array
+                this.tle = data.split('\r\n');
+                
                 sats = this.parseData();
             }
 
