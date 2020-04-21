@@ -9,7 +9,7 @@
  * Credentials used for logging in.
  * @constant
  *
- * @type {Object}
+ * @type {Object<string, string>}
  */
 const CREDENTIALS = {
     username: 'pospivo1@fel.cvut.cz',
@@ -20,13 +20,13 @@ const CREDENTIALS = {
  * URL addreses used by space-track.org API.
  * @constant
  *
- * @type {Object}
+ * @type {Object<string, string>}
  */
 const API = {
-    dataFirst: 'https://www.space-track.org/basicspacedata/query/class/tle/format/tle/NORAD_CAT_ID/',
-    dataSecond: '/orderby/TLE_LINE1 ASC/limit/',
+    dataFirst: "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/",
+    dataSecond: "/orderby/TLE_LINE1 ASC/format/tle",
 
-    loginURL: 'https://www.space-track.org/ajaxauth/login',
+    loginURL: "https://www.space-track.org/ajaxauth/login",
 }
 
 /**
@@ -44,13 +44,13 @@ export default class SpaceTrack {
     getTLEs = async (idArray) => {
         idString = this.convertIDs(idArray);
 
-        const request = new Request('https://www.space-track.org/ajaxauth/login', {
+        const request = new Request(API.loginURL, {
             method: 'POST',
             credentials: 'include',
             body: JSON.stringify({
-                identity: CREDENTIALS.username,
-                password: CREDENTIALS.password,
-                query: "https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/" + idString + "/orderby/TLE_LINE1 ASC/format/tle"
+                identity:   CREDENTIALS.username,
+                password:   CREDENTIALS.password,
+                query:      API.dataFirst + idString + API.dataSecond
             }),
             headers: {
                 'Accept': 'application/json',
