@@ -1,3 +1,9 @@
+/** 
+ *  @fileOverview Default class for Satviz application. 
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
 'use-strict';
 
 import React, { Component } from 'react';
@@ -36,50 +42,85 @@ import CoordConverter from './utils/coordsConverter'
 import * as satelliteSelectItems from './js/res/selectCategories.json';
 import * as groundSegmentSelectItems from './js/res/selectGroundSegment.json';
 
-const { width, height } = Dimensions.get('window');
 
-// Sets the default scene you want for AR and VR
-var InitialARScene = require('./js/HelloWorldSceneAR');
+let InitialARScene = require('./js/HelloWorldSceneAR');
 
+/**
+ * Default class of Satviz application.
+ */
 export default class satviz extends Component {
     constructor() {
         super();
 
-        this.myTextInput = React.createRef();
+        /**
+         * Reference to text input for manual satellite selection
+         * @type {React.RefObject<any>} */
+        this.manualSatSelectTextInput = React.createRef();
 
         this.state = {
+            /** Selected satellite IDs from satellite multislect
+             *  @type {Array.<string>} */
             selectedItems: [],
+            /** Indication of reaching maximum of selcted items in select 
+             * @type {boolean} */
             maxItems: false,
 
+            /** Selected satellite IDs from manual select 
+             * @type {Array.<string>} */
             selectedItemsManual: [],
 
+            /** Selected GPS ground segment IDS from GS multiselect 
+             * @type {Array.<string>} */
             selectedItemsGroundSegment: [],
 
+            /** Visibility of help modal window 
+             * @type {boolean} */
             helpModalVisible: false,
 
+            /** Visibility of satellite info modal (CustomInfoModal) 
+             * @type {boolean} */
             satelliteModalVisible: false,
-            satelliteModalID: 0,
+            /** Selected satellite which info is displayed in info modal 
+             * @type {SatelliteObject} */
             satelliteModalSatellite: null,
 
+            /** IDs of satellites with enabled orbit rendering 
+             * @type {Array.<string>} */
             orbitIDs: [],
+            /** Opacity of orbit line (0 = 100% transparent) 
+             * @type {number} */
             orbitOpacity: 0.8,
 
+            /** Visibility of GPS ground segment information modal 
+             * @type {boolean}*/
             groundSegmentModalVisible: false,
 
+            /** Visibility of sliding panel 
+             * @type {boolean} */
             slidingPanelToggled: false,
+            /** Text of toggle part of sliding panel 
+             * @type {string} */
             slidingPanelText: "Click to reveal satellite selection!",
 
+            /** Value of time speed slider
+             * @type {number} */
             timeSpeedSliderValue: 1,
-
-            flashMessagePosition: "top",
-            flashMessageAutoHide: true,
         };
 
+        /** Timeout for opacity slider 
+         * @type {NodeJS.Timeout} */
         this.opacitySliderTimeout;
 
+        /** Maximum number of selected items in satellite multiselect 
+         * @type {number} */
         this.maxSelectedItems = 50;
     }
 
+    /**
+     * Callback for change in satellite multiselect selected items.
+     * 
+     * @param {Array.<string>} selectedItems IDs of selected items in multiselect
+     */
     onSatelliteSelectedItemsChange = (selectedItems) => {
         if (selectedItems.length >= this.maxSelectedItems) {
             if (selectedItems.length === this.maxSelectedItems) {
@@ -98,81 +139,112 @@ export default class satviz extends Component {
         })
     }
 
+    /**
+     * Callback for change in ground segment multiselect selected items.
+     * 
+     * @param {Array.<string>} selectedItemsGroundSegment IDs of selected items in multiselect
+     */
     onGroundSegmentSelectedItemsChange = (selectedItemsGroundSegment) => {
         this.setState({ selectedItemsGroundSegment });
     };
 
-    toggleModal = () => {
+    /**
+     *  Change visibility of help modal
+     */
+    toggleHelpModal = () => {
         this.setState({ helpModalVisible: !this.state.helpModalVisible });
     };
 
-    satelliteModalSetIDCallback = (sat) => {
+    /**
+     * Callback for setting satellite for satellite info modal.
+     * 
+     * @param {SatelliteObject} sat Satellite to be displayed info about
+     */
+    satelliteModalSetSatelliteCallback = (sat) => {
         this.setState({
-            satelliteModalID: sat.id,
             satelliteModalSatellite: sat,
         });
 
         this.toggleSatelliteModal();
     }
 
+    /**
+     * Change visibility of satellite modal.
+     */
     toggleSatelliteModal = () => {
         this.setState({
             satelliteModalVisible: !this.state.satelliteModalVisible,
         });
     };
 
+    /**
+     * Change visibility of GPS ground segment modal.
+     */
     toggleGroundSegmentModal = () => {
         this.setState({
             groundSegmentModalVisible: !this.state.groundSegmentModalVisible,
         });
     }
 
-
+    /**
+     * Change visibility of sliding panel and change appropriately toggle text.
+     */
     toggleSlidePanel = () => {
-        var toggledBeforeChange = this.state.slidingPanelToggled;
-
-        this.setState({ slidingPanelToggled: !toggledBeforeChange });
-
-        if (!toggledBeforeChange) {
-            this.setState({ slidingPanelText: "Click to hide satellite selection!" });
+        if (this.state.slidingPanelToggled) {
+            this.setState({ slidingPanelText: "Click to show satellite selection!" });
         } else {
-            this.setState({ slidingPanelText: "Click to reveal satellite selection!" });
+            this.setState({ slidingPanelText: "Click to hide satellite selection!" });
         }
+
+        this.setState({ slidingPanelToggled: !this.state.slidingPanelToggled });
     };
 
+    /**
+     * Adds satellite manually with ID in manualSatSelectTextInput.
+     */
     addManual = () => {
-        if (this.state.selectedItemsManual.includes(this.myTextInput.current._lastNativeText) === false) {
-
-            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.myTextInput.current._lastNativeText)});
+        if (this.state.selectedItemsManual.includes(this.manualSatSelectTextInput.current._lastNativeText) === false) {
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText)});
         } else {
-            this.setFlashMesageToSelectionError();
-
             showMessage({
                 message: "Satellite with this ID is already selected!",
                 type: "danger",
             });
         }
 
-        this.myTextInput.current.clear();
+        this.manualSatSelectTextInput.current.clear();
     }
 
-    removeManual = (value) => {
-        this.setState({ selectedItemsManual: this.state.selectedItemsManual.filter(e => e != value) })
+    /**
+     * Removes satellite manually with given ID.
+     * 
+     * @param {string} removeID ID to be removed from manualy selected IDs
+     */
+    removeManual = (removeID) => {
+        this.setState({ selectedItemsManual: this.state.selectedItemsManual.filter(id => id != removeID) })
     }
 
+    /**
+     * Removes all manualy selected satellites.
+     */
     removeManualAll = () => {
         this.setState({ selectedItemsManual: [] });
     }
 
+    /**
+     * Removes satellite with given ID from selected satellites.
+     * 
+     * @param {string} satID ID of satellite to be removed
+     */
     removeSatelliteWithError = (satID) => {
-        // try to remove from selected in category
+        // Try to remove from selected in category
         if (this.state.selectedItems.includes(satID)) {
             let arr = this.state.selectedItems.filter(e => e !== satID);
 
             this.setState({selectedItems: arr});
         }
 
-        // try to remove from selected manually
+        // Try to remove from selected manually
         if (this.state.selectedItemsManual.includes(satID)) {
             let arr = this.state.selectedItemsManual.filter(e => e !== satID);
 
@@ -185,15 +257,11 @@ export default class satviz extends Component {
         });
     }
 
-    setFlashMesageToSelectionError = () => {
-        this.setState({
-            flashMessageAutoHide: true,
-            flashMessagePosition: "top",
-        });
-    }
-
+    /**
+     * Get orbit status for satellite in Satellite Info Modal.
+     */
     isOrbitEnabledForSatelliteInModal = () => {
-        // type error protection
+        // No sat selected protection
         if (this.state.satelliteModalSatellite === null) {
             return false;
         }
@@ -201,9 +269,13 @@ export default class satviz extends Component {
         return this.state.orbitIDs.includes(this.state.satelliteModalSatellite.id);
     }
 
-    
+    /**
+     * Change visibility of orbit ofsatellite with given ID.
+     * 
+     * @param {string} satelliteID Satellite which orbit we want to toggle
+     */
     toggleOrbitVisibility = (satelliteID) => {
-        // type error protection
+        // No sat selected protection
         if (this.state.satelliteModalSatellite === null) {
             return;
         }
@@ -222,6 +294,11 @@ export default class satviz extends Component {
         }
     }
 
+    /**
+     * Renders main window of the Satviz application.
+     * 
+     * @returns {View} Top level View node
+     */
     render() {
         return (
             <View style={styles.container}>
@@ -232,7 +309,7 @@ export default class satviz extends Component {
                     shadowsEnabled={true}
                     initialScene={{ scene: InitialARScene }}
                     viroAppProps={{
-                        satelliteClickCallback: this.satelliteModalSetIDCallback,
+                        satelliteClickCallback: this.satelliteModalSetSatelliteCallback,
                         satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
                         groundSegmentIDs: this.state.selectedItemsGroundSegment,
                         orbitIDs: this.state.orbitIDs,
@@ -245,10 +322,10 @@ export default class satviz extends Component {
                 <Modal
                     isVisible={this.state.helpModalVisible}
                     useNativeDriver={true}
-                    onBackdropPress={this.toggleModal}
+                    onBackdropPress={this.toggleHelpModal}
                 >
                     <View style={styles.helpModal}>
-                        <TouchableOpacity onPress={this.toggleModal} style={styles.modalCloseIcon}>
+                        <TouchableOpacity onPress={this.toggleHelpModal} style={styles.modalCloseIcon}>
                             <Icon name="close-a" size={20} color="grey" />
                         </TouchableOpacity>
 
@@ -280,7 +357,7 @@ export default class satviz extends Component {
                     </View>
                 </Modal>
 
-                <TouchableOpacity onPress={this.toggleModal} style={styles.modalIcon}>
+                <TouchableOpacity onPress={this.toggleHelpModal} style={styles.modalIcon}>
                     <IconM name="help-outline" size={30} color="white" style={styles.iconShadow}/>
                 </TouchableOpacity>
 
@@ -291,8 +368,7 @@ export default class satviz extends Component {
                         closeModal={() => this.toggleSatelliteModal()}
                         orbitEnabled={this.isOrbitEnabledForSatelliteInModal()}
                         orbitButtonCallback={this.toggleOrbitVisibility}
-                    >
-                    </CustomInfoModal>
+                    />
                 </View>
 
                 <SlidingPanel
@@ -342,7 +418,7 @@ export default class satviz extends Component {
                                                 paddingLeft: '3%',
                                             }}
                                             placeholder="Choose by typing satellite ID"
-                                            ref={this.myTextInput}
+                                            ref={this.manualSatSelectTextInput}
                                             keyboardType='numeric'
                                             value={this.state.text}
                                         />
@@ -531,8 +607,8 @@ export default class satviz extends Component {
                 />
 
                 <FlashMessage
-                    position={this.state.flashMessagePosition}
-                    autoHide={this.state.flashMessageAutoHide}
+                    position={"top"}
+                    autoHide={true}
                 />
             </View>
         );
@@ -540,6 +616,9 @@ export default class satviz extends Component {
 }
 
 module.exports = satviz
+
+// Constants used in styles
+const { width, height } = Dimensions.get('window');
 
 const colors = {
     selectedBubble: '#848787',
@@ -627,8 +706,6 @@ const styles = StyleSheet.create({
         borderBottomColor: 'black',
         borderBottomWidth: StyleSheet.hairlineWidth,
     },
-
-
 
     iconShadow: {
         shadowOpacity: 2,
