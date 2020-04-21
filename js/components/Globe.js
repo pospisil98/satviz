@@ -249,7 +249,7 @@ export default class Globe extends Component {
             return sat.id == id;
         })
 
-        this.props.satelliteClickCallback(sat);
+        this.props.satelliteClickCallback(satelliteObject);
     }
 
     /**
