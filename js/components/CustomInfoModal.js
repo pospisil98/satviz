@@ -58,28 +58,13 @@ export default class CustomInfoModal extends Component {
         super();
 
         this.state = {
-            /**
-             * Data for rendering information about satellite.
-             * 
-             * @type {Object<string, string>}
-             */
+            /** Data for rendering information about satellite. @type {Object<string, string>} */
             data: {},
-
-            /**
-             * Selected term to be explained.
-             * 
-             * @type {string}
-             */
+            /** Selected term to be explained. @type {string} */
             explanationRequest: null,
-
-            /**
-             * State of component (modal) visibility - `true` means modal is visible
-             */
+            /** State of component (modal) visibility - `true` means modal is visible @type {boolean} */
             modalVisible: false,
-
-            /**
-             * Text of the orbit toggle button.
-             */
+            /** Text of the orbit toggle button. @type {string} */
             buttonText: message.hide,
         };
     }
