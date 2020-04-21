@@ -129,33 +129,46 @@ export default class SatelliteObject {
      * @param {string} tle String version of TLE record
      */
     constructor(id, satelliteRecord, tle) {
-        /** ID of satellite in satellite catalog @type {string} */
+        /** ID of satellite in satellite catalog
+         *  @type {string} */
         this.id = id;
-        /** TLE record of satellite @type {string} */
+        /** TLE record of satellite 
+         * @type {string} */
         this.tle = tle;
-        /** Satellite record from satellite.js @type {Object} */
+        /** Satellite record from satellite.js 
+         * @type {Object} */
         this.satelliteRecord = satelliteRecord;
-        /** Time of last satellite position @type {Object} */
+        /** Time of last satellite position 
+         * @type {Object} */
         this.time = null;
 
-        /** Description of satellite type @type {string} */
+        /** Description of satellite type 
+         * @type {string} */
         this.description = this.getDescription();
-        /** Require of satellite 3D model @type {NodeRequire}*/
+        /** Require of satellite 3D model
+         *  @type {NodeRequire}*/
         this.modelPath = models[this.description];
-        /** Model type (extension) @type {string} */
+        /** Model type (extension) 
+         * @type {string} */
         this.modelType = modelTypes[this.description];
-        /** All requirements of satellite 3D model @type {Array<NodeRequire>} */
+        /** All requirements of satellite 3D model 
+         * @type {Array<NodeRequire>} */
         this.resources = this.getResources();
 
-        /** Remmaped position of satellite in Viro Coords @type {Array<number>} */
+        /** Remmaped position of satellite in Viro Coords 
+         * @type {Array<number>} */
         this.position = [0.0, 0.0, 0.0];
-        /** Position of satellite in ECI coords @type {Array<number>} */
+        /** Position of satellite in ECI coords 
+         * @type {Array<number>} */
         this.positionEci = null;
-        /** Scale of satellite model @type {Array<number>} */
+        /** Scale of satellite model 
+         * @type {Array<number>} */
         this.scale = scales[this.description];
-        /** Rotation of satellite model @type {Array<number>} */
+        /** Rotation of satellite model
+         *  @type {Array<number>} */
         this.rotation = rotations[this.description];
-        /** Velocity of satellite model in XYZ direction @type {Object<string, number>} */
+        /** Velocity of satellite model in XYZ direction 
+         * @type {Object<string, number>} */
         this.velocity = {};
     }
 
