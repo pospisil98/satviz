@@ -27,7 +27,7 @@ import { showMessage, hideMessage } from "react-native-flash-message";
 /**
  * Class representing default AR scene.
  */
-export default class HelloWorldSceneAR extends Component {
+export default class ARScene extends Component {
     constructor() {
         super();
 
@@ -389,4 +389,4 @@ ViroMaterials.createMaterials({
     }
 });
 
-module.exports = HelloWorldSceneAR;
+module.exports = ARScene;

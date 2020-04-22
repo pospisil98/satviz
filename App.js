@@ -43,7 +43,7 @@ import * as satelliteSelectItems from './js/res/selectCategories.json';
 import * as groundSegmentSelectItems from './js/res/selectGroundSegment.json';
 
 
-let InitialARScene = require('./js/HelloWorldSceneAR');
+let InitialARScene = require('./js/ARScene');
 
 /**
  * Default class of Satviz application.
@@ -108,7 +108,7 @@ export default class satviz extends Component {
         };
 
         /** Timeout for opacity slider 
-         * @type {NodeJS.Timeout} */
+         * @type {any} */
         this.opacitySliderTimeout;
 
         /** Maximum number of selected items in satellite multiselect 

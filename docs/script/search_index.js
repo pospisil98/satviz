@@ -1,5 +1,11 @@
 window.esdocSearchIndex = [
   [
+    "satviz/satviz/js/arscene.js~arscene",
+    "class/satviz/js/ARScene.js~ARScene.html",
+    "<span>ARScene</span> <span class=\"search-result-import-path\">satviz/satviz/js/ARScene.js</span>",
+    "class"
+  ],
+  [
     "satviz/satviz/utils/coordsconverter.js~coordconverter",
     "class/satviz/utils/coordsConverter.js~CoordConverter.html",
     "<span>CoordConverter</span> <span class=\"search-result-import-path\">satviz/satviz/utils/coordsConverter.js</span>",
@@ -15,12 +21,6 @@ window.esdocSearchIndex = [
     "satviz/satviz/js/components/globe.js~globe",
     "class/satviz/js/components/Globe.js~Globe.html",
     "<span>Globe</span> <span class=\"search-result-import-path\">satviz/satviz/js/components/Globe.js</span>",
-    "class"
-  ],
-  [
-    "satviz/satviz/js/helloworldscenear.js~helloworldscenear",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html",
-    "<span>HelloWorldSceneAR</span> <span class=\"search-result-import-path\">satviz/satviz/js/HelloWorldSceneAR.js</span>",
     "class"
   ],
   [
@@ -444,111 +444,87 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
-    "satviz/babel.config.js",
-    "file/satviz/babel.config.js.html",
-    "satviz/babel.config.js",
+    "satviz/js/arscene.js",
+    "file/satviz/js/ARScene.js.html",
+    "satviz/js/ARScene.js",
     "file"
   ],
   [
-    "satviz/index.android.js",
-    "file/satviz/index.android.js.html",
-    "satviz/index.android.js",
-    "file"
-  ],
-  [
-    "satviz/index.ios.js",
-    "file/satviz/index.ios.js.html",
-    "satviz/index.ios.js",
-    "file"
-  ],
-  [
-    "satviz/index.js",
-    "file/satviz/index.js.html",
-    "satviz/index.js",
-    "file"
-  ],
-  [
-    "satviz/js/helloworldscenear.js",
-    "file/satviz/js/HelloWorldSceneAR.js.html",
-    "satviz/js/HelloWorldSceneAR.js",
-    "file"
-  ],
-  [
-    "satviz/js/helloworldscenear.js~helloworldscenear#_onanchorupdated",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-_onAnchorUpdated",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#_onAnchorUpdated",
+    "satviz/js/arscene.js~arscene#_onanchorupdated",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-_onAnchorUpdated",
+    "satviz/js/ARScene.js~ARScene#_onAnchorUpdated",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#componentdidupdate",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-method-componentDidUpdate",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#componentDidUpdate",
+    "satviz/js/arscene.js~arscene#componentdidupdate",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-method-componentDidUpdate",
+    "satviz/js/ARScene.js~ARScene#componentDidUpdate",
     "method"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#constructor",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-constructor-constructor",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#constructor",
+    "satviz/js/arscene.js~arscene#constructor",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-constructor-constructor",
+    "satviz/js/ARScene.js~ARScene#constructor",
     "method"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#getgloberotation",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-getGlobeRotation",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#getGlobeRotation",
+    "satviz/js/arscene.js~arscene#getgloberotation",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-getGlobeRotation",
+    "satviz/js/ARScene.js~ARScene#getGlobeRotation",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#istracking",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-isTracking",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#isTracking",
+    "satviz/js/arscene.js~arscene#istracking",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-isTracking",
+    "satviz/js/ARScene.js~ARScene#isTracking",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#modifyglobeposition",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-modifyGlobePosition",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#modifyGlobePosition",
+    "satviz/js/arscene.js~arscene#modifyglobeposition",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-modifyGlobePosition",
+    "satviz/js/ARScene.js~ARScene#modifyGlobePosition",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#positionmodcount",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-positionModCount",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#positionModCount",
+    "satviz/js/arscene.js~arscene#positionmodcount",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-positionModCount",
+    "satviz/js/ARScene.js~ARScene#positionModCount",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#render",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-method-render",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#render",
+    "satviz/js/arscene.js~arscene#render",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-method-render",
+    "satviz/js/ARScene.js~ARScene#render",
     "method"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#renderdisabled",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-renderDisabled",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#renderDisabled",
+    "satviz/js/arscene.js~arscene#renderdisabled",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-renderDisabled",
+    "satviz/js/ARScene.js~ARScene#renderDisabled",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#renderglobe",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-renderGlobe",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#renderGlobe",
+    "satviz/js/arscene.js~arscene#renderglobe",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-renderGlobe",
+    "satviz/js/ARScene.js~ARScene#renderGlobe",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#rendertargets",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-renderTargets",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#renderTargets",
+    "satviz/js/arscene.js~arscene#rendertargets",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-renderTargets",
+    "satviz/js/ARScene.js~ARScene#renderTargets",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#state",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-state",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#state",
+    "satviz/js/arscene.js~arscene#state",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-state",
+    "satviz/js/ARScene.js~ARScene#state",
     "member"
   ],
   [
-    "satviz/js/helloworldscenear.js~helloworldscenear#tracking",
-    "class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html#instance-member-tracking",
-    "satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR#tracking",
+    "satviz/js/arscene.js~arscene#tracking",
+    "class/satviz/js/ARScene.js~ARScene.html#instance-member-tracking",
+    "satviz/js/ARScene.js~ARScene#tracking",
     "member"
   ],
   [
@@ -982,18 +958,6 @@ window.esdocSearchIndex = [
     "class/satviz/js/components/Globe.js~Globe.html#instance-member-updateRotation",
     "satviz/js/components/Globe.js~Globe#updateRotation",
     "member"
-  ],
-  [
-    "satviz/metro.config.js",
-    "file/satviz/metro.config.js.html",
-    "satviz/metro.config.js",
-    "file"
-  ],
-  [
-    "satviz/rn-cli.config.js",
-    "file/satviz/rn-cli.config.js.html",
-    "satviz/rn-cli.config.js",
-    "file"
   ],
   [
     "satviz/utils/coordsconverter.js",

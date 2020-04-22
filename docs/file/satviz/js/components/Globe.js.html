@@ -30,7 +30,7 @@
   <ul>
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/ARScene.js~ARScene.html">ARScene</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
@@ -47,7 +47,7 @@
  *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
  */
 
-&apos;use-strict&apos;;
+&quot;use strict&quot;;
 
 import React, { Component } from &apos;react&apos;;
 
@@ -160,17 +160,17 @@ export default class Globe extends Component {
 
                 // Convert TLE string to line separated array
                 this.tle = data.split(&apos;\r\n&apos;);
-                
+
                 sats = this.parseData();
             }
 
             // Get satellites which will be not removed from current ones
-            keptFromCurrentObjects = this.state.satellites.filter(sat =&gt; propIDs.includes((sat.id).toString()));
-            
+            let keptFromCurrentObjects = this.state.satellites.filter(sat =&gt; propIDs.includes((sat.id).toString()));
+
             // Get IDs of all visualized satellites
             let curr = [...sats, ...keptFromCurrentObjects].map(sat =&gt; (sat.id).toString());
 
-            this.setState({ 
+            this.setState({
                 satellites: [...sats, ...keptFromCurrentObjects],
                 currentSatelliteIDs: curr,
             })
@@ -202,7 +202,7 @@ export default class Globe extends Component {
      * @returns {Array.&lt;SatelliteObject&gt;}
      */
     parseData = () =&gt; {
-        satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
+        let satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
         this.loading = false;
 
         return satelliteObjects;
@@ -337,9 +337,9 @@ export default class Globe extends Component {
         let city = groundSegmentIDtoCity[segmentID];
         let coordsOriginal = groundSegmentEciCoords[city];
 
-        x = coordsOriginal.x / denominator;
-        y = coordsOriginal.y / denominator;
-        z = coordsOriginal.z / denominator;
+        let x = coordsOriginal.x / denominator;
+        let y = coordsOriginal.y / denominator;
+        let z = coordsOriginal.z / denominator;
 
         // Conversion from ECI to ViroCoords
         return [y, z, x];
@@ -441,7 +441,7 @@ export default class Globe extends Component {
                         onClick={() =&gt; {
                             this.onModelClick(sat.id);
                         }}
-                        
+
                         renderingOrder={10}
                     /&gt;
                 )
@@ -464,10 +464,10 @@ export default class Globe extends Component {
                 let orbitTime = sat.getOrbitTime();
                 if (!this.state.excludedOrbits.includes(sat.id)) {
                     let positions;
-                    
+
                     if (this.shouldUpdateOrbit(sat.id, orbitTime)) {
                         positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
-                                            
+
                         this.orbitPoints[sat.id] = positions;
                         this.orbitTimestamps[sat.id] = this.clock.time();
                     } else {

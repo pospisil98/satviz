@@ -2,7 +2,7 @@
     "source": "./",
     "destination": "docs",
     "includes": ["\\.js$"],
-    "excludes": ["(node_modules|docs|test|foo.js)"],
+    "excludes": ["(node_modules|babel.config.js|index.android.js|index.ios.js|index.js|metro.config.js|rn-cli.config.js|__tests__)"],
     "plugins": [
         {"name": "esdoc-standard-plugin"},
         {"name": "esdoc-ecmascript-proposal-plugin", "option": {"all": true}},

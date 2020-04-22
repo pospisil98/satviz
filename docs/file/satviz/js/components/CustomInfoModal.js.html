@@ -30,7 +30,7 @@
   <ul>
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/ARScene.js~ARScene.html">ARScene</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
@@ -47,6 +47,8 @@
  *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
  */
 
+&quot;use strict&quot;;
+
 import React, { Component } from &apos;react&apos;;
 
 import {
@@ -61,12 +63,12 @@ import Modal from &quot;react-native-modal&quot;;
 
 import Icon from &apos;react-native-vector-icons/Fontisto&apos;;
 
- /**
- * Dictionary of term descriptions.
- * @constant
- *
- * @type {Object&lt;string, string&gt;}
- */
+/**
+* Dictionary of term descriptions.
+* @constant
+*
+* @type {Object&lt;string, string&gt;}
+*/
 const messageDict = {
     id: &quot;The NORAD Catalog Number or USSPACECOM object number is a sequential 5-digit number assigned by USSPACECOM to all Earth orbiting satellites in order of identification.&quot;,
     intlDes: &quot;The International Designator is an naming convention for satellites. It consists of the launch year, a 3-digit incrementing launch number of that year and up to a 3-letter code representing the sequential id of a piece in a launch. Only publicly known satellites are designated.&quot;,
@@ -80,12 +82,12 @@ const messageDict = {
     period: &quot;Period is the amount of time to complete one revolution around the Earth.&quot;,
 }
 
- /**
- * Dictionary of orbit toggle button messages.
- * @constant
- *
- * @type {Object&lt;string, string&gt;}
- */
+/**
+* Dictionary of orbit toggle button messages.
+* @constant
+*
+* @type {Object&lt;string, string&gt;}
+*/
 const message = {
     show: &quot;Show orbit&quot;,
     hide: &quot;Hide orbit&quot;
@@ -115,7 +117,7 @@ export default class CustomInfoModal extends Component {
     componentDidUpdate(prevProps, prevState) {
         // update state to rerender component
         if (this.state.modalVisible != this.props.isModalVisible) {
-            this.setState({modalVisible: this.props.isModalVisible});
+            this.setState({ modalVisible: this.props.isModalVisible });
         }
 
         // update info when the sat ID is changed
@@ -130,7 +132,7 @@ export default class CustomInfoModal extends Component {
                     buttonText: message.hide,
                 });
             }
-            
+
             if (this.props.orbitEnabled) {
                 this.setState({
                     buttonText: message.show,
@@ -219,7 +221,7 @@ export default class CustomInfoModal extends Component {
                 &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;period&quot; }) }}&gt;
                     &lt;Text style={styles.boldFont}&gt;Period: &lt;/Text&gt;{this.state.data.period}
                 &lt;/Text&gt;
-                &lt;Text style={{fontSize: 10, color: &apos;gray&apos;, marginTop: 5}}&gt;By clicking on line you can get more info&lt;/Text&gt;
+                &lt;Text style={{ fontSize: 10, color: &apos;gray&apos;, marginTop: 5 }}&gt;By clicking on line you can get more info&lt;/Text&gt;
             &lt;/View&gt;
         );
     }
@@ -247,13 +249,13 @@ export default class CustomInfoModal extends Component {
                     onBackdropPress={this.closeModalCallback}
                 &gt;
                     &lt;View style={styles.infoModal}&gt;
-                    &lt;TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}&gt;
-                        &lt;Icon name=&quot;close-a&quot; size={20} color=&quot;grey&quot; /&gt;
-                    &lt;/TouchableOpacity&gt;
+                        &lt;TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}&gt;
+                            &lt;Icon name=&quot;close-a&quot; size={20} color=&quot;grey&quot; /&gt;
+                        &lt;/TouchableOpacity&gt;
 
                         {this.renderTextInfo()}
 
-                        &lt;View style={{marginTop: 10}}&gt;
+                        &lt;View style={{ marginTop: 10 }}&gt;
                             &lt;Button
                                 title={this.state.buttonText}
                                 onPress={() =&gt; {
@@ -283,14 +285,15 @@ const styles = StyleSheet.create({
         right: &apos;5%&apos;,
         top: &apos;2%&apos;,
     },
-    infoRow : {
+    infoRow: {
         flex: 1,
         alignSelf: &apos;stretch&apos;,
         flexDirection: &apos;row&apos;,
     },
     rowElement: {
         flex: 1,
-        alignSelf: &apos;stretch&apos; },
+        alignSelf: &apos;stretch&apos;
+    },
     boldFont: {
         fontWeight: &apos;bold&apos;,
     },

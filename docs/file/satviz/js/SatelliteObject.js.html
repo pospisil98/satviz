@@ -30,7 +30,7 @@
   <ul>
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/ARScene.js~ARScene.html">ARScene</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
@@ -47,17 +47,17 @@
  *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
  */
 
-&apos;use-strict&apos;;
+&quot;use strict&quot;;
 
- /**
- * Dictionary of satellite desciption used in other functions.
- * @constant
- *
- * @type {Object&lt;string, string&gt;}
- */
+/**
+* Dictionary of satellite desciption used in other functions.
+* @constant
+*
+* @type {Object&lt;string, string&gt;}
+*/
 const descriptions = {
     25544: &quot;ISS&quot;,
-    
+
     24876: &quot;GPS&quot;,
     25933: &quot;GPS&quot;,
     26360: &quot;GPS&quot;,
@@ -91,23 +91,23 @@ const descriptions = {
     43873: &quot;GPS&quot;,
 }
 
- /**
- * Dictionary of special satellite model requirements.
- * @constant
- *
- * @type {Object&lt;string, NodeRequire&gt;}
- */
+/**
+* Dictionary of special satellite model requirements.
+* @constant
+*
+* @type {Object&lt;string, NodeRequire&gt;}
+*/
 const models = {
     &quot;ISS&quot;: require(&apos;./res/models/iss/ISS.glb&apos;),
     &quot;GPS&quot;: require(&apos;./res/models/gps/gps.obj&apos;),
 }
 
- /**
- * Dictionary of special satellite model material requirements.
- * @constant
- *
- * @type {Object&lt;string, NodeRequire&gt;}
- */
+/**
+* Dictionary of special satellite model material requirements.
+* @constant
+*
+* @type {Object&lt;string, NodeRequire&gt;}
+*/
 const materials = {
     &quot;GPS&quot;: require(&apos;./res/models/gps/gps.mtl&apos;),
 }
@@ -301,9 +301,9 @@ export default class SatelliteObject {
         const denominator = 25000;
         const base = 10000;
 
-        x = value.x / denominator;
-        y = value.y / denominator;
-        z = value.z / denominator;
+        let x = value.x / denominator;
+        let y = value.y / denominator;
+        let z = value.z / denominator;
 
         /*
         x = Math.log(Math.abs(value.x)) / Math.log(base);
@@ -315,7 +315,7 @@ export default class SatelliteObject {
         value.z &lt; 0 ? z = -z : z = z; */
 
         // conversion from eci to viro coords
-        return [y, z, x];   
+        return [y, z, x];
     }
 
     /**
@@ -390,11 +390,11 @@ export default class SatelliteObject {
      */
     getPointsForOrbit = (numSegments, currentDate) =&gt; {
         // in minutes
-        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI)); 
+        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));
         let timeStep = orbitPeriod / numSegments;
 
         let startDate = new Date(currentDate);
-    
+
         let positions = [];
         for (let i = 0; i &lt;= numSegments; i++) {
             let date = new Date(startDate);

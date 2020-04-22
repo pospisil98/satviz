@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <base data-ice="baseUrl" href="../../../">
-  <title data-ice="title">satviz/js/HelloWorldSceneAR.js | satviz</title>
+  <title data-ice="title">satviz/js/ARScene.js | satviz</title>
   <link type="text/css" rel="stylesheet" href="css/style.css">
   <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
   <script src="script/prettify/prettify.js"></script>
@@ -30,7 +30,7 @@
   <ul>
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/ARScene.js~ARScene.html">ARScene</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
@@ -40,14 +40,14 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/HelloWorldSceneAR.js</h1>
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/ARScene.js</h1>
 <pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
  *  @fileOverview Default AR scene of Satviz application. 
  *
  *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
  */
 
-&apos;use-strict&apos;;
+&quot;use strict&quot;;
 
 import React, { Component } from &apos;react&apos;;
 
@@ -70,7 +70,7 @@ import { showMessage, hideMessage } from &quot;react-native-flash-message&quot;;
 /**
  * Class representing default AR scene.
  */
-export default class HelloWorldSceneAR extends Component {
+export default class ARScene extends Component {
     constructor() {
         super();
 
@@ -96,7 +96,7 @@ export default class HelloWorldSceneAR extends Component {
             /** Opacity of rendered orbits 
              * @type {number} */
             orbitOpacity: 0.8,
-            
+
             /** Scale (multiply) of real time speed 
              * @type {number} */
             timeScale: 1
@@ -174,7 +174,7 @@ export default class HelloWorldSceneAR extends Component {
         position[2] = position[2] - 0.085;
 
         if (this.positionModCount === 0) {
-            this.setState({globePosition: position,});
+            this.setState({ globePosition: position, });
         } else {
             // Limit position modification to only first 4 attempts
             if (this.positionModCount &gt; 3) {
@@ -185,14 +185,14 @@ export default class HelloWorldSceneAR extends Component {
             newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
-            
+
             /*
            newPos[0] = ((this.state.globePosition[0]) + position[0]) / 2;
            newPos[1] = ((this.state.globePosition[1]) + position[1]) / 2;
            newPos[2] = ((this.state.globePosition[2]) + position[2]) / 2;
            */
-            
-            this.setState({globePosition: newPos,});
+
+            this.setState({ globePosition: newPos, });
         }
 
         this.positionModCount += 1;
@@ -213,12 +213,12 @@ export default class HelloWorldSceneAR extends Component {
 
             // On flat target simply copy detected position and rotation
             if (targetName === &quot;flatTarget&quot;) {
-                this.setState({globePosition: e.position, globeRotation: e.rotation});
+                this.setState({ globePosition: e.position, globeRotation: e.rotation });
                 return;
             }
 
             if (!this.state.globeDetected &amp;&amp; targetName !== &quot;flatTarget&quot;) {
-                this.setState({globeDetected: true});
+                this.setState({ globeDetected: true });
             }
 
             // Add target name to tracking if not there
@@ -229,7 +229,7 @@ export default class HelloWorldSceneAR extends Component {
                 if (this.tracking.length &gt; 3) {
                     this.tracking.shift();
                 }
-                
+
                 changed = true;
             }
 
@@ -245,14 +245,14 @@ export default class HelloWorldSceneAR extends Component {
 
         // When some target has been changed get user know it and update rotation
         if (changed) {
-            if (this.tracking.length == 0 &amp;&amp; this.isTracking == true ) {
+            if (this.tracking.length == 0 &amp;&amp; this.isTracking == true) {
                 this.isTracking = false;
                 showMessage({
                     message: &quot;Tracking lost :(&quot;,
                     type: &quot;warning&quot;,
                 });
             }
-    
+
             if (this.tracking.length != 0 &amp;&amp; this.isTracking == false) {
                 this.isTracking = true;
                 showMessage({
@@ -262,7 +262,7 @@ export default class HelloWorldSceneAR extends Component {
             }
 
             let rotation = this.getGlobeRotation();
-            this.setState({globeRotation: rotation});
+            this.setState({ globeRotation: rotation });
         }
     }
 
@@ -294,7 +294,7 @@ export default class HelloWorldSceneAR extends Component {
      */
     renderGlobe = () =&gt; {
         if (this.renderDisabled) {
-            return(&lt;ViroNode&gt;&lt;/ViroNode&gt;);
+            return (&lt;ViroNode&gt;&lt;/ViroNode&gt;);
         }
 
         let position = this.state.globePosition;
@@ -305,7 +305,7 @@ export default class HelloWorldSceneAR extends Component {
             flatTarget = false;
         }
 
-        return(
+        return (
             &lt;ViroNode position={position} rotation={rotation}&gt;
                 &lt;Globe
                     satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
@@ -432,7 +432,7 @@ ViroMaterials.createMaterials({
     }
 });
 
-module.exports = HelloWorldSceneAR;</code></pre>
+module.exports = ARScene;</code></pre>
 
 </div>
 

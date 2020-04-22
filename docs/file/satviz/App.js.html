@@ -30,7 +30,7 @@
   <ul>
     
   <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
-<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/ARScene.js~ARScene.html">ARScene</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
 <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
 <li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
@@ -47,7 +47,7 @@
  *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
  */
 
-&apos;use-strict&apos;;
+&quot;use strict&quot;;
 
 import React, { Component } from &apos;react&apos;;
 import {
@@ -86,7 +86,7 @@ import * as satelliteSelectItems from &apos;./js/res/selectCategories.json&apos;
 import * as groundSegmentSelectItems from &apos;./js/res/selectGroundSegment.json&apos;;
 
 
-let InitialARScene = require(&apos;./js/HelloWorldSceneAR&apos;);
+let InitialARScene = require(&apos;./js/ARScene&apos;);
 
 /**
  * Default class of Satviz application.
@@ -151,7 +151,7 @@ export default class satviz extends Component {
         };
 
         /** Timeout for opacity slider 
-         * @type {NodeJS.Timeout} */
+         * @type {any} */
         this.opacitySliderTimeout;
 
         /** Maximum number of selected items in satellite multiselect 
@@ -176,7 +176,7 @@ export default class satviz extends Component {
             return;
         }
 
-        this.setState({ 
+        this.setState({
             selectedItems,
             maxItems: false,
         })
@@ -247,7 +247,7 @@ export default class satviz extends Component {
      */
     addManual = () =&gt; {
         if (this.state.selectedItemsManual.includes(this.manualSatSelectTextInput.current._lastNativeText) === false) {
-            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText)});
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText) });
         } else {
             showMessage({
                 message: &quot;Satellite with this ID is already selected!&quot;,
@@ -284,14 +284,14 @@ export default class satviz extends Component {
         if (this.state.selectedItems.includes(satID)) {
             let arr = this.state.selectedItems.filter(e =&gt; e !== satID);
 
-            this.setState({selectedItems: arr});
+            this.setState({ selectedItems: arr });
         }
 
         // Try to remove from selected manually
         if (this.state.selectedItemsManual.includes(satID)) {
             let arr = this.state.selectedItemsManual.filter(e =&gt; e !== satID);
 
-            this.setState({selectedItemsManual: arr});
+            this.setState({ selectedItemsManual: arr });
         }
 
         showMessage({
@@ -373,16 +373,16 @@ export default class satviz extends Component {
                         &lt;/TouchableOpacity&gt;
 
                         &lt;Text style={styles.helpModalHeading}&gt;About&lt;/Text&gt;
-                        &lt;Text style={{textAlign:&apos;justify&apos;}}&gt;This application is used to visualize satellites orbiting the Earth in augmented reality. Along with the orbit visualization, it allows the display of basic satellite information (position, speed, ...) as well as the display of positions and information regarding the terrestrial GPS segment. &lt;/Text&gt;
+                        &lt;Text style={{ textAlign: &apos;justify&apos; }}&gt;This application is used to visualize satellites orbiting the Earth in augmented reality. Along with the orbit visualization, it allows the display of basic satellite information (position, speed, ...) as well as the display of positions and information regarding the terrestrial GPS segment. &lt;/Text&gt;
 
 
-                        &lt;Text style={[styles.helpModalHeading, {marginTop: 10, textAlign: &apos;center&apos;}]}&gt;How To&lt;/Text&gt;
+                        &lt;Text style={[styles.helpModalHeading, { marginTop: 10, textAlign: &apos;center&apos; }]}&gt;How To&lt;/Text&gt;
                         &lt;Text&gt;1. Detect target   &lt;/Text&gt;
-                        &lt;Text style={{textAlign: &apos;center&apos;}}&gt;2. Choose satellite or ground segment element from slide-up menu   &lt;/Text&gt;
-                        &lt;Text style={{textAlign: &apos;center&apos;}}&gt;3. Click on satellites to get more info   &lt;/Text&gt;
+                        &lt;Text style={{ textAlign: &apos;center&apos; }}&gt;2. Choose satellite or ground segment element from slide-up menu   &lt;/Text&gt;
+                        &lt;Text style={{ textAlign: &apos;center&apos; }}&gt;3. Click on satellites to get more info   &lt;/Text&gt;
 
 
-                        &lt;Text style={[styles.helpModalHeading, {marginTop: 10}]}&gt;Settings&lt;/Text&gt;
+                        &lt;Text style={[styles.helpModalHeading, { marginTop: 10 }]}&gt;Settings&lt;/Text&gt;
                         &lt;Text&gt;Orbit opacity: &lt;/Text&gt;
                         &lt;Slider
                             value={this.state.orbitOpacity}
@@ -391,17 +391,17 @@ export default class satviz extends Component {
                             onValueChange={(val) =&gt; {
                                 clearTimeout(this.opacitySliderTimeout);
                                 this.opacitySliderTimeout = setTimeout(() =&gt; {
-                                    this.setState({orbitOpacity: val })
+                                    this.setState({ orbitOpacity: val })
                                 }, 100)
-                                }
                             }
-                            style={{width: &apos;90%&apos;}}
+                            }
+                            style={{ width: &apos;90%&apos; }}
                         /&gt;
                     &lt;/View&gt;
                 &lt;/Modal&gt;
 
                 &lt;TouchableOpacity onPress={this.toggleHelpModal} style={styles.modalIcon}&gt;
-                    &lt;IconM name=&quot;help-outline&quot; size={30} color=&quot;white&quot; style={styles.iconShadow}/&gt;
+                    &lt;IconM name=&quot;help-outline&quot; size={30} color=&quot;white&quot; style={styles.iconShadow} /&gt;
                 &lt;/TouchableOpacity&gt;
 
                 &lt;View style={styles.bodyViewStyle}&gt;
@@ -427,7 +427,7 @@ export default class satviz extends Component {
                         &lt;View style={styles.slidingPanelLayoutStyle}&gt;
                             &lt;View style={{ flex: 1 }}&gt;
                                 &lt;ScrollView style={{ flex: 1 }}&gt;
-                                    &lt;View style={{flex: 1, justifyContent: &apos;center&apos;}}&gt;
+                                    &lt;View style={{ flex: 1, justifyContent: &apos;center&apos; }}&gt;
                                         &lt;SectionedMultiSelect
                                             items={satelliteSelectItems.default}
                                             uniqueKey=&quot;id&quot;
@@ -443,7 +443,7 @@ export default class satviz extends Component {
                                         /&gt;
                                     &lt;/View&gt;
 
-                                    &lt;View style={[styles.hairlineSplitLine]}/&gt;
+                                    &lt;View style={[styles.hairlineSplitLine]} /&gt;
 
                                     &lt;View
                                         style={{
@@ -465,7 +465,7 @@ export default class satviz extends Component {
                                             keyboardType=&apos;numeric&apos;
                                             value={this.state.text}
                                         /&gt;
-                                        &lt;View style={{ width: &apos;20%&apos;}}&gt;
+                                        &lt;View style={{ width: &apos;20%&apos; }}&gt;
                                             &lt;Button title=&quot;Add!&quot; onPress={this.addManual} /&gt;
                                         &lt;/View&gt;
                                     &lt;/View&gt;
@@ -573,10 +573,10 @@ export default class satviz extends Component {
                                         }
                                     &lt;/View&gt;
 
-                                    &lt;View style={styles.hairlineSplitLine}/&gt;
-                                    
-                                    &lt;View style={{flex: 1, flexDirection: &apos;row&apos;, alignItems: &apos;center&apos;, justifyContent: &apos;space-between&apos;}}&gt;
-                                        &lt;View style={{width: &apos;80%&apos;}}&gt;
+                                    &lt;View style={styles.hairlineSplitLine} /&gt;
+
+                                    &lt;View style={{ flex: 1, flexDirection: &apos;row&apos;, alignItems: &apos;center&apos;, justifyContent: &apos;space-between&apos; }}&gt;
+                                        &lt;View style={{ width: &apos;80%&apos; }}&gt;
                                             &lt;SectionedMultiSelect
                                                 items={groundSegmentSelectItems.default}
                                                 uniqueKey=&quot;id&quot;
@@ -591,14 +591,14 @@ export default class satviz extends Component {
                                                 selectedItems={this.state.selectedItemsGroundSegment}
                                             /&gt;
                                         &lt;/View&gt;
-                                        &lt;View style={{position: &apos;absolute&apos;, top: 15, right: 25}}&gt;
+                                        &lt;View style={{ position: &apos;absolute&apos;, top: 15, right: 25 }}&gt;
                                             &lt;TouchableOpacity onPress={this.toggleGroundSegmentModal}&gt;
-                                                &lt;IconF name=&quot;info&quot; size={30} color=&quot;gray&quot; style={styles.iconShadow}/&gt;
+                                                &lt;IconF name=&quot;info&quot; size={30} color=&quot;gray&quot; style={styles.iconShadow} /&gt;
                                             &lt;/TouchableOpacity&gt;
                                         &lt;/View&gt;
                                         &lt;View&gt;&lt;/View&gt;
                                     &lt;/View&gt;
-                                    
+
 
                                     &lt;Modal
                                         isVisible={this.state.groundSegmentModalVisible}
@@ -606,17 +606,17 @@ export default class satviz extends Component {
                                         onBackdropPress={this.toggleGroundSegmentModal}
                                     &gt;
                                         &lt;View style={styles.groundSegmentModal}&gt;
-                                            &lt;View style={{height: &apos;93%&apos;}}&gt;
+                                            &lt;View style={{ height: &apos;93%&apos; }}&gt;
                                                 &lt;ScrollView&gt;
                                                     &lt;Text style={styles.groundSegmentHeading}&gt;Master Control Stations and Alternate MCS&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentColors}&gt;Red and Gold&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentText}&gt;The master control station, located at Schriever Air Force Base in Colorado Springs, Colorado, is responsible for overall management of the remote monitoring and transmission sites. GPS ephemeris being a tabulation of computed positions, velocities and derived right ascension and declination of GPS satellites at specific times, replace &quot;position&quot; with &quot;ephemeris&quot; because the Master Control Station computes not only position but also velocity, right ascension and declination parameters for eventual upload to GPS satellites.&lt;/Text&gt;
-                                                
-                                                    &lt;Text style={[styles.groundSegmentHeading, {marginTop: 5}]}&gt;Monitor Stations&lt;/Text&gt;
+
+                                                    &lt;Text style={[styles.groundSegmentHeading, { marginTop: 5 }]}&gt;Monitor Stations&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentColors}&gt;AFMS blue, AFSCN yellow, NGA purple&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentText}&gt;Six monitor stations are located at Schriever Air Force Base in Colorado, Cape Canaveral, Florida, Hawaii, Ascension Island in the Atlantic Ocean, Diego Garcia Atoll in the Indian Ocean, and Kwajalein Island in the South Pacific Ocean.Six additional monitoring stations were added in 2005 in Argentina, Bahrain, United Kingdom, Ecuador, Washington DC, and Australia. Each of the monitor stations checks the exact altitude, position, speed, and overall health of the orbiting satellites. The control segment uses measurements collected by the monitor stations to predict the behavior of each satellite&apos;s orbit and clock. The prediction data is up-linked, or transmitted, to the satellites for transmission back to the users. The control segment also ensures that the GPS satellite orbits and clocks remain within acceptable limits. A station can track up to 11 satellites at a time. This &quot;check-up&quot; is performed twice a day, by each station, as the satellites complete their journeys around the earth. Noted variations, such as those caused by the gravity of the moon, sun and the pressure of solar radiation, are passed along to the master control station.&lt;/Text&gt;
-                                                
-                                                    &lt;Text style={[styles.groundSegmentHeading, {marginTop: 5}]}&gt;Ground Antennas&lt;/Text&gt;
+
+                                                    &lt;Text style={[styles.groundSegmentHeading, { marginTop: 5 }]}&gt;Ground Antennas&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentColors}&gt;Green&lt;/Text&gt;
                                                     &lt;Text style={styles.groundSegmentText}&gt;
                                                         The Ground Antennas uplink data to the satellites via S-band radio signals. These data includes ephemerides and clock correction information transmitted within the Navigation Message, as well as command telemetry from the MCS.
@@ -624,15 +624,15 @@ export default class satviz extends Component {
                                                     &lt;/Text&gt;
                                                 &lt;/ScrollView&gt;
                                             &lt;/View&gt;
-                                            &lt;View style={{width: &apos;40%&apos;, marginTop: 10}}&gt;
+                                            &lt;View style={{ width: &apos;40%&apos;, marginTop: 10 }}&gt;
                                                 &lt;Button title=&quot;Hide info&quot; onPress={this.toggleGroundSegmentModal} /&gt;
                                             &lt;/View&gt;
                                         &lt;/View&gt;
                                     &lt;/Modal&gt;
 
-                                    &lt;View style={[styles.hairlineSplitLine]}/&gt;
+                                    &lt;View style={[styles.hairlineSplitLine]} /&gt;
 
-                                    &lt;View style={{marginHorizontal: 10, marginTop: 10}}&gt;
+                                    &lt;View style={{ marginHorizontal: 10, marginTop: 10 }}&gt;
                                         &lt;Text&gt;Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)&lt;/Text&gt;
                                         &lt;Slider
                                             value={this.state.timeSpeedSliderValue}
@@ -713,7 +713,7 @@ const styles = StyleSheet.create({
         alignItems: &apos;center&apos;,
     },
     helpModalHeading: {
-        fontWeight:&apos;bold&apos;,
+        fontWeight: &apos;bold&apos;,
         textAlign: &apos;center&apos;,
         fontSize: 16
     },
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
     },
     groundSegmentHeading: {
-        fontWeight:&apos;bold&apos;,
+        fontWeight: &apos;bold&apos;,
         textAlign: &apos;center&apos;,
         fontSize: 16
     },
@@ -753,7 +753,7 @@ const styles = StyleSheet.create({
     iconShadow: {
         shadowOpacity: 2,
         textShadowRadius: 2,
-        textShadowOffset:{width: 0,height: 0}
+        textShadowOffset: { width: 0, height: 0 }
     },
 });
 </code></pre>
