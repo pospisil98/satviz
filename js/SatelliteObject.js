@@ -4,17 +4,17 @@
  *  @author       Vojtěch Pospíšil
  */
 
-'use-strict';
+"use strict";
 
- /**
- * Dictionary of satellite desciption used in other functions.
- * @constant
- *
- * @type {Object<string, string>}
- */
+/**
+* Dictionary of satellite desciption used in other functions.
+* @constant
+*
+* @type {Object<string, string>}
+*/
 const descriptions = {
     25544: "ISS",
-    
+
     24876: "GPS",
     25933: "GPS",
     26360: "GPS",
@@ -48,23 +48,23 @@ const descriptions = {
     43873: "GPS",
 }
 
- /**
- * Dictionary of special satellite model requirements.
- * @constant
- *
- * @type {Object<string, NodeRequire>}
- */
+/**
+* Dictionary of special satellite model requirements.
+* @constant
+*
+* @type {Object<string, NodeRequire>}
+*/
 const models = {
     "ISS": require('./res/models/iss/ISS.glb'),
     "GPS": require('./res/models/gps/gps.obj'),
 }
 
- /**
- * Dictionary of special satellite model material requirements.
- * @constant
- *
- * @type {Object<string, NodeRequire>}
- */
+/**
+* Dictionary of special satellite model material requirements.
+* @constant
+*
+* @type {Object<string, NodeRequire>}
+*/
 const materials = {
     "GPS": require('./res/models/gps/gps.mtl'),
 }
@@ -258,9 +258,9 @@ export default class SatelliteObject {
         const denominator = 25000;
         const base = 10000;
 
-        x = value.x / denominator;
-        y = value.y / denominator;
-        z = value.z / denominator;
+        let x = value.x / denominator;
+        let y = value.y / denominator;
+        let z = value.z / denominator;
 
         /*
         x = Math.log(Math.abs(value.x)) / Math.log(base);
@@ -272,7 +272,7 @@ export default class SatelliteObject {
         value.z < 0 ? z = -z : z = z; */
 
         // conversion from eci to viro coords
-        return [y, z, x];   
+        return [y, z, x];
     }
 
     /**
@@ -347,11 +347,11 @@ export default class SatelliteObject {
      */
     getPointsForOrbit = (numSegments, currentDate) => {
         // in minutes
-        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI)); 
+        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));
         let timeStep = orbitPeriod / numSegments;
 
         let startDate = new Date(currentDate);
-    
+
         let positions = [];
         for (let i = 0; i <= numSegments; i++) {
             let date = new Date(startDate);

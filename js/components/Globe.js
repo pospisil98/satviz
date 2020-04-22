@@ -4,7 +4,7 @@
  *  @author       Vojtěch Pospíšil
  */
 
-'use-strict';
+"use strict";
 
 import React, { Component } from 'react';
 
@@ -117,17 +117,17 @@ export default class Globe extends Component {
 
                 // Convert TLE string to line separated array
                 this.tle = data.split('\r\n');
-                
+
                 sats = this.parseData();
             }
 
             // Get satellites which will be not removed from current ones
-            keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));
-            
+            let keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));
+
             // Get IDs of all visualized satellites
             let curr = [...sats, ...keptFromCurrentObjects].map(sat => (sat.id).toString());
 
-            this.setState({ 
+            this.setState({
                 satellites: [...sats, ...keptFromCurrentObjects],
                 currentSatelliteIDs: curr,
             })
@@ -159,7 +159,7 @@ export default class Globe extends Component {
      * @returns {Array.<SatelliteObject>}
      */
     parseData = () => {
-        satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
+        let satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
         this.loading = false;
 
         return satelliteObjects;
@@ -294,9 +294,9 @@ export default class Globe extends Component {
         let city = groundSegmentIDtoCity[segmentID];
         let coordsOriginal = groundSegmentEciCoords[city];
 
-        x = coordsOriginal.x / denominator;
-        y = coordsOriginal.y / denominator;
-        z = coordsOriginal.z / denominator;
+        let x = coordsOriginal.x / denominator;
+        let y = coordsOriginal.y / denominator;
+        let z = coordsOriginal.z / denominator;
 
         // Conversion from ECI to ViroCoords
         return [y, z, x];
@@ -398,7 +398,7 @@ export default class Globe extends Component {
                         onClick={() => {
                             this.onModelClick(sat.id);
                         }}
-                        
+
                         renderingOrder={10}
                     />
                 )
@@ -421,10 +421,10 @@ export default class Globe extends Component {
                 let orbitTime = sat.getOrbitTime();
                 if (!this.state.excludedOrbits.includes(sat.id)) {
                     let positions;
-                    
+
                     if (this.shouldUpdateOrbit(sat.id, orbitTime)) {
                         positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
-                                            
+
                         this.orbitPoints[sat.id] = positions;
                         this.orbitTimestamps[sat.id] = this.clock.time();
                     } else {

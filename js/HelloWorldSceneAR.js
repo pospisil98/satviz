@@ -4,7 +4,7 @@
  *  @author       Vojtěch Pospíšil
  */
 
-'use-strict';
+"use strict";
 
 import React, { Component } from 'react';
 
@@ -53,7 +53,7 @@ export default class HelloWorldSceneAR extends Component {
             /** Opacity of rendered orbits 
              * @type {number} */
             orbitOpacity: 0.8,
-            
+
             /** Scale (multiply) of real time speed 
              * @type {number} */
             timeScale: 1
@@ -131,7 +131,7 @@ export default class HelloWorldSceneAR extends Component {
         position[2] = position[2] - 0.085;
 
         if (this.positionModCount === 0) {
-            this.setState({globePosition: position,});
+            this.setState({ globePosition: position, });
         } else {
             // Limit position modification to only first 4 attempts
             if (this.positionModCount > 3) {
@@ -142,14 +142,14 @@ export default class HelloWorldSceneAR extends Component {
             newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
             newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
             newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
-            
+
             /*
            newPos[0] = ((this.state.globePosition[0]) + position[0]) / 2;
            newPos[1] = ((this.state.globePosition[1]) + position[1]) / 2;
            newPos[2] = ((this.state.globePosition[2]) + position[2]) / 2;
            */
-            
-            this.setState({globePosition: newPos,});
+
+            this.setState({ globePosition: newPos, });
         }
 
         this.positionModCount += 1;
@@ -170,12 +170,12 @@ export default class HelloWorldSceneAR extends Component {
 
             // On flat target simply copy detected position and rotation
             if (targetName === "flatTarget") {
-                this.setState({globePosition: e.position, globeRotation: e.rotation});
+                this.setState({ globePosition: e.position, globeRotation: e.rotation });
                 return;
             }
 
             if (!this.state.globeDetected && targetName !== "flatTarget") {
-                this.setState({globeDetected: true});
+                this.setState({ globeDetected: true });
             }
 
             // Add target name to tracking if not there
@@ -186,7 +186,7 @@ export default class HelloWorldSceneAR extends Component {
                 if (this.tracking.length > 3) {
                     this.tracking.shift();
                 }
-                
+
                 changed = true;
             }
 
@@ -202,14 +202,14 @@ export default class HelloWorldSceneAR extends Component {
 
         // When some target has been changed get user know it and update rotation
         if (changed) {
-            if (this.tracking.length == 0 && this.isTracking == true ) {
+            if (this.tracking.length == 0 && this.isTracking == true) {
                 this.isTracking = false;
                 showMessage({
                     message: "Tracking lost :(",
                     type: "warning",
                 });
             }
-    
+
             if (this.tracking.length != 0 && this.isTracking == false) {
                 this.isTracking = true;
                 showMessage({
@@ -219,7 +219,7 @@ export default class HelloWorldSceneAR extends Component {
             }
 
             let rotation = this.getGlobeRotation();
-            this.setState({globeRotation: rotation});
+            this.setState({ globeRotation: rotation });
         }
     }
 
@@ -251,7 +251,7 @@ export default class HelloWorldSceneAR extends Component {
      */
     renderGlobe = () => {
         if (this.renderDisabled) {
-            return(<ViroNode></ViroNode>);
+            return (<ViroNode></ViroNode>);
         }
 
         let position = this.state.globePosition;
@@ -262,7 +262,7 @@ export default class HelloWorldSceneAR extends Component {
             flatTarget = false;
         }
 
-        return(
+        return (
             <ViroNode position={position} rotation={rotation}>
                 <Globe
                     satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}

@@ -4,6 +4,8 @@
  *  @author       Vojtěch Pospíšil
  */
 
+"use strict";
+
 import React, { Component } from 'react';
 
 import {
@@ -18,12 +20,12 @@ import Modal from "react-native-modal";
 
 import Icon from 'react-native-vector-icons/Fontisto';
 
- /**
- * Dictionary of term descriptions.
- * @constant
- *
- * @type {Object<string, string>}
- */
+/**
+* Dictionary of term descriptions.
+* @constant
+*
+* @type {Object<string, string>}
+*/
 const messageDict = {
     id: "The NORAD Catalog Number or USSPACECOM object number is a sequential 5-digit number assigned by USSPACECOM to all Earth orbiting satellites in order of identification.",
     intlDes: "The International Designator is an naming convention for satellites. It consists of the launch year, a 3-digit incrementing launch number of that year and up to a 3-letter code representing the sequential id of a piece in a launch. Only publicly known satellites are designated.",
@@ -37,12 +39,12 @@ const messageDict = {
     period: "Period is the amount of time to complete one revolution around the Earth.",
 }
 
- /**
- * Dictionary of orbit toggle button messages.
- * @constant
- *
- * @type {Object<string, string>}
- */
+/**
+* Dictionary of orbit toggle button messages.
+* @constant
+*
+* @type {Object<string, string>}
+*/
 const message = {
     show: "Show orbit",
     hide: "Hide orbit"
@@ -72,7 +74,7 @@ export default class CustomInfoModal extends Component {
     componentDidUpdate(prevProps, prevState) {
         // update state to rerender component
         if (this.state.modalVisible != this.props.isModalVisible) {
-            this.setState({modalVisible: this.props.isModalVisible});
+            this.setState({ modalVisible: this.props.isModalVisible });
         }
 
         // update info when the sat ID is changed
@@ -87,7 +89,7 @@ export default class CustomInfoModal extends Component {
                     buttonText: message.hide,
                 });
             }
-            
+
             if (this.props.orbitEnabled) {
                 this.setState({
                     buttonText: message.show,
@@ -176,7 +178,7 @@ export default class CustomInfoModal extends Component {
                 <Text onPress={() => { this.setState({ explanationRequest: "period" }) }}>
                     <Text style={styles.boldFont}>Period: </Text>{this.state.data.period}
                 </Text>
-                <Text style={{fontSize: 10, color: 'gray', marginTop: 5}}>By clicking on line you can get more info</Text>
+                <Text style={{ fontSize: 10, color: 'gray', marginTop: 5 }}>By clicking on line you can get more info</Text>
             </View>
         );
     }
@@ -204,13 +206,13 @@ export default class CustomInfoModal extends Component {
                     onBackdropPress={this.closeModalCallback}
                 >
                     <View style={styles.infoModal}>
-                    <TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}>
-                        <Icon name="close-a" size={20} color="grey" />
-                    </TouchableOpacity>
+                        <TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}>
+                            <Icon name="close-a" size={20} color="grey" />
+                        </TouchableOpacity>
 
                         {this.renderTextInfo()}
 
-                        <View style={{marginTop: 10}}>
+                        <View style={{ marginTop: 10 }}>
                             <Button
                                 title={this.state.buttonText}
                                 onPress={() => {
@@ -240,14 +242,15 @@ const styles = StyleSheet.create({
         right: '5%',
         top: '2%',
     },
-    infoRow : {
+    infoRow: {
         flex: 1,
         alignSelf: 'stretch',
         flexDirection: 'row',
     },
     rowElement: {
         flex: 1,
-        alignSelf: 'stretch' },
+        alignSelf: 'stretch'
+    },
     boldFont: {
         fontWeight: 'bold',
     },
