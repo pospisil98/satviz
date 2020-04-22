@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">satviz/js/SatelliteObject.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/SatelliteObject.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Representation of object behind satellite. 
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+&apos;use-strict&apos;;
+
+ /**
+ * Dictionary of satellite desciption used in other functions.
+ * @constant
+ *
+ * @type {Object&lt;string, string&gt;}
+ */
+const descriptions = {
+    25544: &quot;ISS&quot;,
+    
+    24876: &quot;GPS&quot;,
+    25933: &quot;GPS&quot;,
+    26360: &quot;GPS&quot;,
+    26407: &quot;GPS&quot;,
+    26605: &quot;GPS&quot;,
+    27663: &quot;GPS&quot;,
+    27704: &quot;GPS&quot;,
+    28129: &quot;GPS&quot;,
+    28190: &quot;GPS&quot;,
+    28361: &quot;GPS&quot;,
+    28474: &quot;GPS&quot;,
+    28874: &quot;GPS&quot;,
+    29486: &quot;GPS&quot;,
+    29601: &quot;GPS&quot;,
+    32260: &quot;GPS&quot;,
+    32384: &quot;GPS&quot;,
+    32711: &quot;GPS&quot;,
+    35752: &quot;GPS&quot;,
+    36585: &quot;GPS&quot;,
+    37753: &quot;GPS&quot;,
+    38833: &quot;GPS&quot;,
+    39166: &quot;GPS&quot;,
+    39533: &quot;GPS&quot;,
+    39741: &quot;GPS&quot;,
+    40105: &quot;GPS&quot;,
+    40294: &quot;GPS&quot;,
+    40534: &quot;GPS&quot;,
+    40730: &quot;GPS&quot;,
+    41019: &quot;GPS&quot;,
+    41328: &quot;GPS&quot;,
+    43873: &quot;GPS&quot;,
+}
+
+ /**
+ * Dictionary of special satellite model requirements.
+ * @constant
+ *
+ * @type {Object&lt;string, NodeRequire&gt;}
+ */
+const models = {
+    &quot;ISS&quot;: require(&apos;./res/models/iss/ISS.glb&apos;),
+    &quot;GPS&quot;: require(&apos;./res/models/gps/gps.obj&apos;),
+}
+
+ /**
+ * Dictionary of special satellite model material requirements.
+ * @constant
+ *
+ * @type {Object&lt;string, NodeRequire&gt;}
+ */
+const materials = {
+    &quot;GPS&quot;: require(&apos;./res/models/gps/gps.mtl&apos;),
+}
+
+/**
+ * Dictionary of special satellite model material requirements.
+ * @constant
+ *
+ * @type {Object&lt;string, NodeRequire&gt;}
+ */
+const textures = {
+    &quot;GPS&quot;: require(&apos;./res/models/Satellite.mtl&apos;),
+}
+
+/**
+ * Dictionary of satellite model scales.
+ * @constant
+ *
+ * @type {Object&lt;string, Array.&lt;number&gt;&gt;}
+ */
+const scales = {
+    &quot;ISS&quot;: [0.1, 0.1, 0.1],
+    &quot;GPS&quot;: [0.03, 0.03, 0.03],
+    &quot;DEFAULT&quot;: [0.0005, 0.0005, 0.0005],
+}
+
+/**
+ * Dictionary of satellite model rotation.
+ * @constant
+ *
+ * @type {Object&lt;string, Array.&lt;number&gt;&gt;}
+ */
+const rotations = {
+    &quot;ISS&quot;: [0, 90, 0],
+    &quot;GPS&quot;: [0.0, 0.0, 0.0],
+    &quot;DEFAULT&quot;: [0.0, 0.0, 0.0],
+}
+
+/**
+ * Dictionary of satellite model types (extensions).
+ * @constant
+ *
+ * @type {Object&lt;string, string&gt;}
+ */
+const modelTypes = {
+    &quot;ISS&quot;: &quot;GLB&quot;,
+    &quot;GPS&quot;: &quot;OBJ&quot;,
+}
+
+var satellite = require(&apos;satellite.js&apos;);
+
+/**
+ * Object representing space satellite.
+ */
+export default class SatelliteObject {
+
+    /**
+     * Constructs a satelite object with given properties.
+     * 
+     * @param {string} id ID of satellite from Satellite Catalog
+     * @param {Object} satelliteRecord Satellite record of satellite from satellite.js
+     * @param {string} tle String version of TLE record
+     */
+    constructor(id, satelliteRecord, tle) {
+        /** ID of satellite in satellite catalog
+         *  @type {string} */
+        this.id = id;
+        /** TLE record of satellite 
+         * @type {string} */
+        this.tle = tle;
+        /** Satellite record from satellite.js 
+         * @type {Object} */
+        this.satelliteRecord = satelliteRecord;
+        /** Time of last satellite position 
+         * @type {Object} */
+        this.time = null;
+
+        /** Description of satellite type 
+         * @type {string} */
+        this.description = this.getDescription();
+        /** Require of satellite 3D model
+         *  @type {NodeRequire}*/
+        this.modelPath = models[this.description];
+        /** Model type (extension) 
+         * @type {string} */
+        this.modelType = modelTypes[this.description];
+        /** All requirements of satellite 3D model 
+         * @type {Array&lt;NodeRequire&gt;} */
+        this.resources = this.getResources();
+
+        /** Remmaped position of satellite in Viro Coords 
+         * @type {Array&lt;number&gt;} */
+        this.position = [0.0, 0.0, 0.0];
+        /** Position of satellite in ECI coords 
+         * @type {Array&lt;number&gt;} */
+        this.positionEci = null;
+        /** Scale of satellite model 
+         * @type {Array&lt;number&gt;} */
+        this.scale = scales[this.description];
+        /** Rotation of satellite model
+         *  @type {Array&lt;number&gt;} */
+        this.rotation = rotations[this.description];
+        /** Velocity of satellite model in XYZ direction 
+         * @type {Object&lt;string, number&gt;} */
+        this.velocity = {};
+    }
+
+    /**
+     * Gathers all needed resources for satellite model.
+     * 
+     * @returns {Array&lt;NodeRequire&gt;} Array of all satellite model additional requirements.
+     */
+    getResources = () =&gt; {
+        let material = this.getMaterialPath();
+        let texture = this.getTexturePath();
+
+        let resources = [];
+
+        if (material !== null) {
+            resources.push(material);
+        }
+
+        if (texture !== null) {
+            resources.push(texture);
+        }
+
+        return resources;
+    }
+
+    /**
+     * Returns material needed by model specified in material dict.
+     * 
+     * @returns {NodeRequire} Requirement or null when nothing special is needed.
+     */
+    getMaterialPath = () =&gt; {
+        if (this.description in materials) {
+            return materials[this.description];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns texture needed by model specified in texture dict.
+     * 
+     * @returns {NodeRequire} Requirement or null when nothing special is needed.
+     */
+    getTexturePath = () =&gt; {
+        if (this.description in textures) {
+            return textures[this.description];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns desciption string of model specified in description dict.
+     * 
+     * @returns {string} Description or DEFAULT if not defined.
+     */
+    getDescription = () =&gt; {
+        if (this.id in descriptions) {
+            return descriptions[this.id];
+        } else {
+            return &quot;DEFAULT&quot;;
+        }
+    }
+
+    /**
+     * Updates satellite position to position in given time.
+     * 
+     * @param {Object} datetime Javascript date object.
+     */
+    updatePosition = (datetime) =&gt; {
+        let propagation = satellite.propagate(this.satelliteRecord, datetime);
+
+        this.time = datetime;
+        this.velocity = propagation.velocity;
+        this.positionEci = propagation.position;
+        this.position = this.mapPositionToRange(propagation.position);
+    }
+
+    /**
+     * Remaps position value into displayable values in coords used by viro react.
+     * 
+     * @param {Array&lt;number&gt;} value Position in [X, Y, Z] format.
+     * 
+     * @returns {Array&lt;number&gt;} Remapped position in [Y, Z, X] format (Viro coords).
+     */
+    mapPositionToRange = (value) =&gt; {
+        const denominator = 25000;
+        const base = 10000;
+
+        x = value.x / denominator;
+        y = value.y / denominator;
+        z = value.z / denominator;
+
+        /*
+        x = Math.log(Math.abs(value.x)) / Math.log(base);
+        y = Math.log(Math.abs(value.y)) / Math.log(base);
+        z = Math.log(Math.abs(value.z)) / Math.log(base);
+
+        value.x &lt; 0 ? x = -x : x = x;
+        value.y &lt; 0 ? y = -y : y = y;
+        value.z &lt; 0 ? z = -z : z = z; */
+
+        // conversion from eci to viro coords
+        return [y, z, x];   
+    }
+
+    /**
+     * Formats given data to strings with correct units.
+     * 
+     * @param {Object&lt;string, any&gt;} data Dictionary with data to be formated.
+     * 
+     * @returns {Object&lt;string, string&gt;} Dictionary with data correctly formated for display. 
+     */
+    formatSelectedDataForModal = (data) =&gt; {
+        let formated = {};
+        formated.id = data.id.toString(); // NORAD ID
+        formated.intlDes = data.intlDes.toString(); // INTL DESIGNATOR (year, number of launch, piece of launch)
+        formated.apogee = data.apogee.toFixed(2).toString() + &apos; km&apos;;
+        formated.perigee = data.perigee.toFixed(2).toString() + &apos; km&apos;;
+        formated.inclination = this.deg_to_dms(this.radians_to_degrees(data.inclination));
+        formated.latitude = satellite.degreesLat(data.positionGeodetic.latitude).toFixed(3);
+        formated.longitude = satellite.degreesLong(data.positionGeodetic.longitude).toFixed(3);
+        formated.height = data.positionGeodetic.height.toFixed(2).toString() + &apos; km&apos;;
+        formated.velocity = data.velocity.toFixed(2).toString() + &apos; km/s&apos;;
+        formated.period = data.period.toFixed(0).toString() + &apos; min&apos;;
+
+        return formated;
+    }
+
+    /**
+     * Calculates data needed in information modal window.
+     * 
+     * @returns {Object&lt;string, any&gt;} Dictionary of formated data for usage directly in info modal
+     */
+    getDataForInfoModal = () =&gt; {
+        let data = {};
+        data.id = this.id;
+        data.intlDes = this.getIntlDes();
+        data.inclination = this.satelliteRecord.inclo;  // Rads
+        data.eccentricity = this.satelliteRecord.ecco;
+        data.raan = this.satelliteRecord.nodeo;   // Rads
+        data.argPe = this.satelliteRecord.argpo;  // Rads
+        data.meanMotion = this.satelliteRecord.no * 60 * 24 / (2 * Math.PI);     // Convert rads/minute to rev/day
+
+        data.semiMajorAxis = Math.pow(8681663.653 / data.meanMotion, (2 / 3));
+        data.semiMinorAxis = data.semiMajorAxis * Math.sqrt(1 - Math.pow(data.eccentricity, 2));
+        data.apogee = data.semiMajorAxis * (1 + data.eccentricity) - 6371;
+        data.perigee = data.semiMajorAxis * (1 - data.eccentricity) - 6371;
+        data.period = 1440.0 / data.meanMotion;
+
+        // Geodetic position requires GMST time (http://en.wikipedia.org/wiki/Sidereal_time#Definition)
+        let gmst = satellite.gstime(new Date(this.time));
+        data.positionGeodetic = satellite.eciToGeodetic(this.positionEci, gmst);
+
+        data.velocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2) + Math.pow(this.velocity.z, 2));
+
+        return this.formatSelectedDataForModal(data);
+    }
+
+    /**
+     * Calculates orbit time of satellite in minutes
+     * 
+     * @returns {number} Orbit time in minutes
+     */
+    getOrbitTime = () =&gt; {
+        return (1440.0 / this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));
+    }
+
+    /**
+     * Calculates points through one satellite orbit in future (first point is duplicatedat the edn of array).
+     * 
+     * @param {number} numSegments Number of points (segments) in one orbit.
+     * @param {any} currentDate Current date / starting date of orbit. 
+     * 
+     * @returns {Array&lt;Array&lt;number&gt;&gt;} Array of [x, y, z] positions of points.
+     */
+    getPointsForOrbit = (numSegments, currentDate) =&gt; {
+        // in minutes
+        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI)); 
+        let timeStep = orbitPeriod / numSegments;
+
+        let startDate = new Date(currentDate);
+    
+        let positions = [];
+        for (let i = 0; i &lt;= numSegments; i++) {
+            let date = new Date(startDate);
+            // Move date by one &quot;segment duration&quot;
+            date.setMinutes(startDate.getMinutes() + (i * timeStep));
+
+            let position = satellite.propagate(this.satelliteRecord, date).position;
+            positions.push(this.mapPositionToRange(position))
+        }
+
+        // Repeat first point at the end because of ViroPolyline
+        positions.push(positions[0]);
+
+        return positions;
+    }
+
+    /**
+     * Composes International Designator of satellite.
+     * 
+     * @returns {string} ITLDES of satellite
+     */
+    getIntlDes = () =&gt; {
+        let des = &apos;&apos;;
+
+        let year = this.tle[0].substring(9, 11);
+        let prefix = (year &gt; 50) ? &apos;19&apos; : &apos;20&apos;;
+        year = prefix + year;
+
+        let rest = this.tle[0].substring(11, 16);
+        des = year + &apos;-&apos; + rest;
+
+        return des;
+    }
+
+    /**
+     * Converts degrees to d&#xB0; m&apos; s&quot; format.
+     * https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript/5786627#5786627
+     * 
+     * @param {number} deg Value in degrees
+     * 
+     * @returns {string} Formated degree value (d&#xB0; m&apos; s&quot;)
+     */
+    deg_to_dms = (deg) =&gt; {
+        var d = Math.floor(deg);
+        var minfloat = (deg - d) * 60;
+        var m = Math.floor(minfloat);
+        var secfloat = (minfloat - m) * 60;
+        var s = Math.round(secfloat);
+        // After rounding, the seconds might become 60. These two if-tests are not necessary if no rounding is done.
+        if (s == 60) {
+            m++;
+            s = 0;
+        }
+        if (m == 60) {
+            d++;
+            m = 0;
+        }
+        return (&quot;&quot; + d + &quot;&#xB0; &quot; + m + &quot;&apos; &quot; + s + &quot;\&quot;&quot;);
+    }
+
+    /**
+     * Converts radian value to degree value.
+     * 
+     * @param {number} radians Value in radians
+     * 
+     * @returns {number} Value in degrees
+     */
+    radians_to_degrees = (radians) =&gt; {
+        return radians * (180 / Math.PI);
+    }
+}</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

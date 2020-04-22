@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../../">
+  <title data-ice="title">satviz/js/components/CustomInfoModal.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/components/CustomInfoModal.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Component for displaying info about selected satellite. 
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+import React, { Component } from &apos;react&apos;;
+
+import {
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    Button
+} from &apos;react-native&apos;;
+
+import Modal from &quot;react-native-modal&quot;;
+
+import Icon from &apos;react-native-vector-icons/Fontisto&apos;;
+
+ /**
+ * Dictionary of term descriptions.
+ * @constant
+ *
+ * @type {Object&lt;string, string&gt;}
+ */
+const messageDict = {
+    id: &quot;The NORAD Catalog Number or USSPACECOM object number is a sequential 5-digit number assigned by USSPACECOM to all Earth orbiting satellites in order of identification.&quot;,
+    intlDes: &quot;The International Designator is an naming convention for satellites. It consists of the launch year, a 3-digit incrementing launch number of that year and up to a 3-letter code representing the sequential id of a piece in a launch. Only publicly known satellites are designated.&quot;,
+    apogee: &quot;Apogee is the point where the satellite is farthest from Earth is called apogee (sometimes called apoapsis, or apifocus&quot;,
+    perigee: &quot;Perigee is the point where the satellite is closest to the Earth (sometimes called periapsis or perifocus)&quot;,
+    inclination: &quot;Inclination is the angle between the orbital plane and the equatorial plane. By convention, inclination is a number between 0 and 180 degrees. A satellite in a geostationary orbit has an inclination zero. A satellite in a polar orbit will have an inclination of 90 degrees.&quot;,
+    latitude: &quot;Latitude is a geographic coordinate that specifies the north&#x2013;south position of a point on the Earth&apos;s surface. It is an angle which ranges from 0&#xB0; at the Equator to 90&#xB0; (North or South) at the poles.&quot;,
+    longitude: &quot;Longitude is a geographic coordinate that specifies the east&#x2013;west position of a point on the Earth&apos;s surface. The longitude of other places is measured as the angle east or west from the Prime Meridian, ranging from 0&#xB0; at the Prime Meridian to +180&#xB0; eastward and &#x2212;180&#xB0; westward.&quot;,
+    height: &quot;Altitude or height (sometimes known as &apos;depth&apos;) a distance measurement, usually in the vertical or \&quot;up\&quot; direction, between a reference datum and a point or object. It is basically the distance between object and Earth sea level.&quot;,
+    velocity: &quot;The velocity of an object is the rate of change of its position with respect to a frame of reference, and is a function of time. It is more known as speed.&quot;,
+    period: &quot;Period is the amount of time to complete one revolution around the Earth.&quot;,
+}
+
+ /**
+ * Dictionary of orbit toggle button messages.
+ * @constant
+ *
+ * @type {Object&lt;string, string&gt;}
+ */
+const message = {
+    show: &quot;Show orbit&quot;,
+    hide: &quot;Hide orbit&quot;
+}
+
+/**
+ * Component for displaying info about selected satellite.
+ * 
+ * 
+ */
+export default class CustomInfoModal extends Component {
+    constructor() {
+        super();
+
+        this.state = {
+            /** Data for rendering information about satellite. @type {Object&lt;string, string&gt;} */
+            data: {},
+            /** Selected term to be explained. @type {string} */
+            explanationRequest: null,
+            /** State of component (modal) visibility - `true` means modal is visible @type {boolean} */
+            modalVisible: false,
+            /** Text of the orbit toggle button. @type {string} */
+            buttonText: message.hide,
+        };
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // update state to rerender component
+        if (this.state.modalVisible != this.props.isModalVisible) {
+            this.setState({modalVisible: this.props.isModalVisible});
+        }
+
+        // update info when the sat ID is changed
+        if (this.props.satellite &amp;&amp; this.state.data.id != this.props.satellite[0].id) {
+            this.updateSateliteData();
+        }
+
+        // set apropriate text to orbit toggle button
+        if (this.props.orbitEnabled != prevProps.orbitEnabled &amp;&amp; prevProps.orbitEnabled) {
+            if (!this.props.orbitEnabled) {
+                this.setState({
+                    buttonText: message.hide,
+                });
+            }
+            
+            if (this.props.orbitEnabled) {
+                this.setState({
+                    buttonText: message.show,
+                });
+            }
+        }
+    }
+
+    /**
+     * Updates information about satellite.
+     */
+    updateSateliteData = () =&gt; {
+        let temp = this.props.satellite[0].getDataForInfoModal();
+        this.setState({ data: temp });
+
+        if (this.props.isModalVisible) {
+            setTimeout(() =&gt; {
+                this.updateSateliteData();
+            }, 500);
+        }
+    }
+
+    /**
+     * Alternates between toggle orbit button messages.
+     */
+    changeText = () =&gt; {
+        let text;
+        if (this.state.buttonText === message.show) {
+            text = message.hide;
+        } else {
+            text = message.show;
+        }
+
+        this.setState({
+            buttonText: text,
+        });
+    }
+
+    /**
+     * Callback for closing modal window.
+     */
+    closeModalCallback = () =&gt; {
+        // next opening of modal will be without any explanation
+        this.setState({
+            explanationRequest: null,
+        });
+
+        this.props.closeModal();
+    }
+
+    /**
+     * Renders text info with satellite informations.
+     * 
+     * @returns {View} All satellite informations
+     */
+    renderTextInfo = () =&gt; {
+        return (
+            &lt;View style={styles.textInfo}&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;id&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;NORAD ID: &lt;/Text&gt;{this.state.data.id}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;intlDes&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Int&apos;l Designator: &lt;/Text&gt;{this.state.data.intlDes}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;apogee&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Apogee: &lt;/Text&gt;{this.state.data.apogee}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;perigee&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Perigee: &lt;/Text&gt;{this.state.data.perigee}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;inclination&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Inclination: &lt;/Text&gt;{this.state.data.inclination}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;latitude&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Latitude: &lt;/Text&gt;{this.state.data.latitude}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;longitude&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Longitude: &lt;/Text&gt;{this.state.data.longitude}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;height&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Height: &lt;/Text&gt;{this.state.data.height}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;velocity&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Velocity: &lt;/Text&gt;{this.state.data.velocity}
+                &lt;/Text&gt;
+                &lt;Text onPress={() =&gt; { this.setState({ explanationRequest: &quot;period&quot; }) }}&gt;
+                    &lt;Text style={styles.boldFont}&gt;Period: &lt;/Text&gt;{this.state.data.period}
+                &lt;/Text&gt;
+                &lt;Text style={{fontSize: 10, color: &apos;gray&apos;, marginTop: 5}}&gt;By clicking on line you can get more info&lt;/Text&gt;
+            &lt;/View&gt;
+        );
+    }
+
+    /**
+     * Renders selected term explanation.
+     */
+    renderExplanation = () =&gt; {
+        return (
+            &lt;Text style={styles.explanation}&gt;
+                {messageDict[this.state.explanationRequest]}
+            &lt;/Text&gt;
+        );
+    }
+
+    render() {
+        if (!this.state.modalVisible) {
+            return &lt;View&gt;&lt;/View&gt;
+        }
+
+        return (
+            &lt;View&gt;
+                &lt;Modal isVisible={this.state.modalVisible}
+                    useNativeDriver={true}
+                    onBackdropPress={this.closeModalCallback}
+                &gt;
+                    &lt;View style={styles.infoModal}&gt;
+                    &lt;TouchableOpacity onPress={this.closeModalCallback} style={styles.modalCloseIcon}&gt;
+                        &lt;Icon name=&quot;close-a&quot; size={20} color=&quot;grey&quot; /&gt;
+                    &lt;/TouchableOpacity&gt;
+
+                        {this.renderTextInfo()}
+
+                        &lt;View style={{marginTop: 10}}&gt;
+                            &lt;Button
+                                title={this.state.buttonText}
+                                onPress={() =&gt; {
+                                    this.props.orbitButtonCallback(this.state.data.id);
+                                    this.changeText();
+                                }}
+                            /&gt;
+                        &lt;/View&gt;
+
+                        {this.renderExplanation()}
+                    &lt;/View&gt;
+                &lt;/Modal&gt;
+            &lt;/View&gt;
+        );
+    }
+}
+
+const styles = StyleSheet.create({
+    infoModal: {
+        backgroundColor: &quot;white&quot;,
+        marginHorizontal: &apos;10%&apos;,
+        height: &apos;53%&apos;,
+        paddingHorizontal: &quot;5%&quot;,
+    },
+    modalCloseIcon: {
+        position: &apos;absolute&apos;,
+        right: &apos;5%&apos;,
+        top: &apos;2%&apos;,
+    },
+    infoRow : {
+        flex: 1,
+        alignSelf: &apos;stretch&apos;,
+        flexDirection: &apos;row&apos;,
+    },
+    rowElement: {
+        flex: 1,
+        alignSelf: &apos;stretch&apos; },
+    boldFont: {
+        fontWeight: &apos;bold&apos;,
+    },
+    textInfo: {
+        paddingTop: &apos;5%&apos;,
+        width: &apos;80%&apos;,
+    },
+    explanation: {
+        paddingTop: &apos;3%&apos;,
+    }
+});</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

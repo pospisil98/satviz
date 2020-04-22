@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../../">
+  <title data-ice="title">satviz/js/components/Globe.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/components/Globe.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Globe component providing all the visualization.
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+&apos;use-strict&apos;;
+
+import React, { Component } from &apos;react&apos;;
+
+import {
+    ViroMaterials,
+    ViroNode,
+    Viro3DObject,
+    ViroAmbientLight,
+    ViroSphere,
+    ViroBox,
+    ViroPolyline,
+} from &apos;react-viro&apos;;
+
+import SpaceTrack from &apos;../SpaceTrack&apos;;
+import SatelliteObject from &apos;../SatelliteObject&apos;;
+
+
+var satellite = require(&apos;satellite.js&apos;);
+var Clock = require(&apos;timetravel&apos;).Clock;
+
+/**
+ * Component representing virtual globe with satellites.
+ */
+export default class Globe extends Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            /** Currently visualized satellite objects
+             * @type {Array.&lt;Object&gt;} */
+            satellites: [],
+            /** Currently visualized satellite IDs
+             * @type {Array.&lt;string&gt;} */
+            currentSatelliteIDs: [],
+            /** IDs of sats without orbit rendered 
+             * @type {Array&lt;string&gt;} */
+            excludedOrbits: [],
+            /** Opacity of orbit line
+             * @type {number} */
+            orbitOpacity: 0.8,
+            /** Rotation around individual axis to compensate globe rotation
+             * @type {Array.&lt;number&gt;} */
+            groundRotationCompensation: [0, 0, 0]
+        }
+
+        /** Compensation of model rotation on different targets
+         *  @type {Array.&lt;number&gt;} */
+        this.modelListRotation = [0, 0, 0];
+        if (this.props.flatTarget) {
+            this.modelListRotation = [0, -143, 0];
+        } else {
+            this.modelListRotation = [0, -173, 0];
+        }
+
+        /** SpaceTrack object for getting data from Satellite Catalog
+         * @type {SpaceTrack} */
+        this.ST = new SpaceTrack();
+
+        /** State of globe data loading
+         * @type {boolean} */
+        this.loading = false;
+
+        /** Number of segments in one orbit
+         * @type {number} */
+        this.orbitSegmentCount = 100;
+        /** Timestamps of orbits starting times 
+         * @type {Object&lt;string, any&gt;} */
+        this.orbitTimestamps = {};
+        /** Points of satellite orbits 
+         * @type {Object&lt;string, Array.&lt;Array.&lt;number&gt;&gt;&gt; */
+        this.orbitPoints = {};
+
+        /** Globe custom clock with special functions
+         * @type {Clock}
+         */
+        this.clock = new Clock();
+
+        /** Last globe rotation time for optimized rotating
+         * @type {Clock.time}
+         */
+        this.lastRotationTime = this.clock.time();
+
+        /** Timer for satellite motion simulation */
+        this.moveTimer = setInterval(this.updatePositions, 100);
+        /** Timer for globe rotation simulation */
+        this.rotationTimer = setInterval(this.updateRotation, 30);
+    }
+
+    async componentDidUpdate(prevProps, prevState) {
+        // Fix for problem where numbers starting with zeros was casted to number
+        let propIDs;
+        if (this.props.satelliteIDs) {
+            propIDs = this.props.satelliteIDs.map(id =&gt; {
+                return (&quot;00000&quot; + id.toString()).slice(-5);
+            });
+        }
+
+        // Check whether two arrays have same elements or not
+        let areIDsSame = (propIDs.length === this.state.currentSatelliteIDs.length) &amp;&amp; propIDs.every(value =&gt; this.state.currentSatelliteIDs.includes(value));
+
+        if (!areIDsSame &amp;&amp; this.loading === false) {
+            let addition = propIDs.filter(x =&gt; !this.state.currentSatelliteIDs.includes(x));
+
+            let sats = [];
+
+            if (addition.length &gt; 0) {
+                // Call ST funtion to get data according to newly added IDs
+                this.loading = true;
+                let data = await this.ST.getTLEs(addition);
+
+                // Convert TLE string to line separated array
+                this.tle = data.split(&apos;\r\n&apos;);
+                
+                sats = this.parseData();
+            }
+
+            // Get satellites which will be not removed from current ones
+            keptFromCurrentObjects = this.state.satellites.filter(sat =&gt; propIDs.includes((sat.id).toString()));
+            
+            // Get IDs of all visualized satellites
+            let curr = [...sats, ...keptFromCurrentObjects].map(sat =&gt; (sat.id).toString());
+
+            this.setState({ 
+                satellites: [...sats, ...keptFromCurrentObjects],
+                currentSatelliteIDs: curr,
+            })
+        }
+
+        // Readjust custom clock speed 
+        if (this.props.timeScale !== prevProps.timeScale) {
+            this.clock.stop();
+            this.clock.speed(this.props.timeScale).time(this.clock.time());
+            this.clock.start();
+        }
+
+        // Update state for component rerender
+        if (this.props.orbitIDs !== prevProps.orbitIDs) {
+            this.setState({
+                excludedOrbits: [...this.props.orbitIDs],
+            });
+        }
+        if (this.props.orbitOpacity !== prevProps.orbitOpacity) {
+            this.setState({
+                orbitOpacity: this.props.orbitOpacity,
+            });
+        }
+    }
+
+    /**
+     * Parses downloaded TLE data into satellite objects and stops loading of data.
+     * 
+     * @returns {Array.&lt;SatelliteObject&gt;}
+     */
+    parseData = () =&gt; {
+        satelliteObjects = this.convertTLEtoSatelliteObjectCollection();
+        this.loading = false;
+
+        return satelliteObjects;
+    }
+
+    /**
+     * Updates positions of currently visualized satellites.
+     */
+    updatePositions = () =&gt; {
+        if (this.state.satellites.length &gt; 0) {
+            let copy = [...this.state.satellites]
+
+            // Sometime there is error in position propagation according to satellite.js documentation
+            // so its needed to store IDs of sats which will be later removed
+            let removeIDs = [];
+
+            copy.forEach((sat) =&gt; {
+                try {
+                    sat.updatePosition(new Date(this.clock.time()));
+                } catch (error) {
+                    removeIDs.push(sat.id);
+                    this.props.removeSatelliteCallback(sat.id);
+                }
+            });
+
+            let cleaned = [...copy];
+            removeIDs.forEach(id =&gt; {
+                cleaned = cleaned.filter(sat =&gt; sat.id !== id);
+            });
+
+            this.setState({ satellites: cleaned });
+        }
+    }
+
+    /**
+     * Updates rotation of earth (satellites) according to real globe rotation.
+     */
+    updateRotation = () =&gt; {
+        const rotationPerSecond = 0.00417807901;
+
+        let now = this.clock.time();
+        let difference = (now - this.lastRotationTime);
+
+        let additionalRotation = difference * (rotationPerSecond / 1000);
+
+        let rotation = (-this.state.groundRotationCompensation[1] + additionalRotation);
+        rotation = rotation % 360;
+
+        // Rotate Earth only if rotation is &gt; 1 degreee (faster timescales, or long realtime visualization)
+        if (rotation &gt; 1) {
+            this.setState({
+                groundRotationCompensation: [0, -rotation, 0],
+            });
+
+            this.lastRotationTime = now;
+        }
+    }
+
+    /**
+     * Converts downloaded TLE data to SatelliteObjects array.
+     * 
+     * @returns {Array.&lt;SatelliteObject&gt;} Converted TLEs into SatelliteObjects
+     */
+    convertTLEtoSatelliteObjectCollection = () =&gt; {
+        var tleIndex = 0;
+        var idIndex = 0;
+        var satrec;
+        var satelliteObjects = [];
+
+        // indexes are += 2 because each TLE has 2 lines
+        for (tleIndex = 0; tleIndex &lt; this.tle.length - 1; tleIndex += 2) {
+            satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);
+            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec, [this.tle[tleIndex], this.tle[tleIndex + 1]]))
+            idIndex += 1;
+        }
+
+        return satelliteObjects;
+    }
+
+    /**
+     * Processes click on visualized satelite.
+     * 
+     * @param {string} id ID of clicked satellite
+     */
+    onModelClick = (id) =&gt; {
+        let satelliteObject = this.state.satellites.filter((sat) =&gt; {
+            return sat.id == id;
+        })
+
+        this.props.satelliteClickCallback(satelliteObject);
+    }
+
+    /**
+     * Gets material for ground segment visualiziaton based on its ID.
+     * 
+     * @param {number} segmentID ID of ground segment
+     * 
+     * @returns {string} Material name
+     */
+    getMaterialForGroundSegment = (segmentID) =&gt; {
+        if (segmentID === 11) {
+            return &quot;red&quot;;
+        } else if (segmentID === 12) {
+            return &quot;gold&quot;;
+        } else if (segmentID &gt;= 13 &amp;&amp; segmentID &lt;= 16) {
+            return &quot;green&quot;;
+        } else if (segmentID &gt;= 21 &amp;&amp; segmentID &lt;= 26) {
+            return &quot;blue&quot;;
+        } else if (segmentID &gt;= 31 &amp;&amp; segmentID &lt;= 37) {
+            return &quot;yellow&quot;;
+        } else if (segmentID &gt;= 41 &amp;&amp; segmentID &lt;= 50) {
+            return &quot;purple&quot;;
+        }
+    }
+
+    /**
+     * Gets position of ground segment with given ID for visualiziation.
+     * 
+     * @param {string} segmentID ID of segment
+     * 
+     * @returns {Array.&lt;number&gt;} Position in ViroCoords
+     */
+    getPositionForGroundSegment = (segmentID) =&gt; {
+        let denominator;
+
+        if (this.props.flatTarget) {
+            denominator = 80000;
+        } else {
+            denominator = 38500;
+        }
+
+        let city = groundSegmentIDtoCity[segmentID];
+        let coordsOriginal = groundSegmentEciCoords[city];
+
+        x = coordsOriginal.x / denominator;
+        y = coordsOriginal.y / denominator;
+        z = coordsOriginal.z / denominator;
+
+        // Conversion from ECI to ViroCoords
+        return [y, z, x];
+    }
+
+    /**
+     * Decides whether enough time, one rotation, has passed for satellite orbit to be updated.
+     * 
+     * @param {string} satID ID of satellite orbit to be checked
+     * @param {Date} orbitTime Current time 
+     * 
+     * @returns {boolean} Decision whether to update or not
+     */
+    shouldUpdateOrbit = (satID, orbitTime) =&gt; {
+        if (!(satID in this.orbitTimestamps)) {
+            return true;
+        }
+
+        let maxtime = new Date(this.orbitTimestamps[satID]);
+        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);
+
+        if (this.clock.time() &gt; maxtime) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Maps selected ground segment IDs to models for render.
+     * 
+     * @returns {Array.&lt;ViroSphere&gt;} Array of 3D spheres as position visualization
+     */
+    getGroundSegmentToRender = () =&gt; {
+        let segmentList;
+
+        if (!this.loading) {
+            segmentList = this.props.groundSegmentIDs.map((segmentID) =&gt; {
+                let materialName = this.getMaterialForGroundSegment(segmentID);
+                let position = this.getPositionForGroundSegment(segmentID);
+
+                return (
+                    &lt;ViroSphere
+                        key={segmentID}
+                        heightSegmentCount={8}
+                        widthSegmentCount={8}
+                        radius={0.006}
+                        position={position}
+                        materials={[materialName]}
+                    /&gt;
+                );
+            });
+        }
+
+        return segmentList;
+    }
+
+    /**
+     * Maps selected satellite IDs to models for render.
+     * 
+     * @returns {Array.&lt;ViroSphere|Viro3DObject&gt;} Array of 3D models as satellite visualization
+     */
+    getSatellitesToRender = () =&gt; {
+        let modelList;
+
+        if (!this.loading) {
+            modelList = this.state.satellites.map((sat) =&gt; {
+                if (sat.description === &quot;DEFAULT&quot;) {
+                    return (
+                        &lt;ViroSphere
+                            key={sat.id}
+                            heightSegmentCount={10}
+                            widthSegmentCount={10}
+                            radius={0.01}
+                            position={sat.position}
+                            materials={[&quot;gray&quot;]}
+
+                            highAccuracyEvents={false}
+                            onClick={() =&gt; {
+                                this.onModelClick(sat.id);
+                            }}
+
+                            renderingOrder={10}
+                        /&gt;
+                    );
+                }
+
+                return (
+                    &lt;Viro3DObject
+                        key={sat.id}
+                        source={sat.modelPath}
+                        resources={sat.resources}
+                        position={sat.position}
+                        scale={sat.scale}
+                        rotation={sat.rotation}
+                        type={sat.modelType}
+
+                        highAccuracyEvents={false}
+                        onClick={() =&gt; {
+                            this.onModelClick(sat.id);
+                        }}
+                        
+                        renderingOrder={10}
+                    /&gt;
+                )
+            });
+        }
+
+        return modelList;
+    }
+
+    /**
+     * Maps selected satellite IDs (without excluded ones) to orbits for render.
+     * 
+     * @returns {Array.&lt;ViroPolyline&gt;} Array of Viro Polylines - orbits
+     */
+    getOrbitsToRender = () =&gt; {
+        let orbitList;
+
+        if (!this.loading) {
+            orbitList = this.state.satellites.map((sat) =&gt; {
+                let orbitTime = sat.getOrbitTime();
+                if (!this.state.excludedOrbits.includes(sat.id)) {
+                    let positions;
+                    
+                    if (this.shouldUpdateOrbit(sat.id, orbitTime)) {
+                        positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));
+                                            
+                        this.orbitPoints[sat.id] = positions;
+                        this.orbitTimestamps[sat.id] = this.clock.time();
+                    } else {
+                        positions = this.orbitPoints[sat.id];
+                    }
+
+                    return (
+                        &lt;ViroPolyline
+                            key={sat.id}
+                            position={[0, 0, 0]}
+                            points={positions}
+                            thickness={0.001}
+                            materials={&quot;red&quot;}
+                            opacity={this.state.orbitOpacity}
+                        /&gt;
+                    );
+                }
+            });
+        }
+
+        return orbitList;
+    }
+
+    /**
+     * Renders flat target version of augumented globe.
+     * 
+     * @returns {ViroNode} Globe with all satelites and orbits.
+     */
+    renderFlatTargetGlobe = () =&gt; {
+        let modelList = this.getSatellitesToRender();
+        let groundSegmentList = this.getGroundSegmentToRender();
+        let orbitsList = this.getOrbitsToRender();
+
+        return (
+            &lt;ViroNode position={[0, 0.2, 0]}&gt;
+                &lt;ViroAmbientLight color=&quot;#FFFFFF&quot; intensity={2000} temperature={4000} /&gt;
+
+                &lt;Viro3DObject source={require(&apos;../res/earth.obj&apos;)}
+                    resources={[require(&apos;../res/earth.mtl&apos;),
+                    require(&apos;../res/earth_texture.png&apos;)]}
+                    position={[0.0, 0.0, 0.0]}
+                    scale={[0.04, 0.04, 0.04]}
+                    rotation={[180, 180, -180]}
+                    type=&quot;OBJ&quot;
+                /&gt;
+
+                &lt;ViroNode rotation={this.modelListRotation}&gt;
+                    {groundSegmentList}
+
+                    &lt;ViroNode rotation={this.state.groundRotationCompensation}&gt;
+                        {modelList}
+                        {orbitsList}
+                    &lt;/ViroNode&gt;
+                &lt;/ViroNode&gt;
+            &lt;/ViroNode&gt;
+        );
+    }
+
+    /**
+     * Renders full 3D model of Earth or only its transparent version but with occlusive properties. 
+     * 
+     * @returns {&lt;Viro3DObject|ViroNode} Globe for globe target
+     */
+    renderVirtualGlobe = () =&gt; {
+        if (this.props.renderVirtualGlobe) {
+            return (
+                &lt;Viro3DObject source={require(&apos;../res/earth.obj&apos;)}
+                    resources={[require(&apos;../res/earth.mtl&apos;),
+                    require(&apos;../res/earth_texture.png&apos;)]}
+                    position={[0.0, 0.0, 0.0]}
+                    scale={[0.08, 0.08, 0.08]}
+                    rotation={[180, -150, -180]}  // Rotated that africa is towards camera
+                    type=&quot;OBJ&quot;
+                /&gt;
+            );
+        } else {
+
+            return (
+                &lt;ViroNode&gt;
+                    &lt;ViroSphere
+                        heightSegmentCount={20}
+                        widthSegmentCount={20}
+                        radius={0.17}
+                        position={[0, 0, 0]}
+                        materials={[&quot;occlusive&quot;]}
+                        renderingOrder={-1}
+                    /&gt;
+
+                    &lt;Viro3DObject source={require(&apos;../res/ghostEarth/untitled.obj&apos;)}
+                        resources={[require(&apos;../res/ghostEarth/untitled.mtl&apos;),
+                        require(&apos;../res/ghostEarth/untitled.png&apos;)]}
+                        position={[0.0, 0.0, 0.0]}
+                        scale={[0.18, 0.18, 0.18]}
+                        rotation={[0, -175, 0]}  // rotated that africa is towards camera
+                        type=&quot;OBJ&quot;
+                        opacity={0.3}
+                    /&gt;
+                &lt;/ViroNode&gt;
+            );
+        }
+    }
+
+    /**
+     * Renders globe target version of augumented globe.
+     * 
+     * @returns {ViroNode} Globe with all satelites and orbits.
+     */
+    renderGlobeTargetGlobe = () =&gt; {
+        let modelList = this.getSatellitesToRender();
+        let groundSegmentList = this.getGroundSegmentToRender();
+        let orbitsList = this.getOrbitsToRender();
+
+        return (
+            &lt;ViroNode&gt;
+                &lt;ViroAmbientLight color=&quot;#FFFFFF&quot; /&gt;
+
+                {this.renderVirtualGlobe()}
+
+                &lt;ViroNode rotation={this.modelListRotation}&gt;
+                    {groundSegmentList}
+
+                    &lt;ViroNode rotation={this.state.groundRotationCompensation}&gt;
+                        {modelList}
+                        {orbitsList}
+                    &lt;/ViroNode&gt;
+                &lt;/ViroNode&gt;
+            &lt;/ViroNode&gt;
+        );
+    }
+
+    /**
+     * Decides whether to render flat or globe target globe.
+     * 
+     * @returns {ViroNode} Correct globe with all orbits, satellites and ground segments.
+     */
+    renderGlobe = () =&gt; {
+        if (this.props.flatTarget) {
+            return this.renderFlatTargetGlobe();
+        } else {
+            return this.renderGlobeTargetGlobe();
+        }
+    }
+
+    /**
+     * Renders whole component - visualization
+     * 
+     * @returns {ViroNode} Globe visualization
+     */
+    render() {
+        return (
+            &lt;ViroNode&gt;
+                {this.renderGlobe()}
+            &lt;/ViroNode&gt;
+        );
+    }
+}
+
+/**
+ * ECI cooardinates of cities with GPS ground segments.
+ * 
+ * @constant
+ * @type {Object&lt;string, Object&lt;string, number&gt;&gt;}
+ */
+const groundSegmentEciCoords = {
+    &quot;schriever&quot;: { &quot;x&quot;: 3910.3096787548093, &quot;y&quot;: 3080.3510329695946, &quot;z&quot;: 3975.5813422691904 },
+    &quot;vandenberg&quot;: { &quot;x&quot;: 4856.790504752817, &quot;y&quot;: 1985.1370670602403, &quot;z&quot;: 3615.737268949631 },
+    &quot;cape&quot;: { &quot;x&quot;: 2619.008345543573, &quot;y&quot;: 4961.851777391096, &quot;z&quot;: 3024.8968340995298 },
+    &quot;ascension&quot;: { &quot;x&quot;: -3922.7604262692257, &quot;y&quot;: 4952.862829619637, &quot;z&quot;: -875.6544312352279 },
+    &quot;diego&quot;: { &quot;x&quot;: -5170.553732498662, &quot;y&quot;: -3647.0385227647125, &quot;z&quot;: -806.8053933403049 },
+    &quot;kwajalein&quot;: { &quot;x&quot;: 4093.666061017764, &quot;y&quot;: -4796.201022830874, &quot;z&quot;: 960.7141097469664 },
+    &quot;hawaii&quot;: { &quot;x&quot;: 5786.235355097538, &quot;y&quot;: -1500.9790587172447, &quot;z&quot;: 2219.0532011295636 },
+    &quot;greenland&quot;: { &quot;x&quot;: 410.97339412324754, &quot;y&quot;: 1434.4349979707606, &quot;z&quot;: 6181.170740804261 },
+    &quot;hampshire&quot;: { &quot;x&quot;: 1493.91674263956, &quot;y&quot;: 4359.107545377384, &quot;z&quot;: 4396.24767788034 },
+    &quot;britain&quot;: { &quot;x&quot;: -3078.574521370201, &quot;y&quot;: 2465.378033770742, &quot;z&quot;: 4996.687333000982 },
+    &quot;guam&quot;: { &quot;x&quot;: 1865.487956036825, &quot;y&quot;: -5918.882386479585, &quot;z&quot;: 1470.730166121755 },
+    &quot;alaska&quot;: { &quot;x&quot;: 3016.4701519528826, &quot;y&quot;: -219.03495480709444, &quot;z&quot;: 5597.555648180364 },
+    &quot;washington&quot;: { &quot;x&quot;: 2046.1450152058833, &quot;y&quot;: 4528.634340221239, &quot;z&quot;: 3986.0421024686416 },
+    &quot;ecuador&quot;: { &quot;x&quot;: 2779.402343452063, &quot;y&quot;: 5740.560921023602, &quot;z&quot;: -107.89682911058405 },
+    &quot;uruguay&quot;: { &quot;x&quot;: 304.42572961808673, &quot;y&quot;: 5325.040877018454, &quot;z&quot;: -3487.141934869165 },
+    &quot;africa&quot;: { &quot;x&quot;: -5848.400376263067, &quot;y&quot;: 1424.0113052546715, &quot;z&quot;: -2104.612547103142 },
+    &quot;bahrain&quot;: { &quot;x&quot;: -5582.67664844856, &quot;y&quot;: -1318.6034421675904, &quot;z&quot;: 2780.958250256032 },
+    &quot;korea&quot;: { &quot;x&quot;: 46.677236661753795, &quot;y&quot;: -5091.781885528575, &quot;z&quot;: 3829.3084077342232 },
+    &quot;australia&quot;: { &quot;x&quot;: 1033.5451370010423, &quot;y&quot;: -5204.347927342779, &quot;z&quot;: -3528.946706348021 },
+    &quot;zealand&quot;: { &quot;x&quot;: 3451.4932197311496, &quot;y&quot;: -3264.5169253457175, &quot;z&quot;: -4242.601519256618 }
+}
+
+/**
+ * Specifies city of ground segment by ID.
+ * 
+ * @constant
+ * @type {Object&lt;number, string&gt;}
+ */
+const groundSegmentIDtoCity = {
+    11: &quot;schriever&quot;,
+    12: &quot;vandenberg&quot;,
+    13: &quot;cape&quot;,
+    14: &quot;ascension&quot;,
+    15: &quot;diego&quot;,
+    16: &quot;kwajalein&quot;,
+
+    21: &quot;hawaii&quot;,
+    22: &quot;schriever&quot;,
+    23: &quot;cape&quot;,
+    24: &quot;ascension&quot;,
+    25: &quot;diego&quot;,
+    26: &quot;kwajalein&quot;,
+
+    31: &quot;greenland&quot;,
+    32: &quot;hampshire&quot;,
+    33: &quot;vandenberg&quot;,
+    34: &quot;hawaii&quot;,
+    35: &quot;britain&quot;,
+    36: &quot;diego&quot;,
+    37: &quot;guam&quot;,
+
+    41: &quot;alaska&quot;,
+    42: &quot;washington&quot;,
+    43: &quot;ecuador&quot;,
+    44: &quot;uruguay&quot;,
+    45: &quot;britain&quot;,
+    46: &quot;africa&quot;,
+    47: &quot;bahrain&quot;,
+    48: &quot;korea&quot;,
+    49: &quot;australia&quot;,
+    50: &quot;zealand&quot;
+}
+
+// Definition of materials for 3D objects rendering.
+ViroMaterials.createMaterials({
+    gray: {
+        shininess: 2.0,
+        lightingModel: &quot;Lambert&quot;,
+        diffuseColor: &quot;#A9A9A9&quot;,
+    },
+    earth: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseTexture: require(&apos;../res/earth_texture.png&apos;),
+    },
+    iss: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#6e6e6e&apos;
+    },
+    occlusive: {
+        diffuseColor: &quot;#FFFFFFFF&quot;,
+        colorWriteMask: [&quot;None&quot;],
+    },
+    red: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#AF0606&apos;
+    },
+    gold: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#FFC300&apos;
+    },
+    green: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#06AF48&apos;
+    },
+    blue: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#067EAF&apos;
+    },
+    yellow: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#F4F71A&apos;
+    },
+    purple: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#7504AC&apos;
+    }
+});
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

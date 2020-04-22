@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">satviz/js/HelloWorldSceneAR.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/js/HelloWorldSceneAR.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Default AR scene of Satviz application. 
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+&apos;use-strict&apos;;
+
+import React, { Component } from &apos;react&apos;;
+
+import { StyleSheet } from &apos;react-native&apos;;
+
+import {
+    ViroARScene,
+    ViroConstants,
+    ViroARImageMarker,
+    ViroARTrackingTargets,
+    ViroSpotLight,
+    ViroNode,
+    ViroMaterials,
+    ViroSphere,
+} from &apos;react-viro&apos;;
+
+import Globe from &apos;./components/Globe&apos;
+import { showMessage, hideMessage } from &quot;react-native-flash-message&quot;;
+
+/**
+ * Class representing default AR scene.
+ */
+export default class HelloWorldSceneAR extends Component {
+    constructor() {
+        super();
+
+
+        this.state = {
+            /** Rotation of globe based on real world 
+             * @type {Array.&lt;number&gt;} */
+            globeRotation: [0, 0, 0],
+            /** State of detection true=globe target detected
+             * @type {boolean} */
+            globeDetected: false,
+            /** Detected globe real world position 
+             * @type {Array.&lt;number&gt;|null} */
+            globePosition: null,
+
+            /** IDs of selected satellites to render 
+             * @type {Array.&lt;string&gt;} */
+            satelliteIDs: [],
+
+            /** IDs of satellites which should have orbit rendered 
+             * @type {Array.&lt;string&gt;} */
+            orbitIDs: [],
+            /** Opacity of rendered orbits 
+             * @type {number} */
+            orbitOpacity: 0.8,
+            
+            /** Scale (multiply) of real time speed 
+             * @type {number} */
+            timeScale: 1
+        };
+
+        /** Names of currently tracked image targets 
+         * @type {Array.&lt;string&gt;} */
+        this.tracking = [];
+        /** State of globe tracking 
+         * @type {boolean} */
+        this.isTracking = false;
+
+        /** Count of globe position recalculation 
+         * @type {number} */
+        this.positionModCount = 0;
+
+        /** Switch for Globe rendering 
+         * @type {boolean} */
+        this.renderDisabled = true;
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // Rerender on change of props
+        if (this.state.satelliteIDs != this.props.arSceneNavigator.viroAppProps.satelliteIDs) {
+            this.setState({
+                satelliteIDs: this.props.arSceneNavigator.viroAppProps.satelliteIDs,
+            })
+        }
+        if (this.state.timeScale != this.props.arSceneNavigator.viroAppProps.timeScale) {
+            this.setState({
+                timeScale: this.props.arSceneNavigator.viroAppProps.timeScale,
+            })
+        }
+        if (this.state.orbitIDs != this.props.arSceneNavigator.viroAppProps.orbitIDs) {
+            this.setState({
+                orbitIDs: this.props.arSceneNavigator.viroAppProps.orbitIDs,
+            });
+        }
+        if (this.state.orbitOpacity != this.props.arSceneNavigator.viroAppProps.orbitOpacity) {
+            this.setState({
+                orbitOpacity: this.props.arSceneNavigator.viroAppProps.orbitOpacity,
+            });
+        }
+    }
+
+    /**
+     * Calculate globe rotation from tracking targets
+     * 
+     * @returns {Array.&lt;number&gt;} Rotation in format [0, Y rotation, 0]
+     */
+    getGlobeRotation = () =&gt; {
+        if (this.tracking.length === 0) {
+            return this.state.globeRotation;
+        }
+
+        let sum = 0;
+        this.tracking.forEach(element =&gt; {
+            // -15 is because of &quot;default pose&quot; of globe where africa is in front of camera
+            sum += (angles[element] - 15);
+        });
+
+        let angle = sum / this.tracking.length;
+
+        // Negative angle is because rotation has opposite direction than angles on globe
+        return [0, -angle, 0];
+    }
+
+    /**
+     * Modify globe position based on given position.
+     * 
+     * @param {Array.&lt;number&gt;} position Position to adjust globe position to
+     */
+    modifyGlobePosition = (position) =&gt; {
+        // move Z coord into center of globe
+        position[2] = position[2] - 0.085;
+
+        if (this.positionModCount === 0) {
+            this.setState({globePosition: position,});
+        } else {
+            // Limit position modification to only first 4 attempts
+            if (this.positionModCount &gt; 3) {
+                return;
+            }
+
+            let newPos = [];
+            newPos[0] = ((this.state.globePosition[0] * this.positionModCount) + position[0]) / (this.positionModCount + 1);
+            newPos[1] = ((this.state.globePosition[1] * this.positionModCount) + position[1]) / (this.positionModCount + 1);
+            newPos[2] = ((this.state.globePosition[2] * this.positionModCount) + position[2]) / (this.positionModCount + 1);
+            
+            /*
+           newPos[0] = ((this.state.globePosition[0]) + position[0]) / 2;
+           newPos[1] = ((this.state.globePosition[1]) + position[1]) / 2;
+           newPos[2] = ((this.state.globePosition[2]) + position[2]) / 2;
+           */
+            
+            this.setState({globePosition: newPos,});
+        }
+
+        this.positionModCount += 1;
+    }
+
+    /**
+     * Function which is triggered everytime when imageTarget anchor changes.
+     * 
+     * @param {any} e Event which happened
+     * @param {string} targetName Name of updated target
+     */
+    _onAnchorUpdated = (e, targetName) =&gt; {
+        let changed = false;
+
+        if (e.trackingMethod === &quot;tracking&quot;) {
+            // Tracking something - render Globe
+            this.renderDisabled = false;
+
+            // On flat target simply copy detected position and rotation
+            if (targetName === &quot;flatTarget&quot;) {
+                this.setState({globePosition: e.position, globeRotation: e.rotation});
+                return;
+            }
+
+            if (!this.state.globeDetected &amp;&amp; targetName !== &quot;flatTarget&quot;) {
+                this.setState({globeDetected: true});
+            }
+
+            // Add target name to tracking if not there
+            if (!this.tracking.includes(targetName)) {
+                this.tracking.push(targetName);
+
+                // Hold only last 3 targets
+                if (this.tracking.length &gt; 3) {
+                    this.tracking.shift();
+                }
+                
+                changed = true;
+            }
+
+            // Update globe position according to detected position
+            this.modifyGlobePosition(e.position);
+        } else if (e.trackingMethod === &quot;lastKnownPose&quot;) {
+            // LastKnownPose means that target is no longer available so remove it
+            if (this.tracking.includes(targetName)) {
+                this.tracking = this.tracking.filter(e =&gt; e !== targetName);
+                changed = true;
+            }
+        }
+
+        // When some target has been changed get user know it and update rotation
+        if (changed) {
+            if (this.tracking.length == 0 &amp;&amp; this.isTracking == true ) {
+                this.isTracking = false;
+                showMessage({
+                    message: &quot;Tracking lost :(&quot;,
+                    type: &quot;warning&quot;,
+                });
+            }
+    
+            if (this.tracking.length != 0 &amp;&amp; this.isTracking == false) {
+                this.isTracking = true;
+                showMessage({
+                    message: &quot;Tracking established&quot;,
+                    type: &quot;success&quot;,
+                });
+            }
+
+            let rotation = this.getGlobeRotation();
+            this.setState({globeRotation: rotation});
+        }
+    }
+
+    /**
+     * Maps all imageTarget names to ViroARImageMarker
+     * 
+     * @returns {Array.&lt;ViroARImageMarker&gt;} Array of AR image markers
+     */
+    renderTargets = () =&gt; {
+        let targets = [];
+
+        targets = targetNames.map((name) =&gt; {
+            return (
+                &lt;ViroARImageMarker
+                    key={name}
+                    target={name}
+                    onAnchorUpdated={(e) =&gt; this._onAnchorUpdated(e, name)}
+                /&gt;
+            )
+        });
+
+        return targets;
+    }
+
+    /**
+     * Returns Globe component with everything setu up to visualization
+     * 
+     * @returns {ViroNode} Globe with all properties set
+     */
+    renderGlobe = () =&gt; {
+        if (this.renderDisabled) {
+            return(&lt;ViroNode&gt;&lt;/ViroNode&gt;);
+        }
+
+        let position = this.state.globePosition;
+        let flatTarget = true;
+        let rotation = this.state.globeRotation;
+
+        if (this.state.globeDetected) {
+            flatTarget = false;
+        }
+
+        return(
+            &lt;ViroNode position={position} rotation={rotation}&gt;
+                &lt;Globe
+                    satelliteClickCallback={this.props.arSceneNavigator.viroAppProps.satelliteClickCallback}
+                    satelliteIDs={this.state.satelliteIDs}
+                    groundSegmentIDs={this.props.arSceneNavigator.viroAppProps.groundSegmentIDs}
+                    timeScale={this.state.timeScale}
+                    flatTarget={flatTarget}
+                    renderVirtualGlobe={false}
+                    removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
+                    orbitIDs={this.state.orbitIDs}
+                    orbitOpacity={this.state.orbitOpacity}
+                /&gt;
+            &lt;/ViroNode&gt;
+        );
+    }
+
+    /**
+     * Renders AR scene.
+     * 
+     * @returns {ViroARScene} ARscene with globe visualization 
+     */
+    render() {
+        return (
+            &lt;ViroARScene onTrackingUpdated={this._onInitialized} &gt;
+
+                &lt;ViroSpotLight innerAngle={5} outerAngle={90} direction={[0, -1, -.2]}
+                    position={[0, 3, 1]} color=&quot;#ffffff&quot; castsShadow={true} /&gt;
+
+                &lt;ViroARImageMarker target={&quot;flatTarget&quot;} onAnchorUpdated={(e) =&gt; this._onAnchorUpdated(e, &quot;flatTarget&quot;)} /&gt;
+
+                {this.renderTargets()}
+
+                {this.renderGlobe()}
+            &lt;/ViroARScene&gt;
+        );
+    }
+}
+
+/**
+ * Names of imageTargets of globe
+ * @constant
+ * @type {Array.&lt;string&gt;}
+ */
+const targetNames = [
+    &quot;africa&quot;, &quot;atlantic&quot;, &quot;australia&quot;, &quot;china&quot;, &quot;europe&quot;,
+    &quot;hawaii&quot;, &quot;indonesia&quot;, &quot;northAmerica&quot;, &quot;southAmerica&quot;
+];
+
+/**
+ * Angles of rotation of center of imageTarget
+ * @constant
+ * @type {Object&lt;string, number&gt;}
+ */
+const angles = {
+    &quot;africa&quot;: 15,
+    &quot;atlantic&quot;: 340,
+    &quot;australia&quot;: 135,
+    &quot;china&quot;: 90,
+    &quot;europe&quot;: 15,
+    &quot;hawaii&quot;: 195,
+    &quot;indonesia&quot;: 140,
+    &quot;northAmerica&quot;: 260,
+    &quot;southAmerica&quot;: 300,
+}
+
+// Definition of tracking targets for ARImageTargets
+ViroARTrackingTargets.createTargets({
+    &quot;flatTarget&quot;: {
+        source: require(&apos;./res/targets/earthFlat.jpeg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.2 // real world width in meters
+    },
+    &quot;africa&quot;: {
+        source: require(&apos;./res/targets/africa.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;atlantic&quot;: {
+        source: require(&apos;./res/targets/atlantic.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;australia&quot;: {
+        source: require(&apos;./res/targets/australia.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;china&quot;: {
+        source: require(&apos;./res/targets/china.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;europe&quot;: {
+        source: require(&apos;./res/targets/europe.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;hawaii&quot;: {
+        source: require(&apos;./res/targets/hawaii.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;indonesia&quot;: {
+        source: require(&apos;./res/targets/indonesia.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;northAmerica&quot;: {
+        source: require(&apos;./res/targets/northAmerica.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+    &quot;southAmerica&quot;: {
+        source: require(&apos;./res/targets/southAmerica.jpg&apos;),
+        orientation: &quot;Up&quot;,
+        physicalWidth: 0.3,
+    },
+});
+
+ViroMaterials.createMaterials({
+    mat: {
+        lightingModel: &quot;Blinn&quot;,
+        diffuseColor: &apos;#6e6e6e&apos;
+    }
+});
+
+module.exports = HelloWorldSceneAR;</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

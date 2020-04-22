@@ -8,6 +8,10 @@
   },
   "dependencies": {
     "@react-native-community/slider": "^1.1.4",
+    "esdoc": "^1.1.0",
+    "esdoc-ecmascript-proposal-plugin": "^1.0.0",
+    "esdoc-jsx-plugin": "^1.0.0",
+    "esdoc-standard-plugin": "^1.0.0",
     "jetifier": "^1.6.5",
     "react": "16.8.3",
     "react-native": "0.59.3",

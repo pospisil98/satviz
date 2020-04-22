@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../../">
+  <title data-ice="title">satviz/utils/coordsConverter.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/utils/coordsConverter.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Simple class for converting cities locations to ECI coordinates.
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+var satellite = require(&apos;satellite.js&apos;);
+
+/**
+ * Class representing converter of geodetic coordinates of cities to ECI coordinates.
+ */
+export default class CoordConverter {
+    constructor() {
+        /**
+         * Names of cities to be converted
+         * @type {Array.&lt;string&gt;}
+         */
+        this.cities = [
+            &quot;schriever&quot;,
+            &quot;vandenberg&quot;,
+            &quot;cape&quot;,
+            &quot;ascension&quot;,
+            &quot;diego&quot;,
+            &quot;kwajalein&quot;,
+            &quot;hawaii&quot;,
+            &quot;greenland&quot;,
+            &quot;hampshire&quot;,
+            &quot;britain&quot;,
+            &quot;guam&quot;,
+            &quot;alaska&quot;,
+            &quot;washington&quot;,
+            &quot;ecuador&quot;,
+            &quot;uruguay&quot;,
+            &quot;africa&quot;,
+            &quot;bahrain&quot;,
+            &quot;korea&quot;,
+            &quot;australia&quot;,
+            &quot;zealand&quot;
+        ];
+
+        /** 
+         * Dictionary of latitudes of cities locations
+         * @type {Object&lt;string, number&gt;}
+         */
+        this.latitudes = {
+            &quot;schriever&quot;: 38.800487,
+            &quot;vandenberg&quot;: 34.751841,
+            &quot;cape&quot;: 28.491770,
+            &quot;ascension&quot;: -7.943064,
+            &quot;diego&quot;: -7.315041,
+            &quot;kwajalein&quot;: 8.720267,
+            &quot;hawaii&quot;: 20.491747,
+            &quot;greenland&quot;: 76.515851,
+            &quot;hampshire&quot;: 43.845083,
+            &quot;britain&quot;: 51.901636,
+            &quot;guam&quot;: 13.419102,
+            &quot;alaska&quot;: 61.777863,
+            &quot;washington&quot;: 38.921486,
+            &quot;ecuador&quot;: -0.975709,
+            &quot;uruguay&quot;: -33.352731,
+            &quot;africa&quot;: -19.392172,
+            &quot;bahrain&quot;: 26.015521,
+            &quot;korea&quot;: 37.129097,
+            &quot;australia&quot;: -33.805079,
+            &quot;zealand&quot;: -41.957162
+        };
+
+        /** 
+         * Dictionary of longitudes of cities locations
+         * @type {Object&lt;string, number&gt;}
+         */
+        this.longitudes = {
+            &quot;schriever&quot;: -104.522903,
+            &quot;vandenberg&quot;: -120.520696,
+            &quot;cape&quot;: -80.578600,
+            &quot;ascension&quot;: -14.372331,
+            &quot;diego&quot;: 72.444928,
+            &quot;kwajalein&quot;: 167.729290,
+            &quot;hawaii&quot;: -157.294502,
+            &quot;greenland&quot;: -68.739511,
+            &quot;hampshire&quot;: -71.669399,
+            &quot;britain&quot;: -1.440593,
+            &quot;guam&quot;: 144.741369,
+            &quot;alaska&quot;: -146.905346,
+            &quot;washington&quot;: -77.066804,
+            &quot;ecuador&quot;: -78.587049,
+            &quot;uruguay&quot;: -56.024181,
+            &quot;africa&quot;: 23.563274,
+            &quot;bahrain&quot;: 50.537233,
+            &quot;korea&quot;: 127.773009,
+            &quot;australia&quot;: 138.480160,
+            &quot;zealand&quot;: 173.842508
+        };
+    }
+
+    /**
+     * Converts city coordination specified in dictionaries in class into
+     * ECI coords and prints them into console.
+     */
+    convert = () =&gt; {
+        let geodetic = {
+            longitude: satellite.degreesToRadians(),
+            latitude: satellite.degreesToRadians(),
+            height: 0.8
+        };
+
+        let ecf = satellite.geodeticToEcf(geodetic);
+        
+        let gmst = satellite.gstime(new Date());
+        let eci = satellite.ecfToEci(ecf, gmst);
+
+        let result = {}
+        let date = new Date()
+        this.cities.forEach(element =&gt; {
+            let geodetic = {
+                longitude: satellite.degreesToRadians(this.longitudes[element]),
+                latitude: satellite.degreesToRadians(this.latitudes[element]),
+                height: 0.8
+            };
+
+            let ecf = satellite.geodeticToEcf(geodetic);
+            let gmst = satellite.gstime(date);
+            let eci = satellite.ecfToEci(ecf, gmst);
+
+            result[element] = eci;
+        });
+
+        console.log(JSON.stringify(result));
+    }
+}</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

@@ -140,6 +140,8 @@ export default class CustomInfoModal extends Component {
 
     /**
      * Renders text info with satellite informations.
+     * 
+     * @returns {View} All satellite informations
      */
     renderTextInfo = () => {
         return (

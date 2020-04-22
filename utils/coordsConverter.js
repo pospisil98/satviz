@@ -1,7 +1,20 @@
+/** 
+ *  @fileOverview Simple class for converting cities locations to ECI coordinates.
+ *
+ *  @author       Vojtěch Pospíšil
+ */
+
 var satellite = require('satellite.js');
 
+/**
+ * Class representing converter of geodetic coordinates of cities to ECI coordinates.
+ */
 export default class CoordConverter {
     constructor() {
+        /**
+         * Names of cities to be converted
+         * @type {Array.<string>}
+         */
         this.cities = [
             "schriever",
             "vandenberg",
@@ -25,6 +38,10 @@ export default class CoordConverter {
             "zealand"
         ];
 
+        /** 
+         * Dictionary of latitudes of cities locations
+         * @type {Object<string, number>}
+         */
         this.latitudes = {
             "schriever": 38.800487,
             "vandenberg": 34.751841,
@@ -47,6 +64,11 @@ export default class CoordConverter {
             "australia": -33.805079,
             "zealand": -41.957162
         };
+
+        /** 
+         * Dictionary of longitudes of cities locations
+         * @type {Object<string, number>}
+         */
         this.longitudes = {
             "schriever": -104.522903,
             "vandenberg": -120.520696,
@@ -71,6 +93,10 @@ export default class CoordConverter {
         };
     }
 
+    /**
+     * Converts city coordination specified in dictionaries in class into
+     * ECI coords and prints them into console.
+     */
     convert = () => {
         let geodetic = {
             longitude: satellite.degreesToRadians(),

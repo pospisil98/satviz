@@ -33,6 +33,7 @@ const API = {
  * A class representing space-track.org data getter.
  */
 export default class SpaceTrack {
+    
     /**
      * Takes array of satellite IDs and returns TLE records for them.
      * 

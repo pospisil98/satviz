@@ -1,0 +1,98 @@
+{
+  "coverage": "73.18%",
+  "expectCount": 138,
+  "actualCount": 101,
+  "files": {
+    "satviz/App.js": {
+      "expectCount": 24,
+      "actualCount": 17,
+      "undocumentLines": [
+        46,
+        52,
+        60,
+        350,
+        621,
+        623,
+        627
+      ]
+    },
+    "satviz/js/components/CustomInfoModal.js": {
+      "expectCount": 13,
+      "actualCount": 6,
+      "undocumentLines": [
+        46,
+        56,
+        57,
+        60,
+        72,
+        195,
+        231
+      ]
+    },
+    "satviz/js/components/Globe.js": {
+      "expectCount": 35,
+      "actualCount": 27,
+      "undocumentLines": [
+        25,
+        26,
+        32,
+        35,
+        55,
+        96,
+        119,
+        620
+      ]
+    },
+    "satviz/js/HelloWorldSceneAR.js": {
+      "expectCount": 16,
+      "actualCount": 13,
+      "undocumentLines": [
+        31,
+        35,
+        78
+      ]
+    },
+    "satviz/js/SatelliteObject.js": {
+      "expectCount": 36,
+      "actualCount": 29,
+      "undocumentLines": [
+        57,
+        68,
+        78,
+        88,
+        100,
+        112,
+        117
+      ]
+    },
+    "satviz/js/SpaceTrack.js": {
+      "expectCount": 5,
+      "actualCount": 3,
+      "undocumentLines": [
+        25,
+        35
+      ]
+    },
+    "satviz/metro.config.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        13
+      ]
+    },
+    "satviz/rn-cli.config.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        13
+      ]
+    },
+    "satviz/utils/coordsConverter.js": {
+      "expectCount": 7,
+      "actualCount": 6,
+      "undocumentLines": [
+        13
+      ]
+    }
+  }
+}

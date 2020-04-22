@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">satviz/App.js | satviz</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+</head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  <li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/App.js~satviz.html">satviz</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js">js</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/HelloWorldSceneAR.js~HelloWorldSceneAR.html">HelloWorldSceneAR</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SatelliteObject.js~SatelliteObject.html">SatelliteObject</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/SpaceTrack.js~SpaceTrack.html">SpaceTrack</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#js-components">js/components</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/CustomInfoModal.js~CustomInfoModal.html">CustomInfoModal</a></span></span></li>
+<li data-ice="doc"><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/js/components/Globe.js~Globe.html">Globe</a></span></span></li>
+<li data-ice="doc"><a data-ice="dirPath" class="nav-dir-path" href="identifiers.html#utils">utils</a><span data-ice="kind" class="kind-class">C</span><span data-ice="name"><span><a href="class/satviz/utils/coordsConverter.js~CoordConverter.html">CoordConverter</a></span></span></li>
+</ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">satviz/App.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/** 
+ *  @fileOverview Default class for Satviz application. 
+ *
+ *  @author       Vojt&#x11B;ch Posp&#xED;&#x161;il
+ */
+
+&apos;use-strict&apos;;
+
+import React, { Component } from &apos;react&apos;;
+import {
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+    Dimensions,
+    Button,
+    TouchableWithoutFeedback,
+    TouchableOpacity,
+    FlatList,
+    ScrollView,
+} from &apos;react-native&apos;;
+
+import {
+    ViroARSceneNavigator
+} from &apos;react-viro&apos;;
+
+import SlidingPanel from &apos;react-native-sliding-up-down-panels&apos;;
+import SectionedMultiSelect from &apos;react-native-sectioned-multi-select&apos;;
+import Modal from &quot;react-native-modal&quot;;
+import IconF from &apos;react-native-vector-icons/Feather&apos;;
+import IconM from &apos;react-native-vector-icons/MaterialIcons&apos;
+import Icon from &apos;react-native-vector-icons/Fontisto&apos;;
+import Slider from &apos;@react-native-community/slider&apos;;
+
+import FlashMessage from &quot;react-native-flash-message&quot;;
+import { showMessage, hideMessage } from &quot;react-native-flash-message&quot;;
+
+import CustomInfoModal from &apos;./js/components/CustomInfoModal&apos;;
+
+import CoordConverter from &apos;./utils/coordsConverter&apos;
+
+import * as satelliteSelectItems from &apos;./js/res/selectCategories.json&apos;;
+import * as groundSegmentSelectItems from &apos;./js/res/selectGroundSegment.json&apos;;
+
+
+let InitialARScene = require(&apos;./js/HelloWorldSceneAR&apos;);
+
+/**
+ * Default class of Satviz application.
+ */
+export default class satviz extends Component {
+    constructor() {
+        super();
+
+        /**
+         * Reference to text input for manual satellite selection
+         * @type {React.RefObject&lt;any&gt;} */
+        this.manualSatSelectTextInput = React.createRef();
+
+        this.state = {
+            /** Selected satellite IDs from satellite multislect
+             *  @type {Array.&lt;string&gt;} */
+            selectedItems: [],
+            /** Indication of reaching maximum of selcted items in select 
+             * @type {boolean} */
+            maxItems: false,
+
+            /** Selected satellite IDs from manual select 
+             * @type {Array.&lt;string&gt;} */
+            selectedItemsManual: [],
+
+            /** Selected GPS ground segment IDS from GS multiselect 
+             * @type {Array.&lt;string&gt;} */
+            selectedItemsGroundSegment: [],
+
+            /** Visibility of help modal window 
+             * @type {boolean} */
+            helpModalVisible: false,
+
+            /** Visibility of satellite info modal (CustomInfoModal) 
+             * @type {boolean} */
+            satelliteModalVisible: false,
+            /** Selected satellite which info is displayed in info modal 
+             * @type {SatelliteObject} */
+            satelliteModalSatellite: null,
+
+            /** IDs of satellites with enabled orbit rendering 
+             * @type {Array.&lt;string&gt;} */
+            orbitIDs: [],
+            /** Opacity of orbit line (0 = 100% transparent) 
+             * @type {number} */
+            orbitOpacity: 0.8,
+
+            /** Visibility of GPS ground segment information modal 
+             * @type {boolean}*/
+            groundSegmentModalVisible: false,
+
+            /** Visibility of sliding panel 
+             * @type {boolean} */
+            slidingPanelToggled: false,
+            /** Text of toggle part of sliding panel 
+             * @type {string} */
+            slidingPanelText: &quot;Click to reveal satellite selection!&quot;,
+
+            /** Value of time speed slider
+             * @type {number} */
+            timeSpeedSliderValue: 1,
+        };
+
+        /** Timeout for opacity slider 
+         * @type {NodeJS.Timeout} */
+        this.opacitySliderTimeout;
+
+        /** Maximum number of selected items in satellite multiselect 
+         * @type {number} */
+        this.maxSelectedItems = 50;
+    }
+
+    /**
+     * Callback for change in satellite multiselect selected items.
+     * 
+     * @param {Array.&lt;string&gt;} selectedItems IDs of selected items in multiselect
+     */
+    onSatelliteSelectedItemsChange = (selectedItems) =&gt; {
+        if (selectedItems.length &gt;= this.maxSelectedItems) {
+            if (selectedItems.length === this.maxSelectedItems) {
+                this.setState({ selectedItems })
+            }
+
+            this.setState({
+                maxItems: true,
+            })
+            return;
+        }
+
+        this.setState({ 
+            selectedItems,
+            maxItems: false,
+        })
+    }
+
+    /**
+     * Callback for change in ground segment multiselect selected items.
+     * 
+     * @param {Array.&lt;string&gt;} selectedItemsGroundSegment IDs of selected items in multiselect
+     */
+    onGroundSegmentSelectedItemsChange = (selectedItemsGroundSegment) =&gt; {
+        this.setState({ selectedItemsGroundSegment });
+    };
+
+    /**
+     *  Change visibility of help modal
+     */
+    toggleHelpModal = () =&gt; {
+        this.setState({ helpModalVisible: !this.state.helpModalVisible });
+    };
+
+    /**
+     * Callback for setting satellite for satellite info modal.
+     * 
+     * @param {SatelliteObject} sat Satellite to be displayed info about
+     */
+    satelliteModalSetSatelliteCallback = (sat) =&gt; {
+        this.setState({
+            satelliteModalSatellite: sat,
+        });
+
+        this.toggleSatelliteModal();
+    }
+
+    /**
+     * Change visibility of satellite modal.
+     */
+    toggleSatelliteModal = () =&gt; {
+        this.setState({
+            satelliteModalVisible: !this.state.satelliteModalVisible,
+        });
+    };
+
+    /**
+     * Change visibility of GPS ground segment modal.
+     */
+    toggleGroundSegmentModal = () =&gt; {
+        this.setState({
+            groundSegmentModalVisible: !this.state.groundSegmentModalVisible,
+        });
+    }
+
+    /**
+     * Change visibility of sliding panel and change appropriately toggle text.
+     */
+    toggleSlidePanel = () =&gt; {
+        if (this.state.slidingPanelToggled) {
+            this.setState({ slidingPanelText: &quot;Click to show satellite selection!&quot; });
+        } else {
+            this.setState({ slidingPanelText: &quot;Click to hide satellite selection!&quot; });
+        }
+
+        this.setState({ slidingPanelToggled: !this.state.slidingPanelToggled });
+    };
+
+    /**
+     * Adds satellite manually with ID in manualSatSelectTextInput.
+     */
+    addManual = () =&gt; {
+        if (this.state.selectedItemsManual.includes(this.manualSatSelectTextInput.current._lastNativeText) === false) {
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText)});
+        } else {
+            showMessage({
+                message: &quot;Satellite with this ID is already selected!&quot;,
+                type: &quot;danger&quot;,
+            });
+        }
+
+        this.manualSatSelectTextInput.current.clear();
+    }
+
+    /**
+     * Removes satellite manually with given ID.
+     * 
+     * @param {string} removeID ID to be removed from manualy selected IDs
+     */
+    removeManual = (removeID) =&gt; {
+        this.setState({ selectedItemsManual: this.state.selectedItemsManual.filter(id =&gt; id != removeID) })
+    }
+
+    /**
+     * Removes all manualy selected satellites.
+     */
+    removeManualAll = () =&gt; {
+        this.setState({ selectedItemsManual: [] });
+    }
+
+    /**
+     * Removes satellite with given ID from selected satellites.
+     * 
+     * @param {string} satID ID of satellite to be removed
+     */
+    removeSatelliteWithError = (satID) =&gt; {
+        // Try to remove from selected in category
+        if (this.state.selectedItems.includes(satID)) {
+            let arr = this.state.selectedItems.filter(e =&gt; e !== satID);
+
+            this.setState({selectedItems: arr});
+        }
+
+        // Try to remove from selected manually
+        if (this.state.selectedItemsManual.includes(satID)) {
+            let arr = this.state.selectedItemsManual.filter(e =&gt; e !== satID);
+
+            this.setState({selectedItemsManual: arr});
+        }
+
+        showMessage({
+            message: &quot;Satellite with ID &quot; + satID + &quot; had to be removed from your selection because of internal problem with calculating its position.&quot;,
+            type: &quot;warning&quot;,
+        });
+    }
+
+    /**
+     * Get orbit status for satellite in Satellite Info Modal.
+     */
+    isOrbitEnabledForSatelliteInModal = () =&gt; {
+        // No sat selected protection
+        if (this.state.satelliteModalSatellite === null) {
+            return false;
+        }
+
+        return this.state.orbitIDs.includes(this.state.satelliteModalSatellite.id);
+    }
+
+    /**
+     * Change visibility of orbit ofsatellite with given ID.
+     * 
+     * @param {string} satelliteID Satellite which orbit we want to toggle
+     */
+    toggleOrbitVisibility = (satelliteID) =&gt; {
+        // No sat selected protection
+        if (this.state.satelliteModalSatellite === null) {
+            return;
+        }
+
+        if (this.state.orbitIDs.includes(satelliteID)) {
+            let arr = this.state.orbitIDs.filter(id =&gt; id != satelliteID);
+
+            this.setState({
+                orbitIDs: arr,
+            });
+        } else {
+            let current = [...this.state.orbitIDs];
+            this.setState({
+                orbitIDs: [...current, satelliteID],
+            });
+        }
+    }
+
+    /**
+     * Renders main window of the Satviz application.
+     * 
+     * @returns {View} Top level View node
+     */
+    render() {
+        return (
+            &lt;View style={styles.container}&gt;
+
+                &lt;ViroARSceneNavigator
+                    style={styles.arView}
+                    autofocus={true}
+                    shadowsEnabled={true}
+                    initialScene={{ scene: InitialARScene }}
+                    viroAppProps={{
+                        satelliteClickCallback: this.satelliteModalSetSatelliteCallback,
+                        satelliteIDs: [].concat(this.state.selectedItems).concat(this.state.selectedItemsManual),
+                        groundSegmentIDs: this.state.selectedItemsGroundSegment,
+                        orbitIDs: this.state.orbitIDs,
+                        orbitOpacity: this.state.orbitOpacity,
+                        timeScale: this.state.timeSpeedSliderValue,
+                        removeSatelliteCallback: this.removeSatelliteWithError,
+                    }}
+                /&gt;
+
+                &lt;Modal
+                    isVisible={this.state.helpModalVisible}
+                    useNativeDriver={true}
+                    onBackdropPress={this.toggleHelpModal}
+                &gt;
+                    &lt;View style={styles.helpModal}&gt;
+                        &lt;TouchableOpacity onPress={this.toggleHelpModal} style={styles.modalCloseIcon}&gt;
+                            &lt;Icon name=&quot;close-a&quot; size={20} color=&quot;grey&quot; /&gt;
+                        &lt;/TouchableOpacity&gt;
+
+                        &lt;Text style={styles.helpModalHeading}&gt;About&lt;/Text&gt;
+                        &lt;Text style={{textAlign:&apos;justify&apos;}}&gt;This application is used to visualize satellites orbiting the Earth in augmented reality. Along with the orbit visualization, it allows the display of basic satellite information (position, speed, ...) as well as the display of positions and information regarding the terrestrial GPS segment. &lt;/Text&gt;
+
+
+                        &lt;Text style={[styles.helpModalHeading, {marginTop: 10, textAlign: &apos;center&apos;}]}&gt;How To&lt;/Text&gt;
+                        &lt;Text&gt;1. Detect target   &lt;/Text&gt;
+                        &lt;Text style={{textAlign: &apos;center&apos;}}&gt;2. Choose satellite or ground segment element from slide-up menu   &lt;/Text&gt;
+                        &lt;Text style={{textAlign: &apos;center&apos;}}&gt;3. Click on satellites to get more info   &lt;/Text&gt;
+
+
+                        &lt;Text style={[styles.helpModalHeading, {marginTop: 10}]}&gt;Settings&lt;/Text&gt;
+                        &lt;Text&gt;Orbit opacity: &lt;/Text&gt;
+                        &lt;Slider
+                            value={this.state.orbitOpacity}
+                            minimumValue={0}
+                            maximumValue={1}
+                            onValueChange={(val) =&gt; {
+                                clearTimeout(this.opacitySliderTimeout);
+                                this.opacitySliderTimeout = setTimeout(() =&gt; {
+                                    this.setState({orbitOpacity: val })
+                                }, 100)
+                                }
+                            }
+                            style={{width: &apos;90%&apos;}}
+                        /&gt;
+                    &lt;/View&gt;
+                &lt;/Modal&gt;
+
+                &lt;TouchableOpacity onPress={this.toggleHelpModal} style={styles.modalIcon}&gt;
+                    &lt;IconM name=&quot;help-outline&quot; size={30} color=&quot;white&quot; style={styles.iconShadow}/&gt;
+                &lt;/TouchableOpacity&gt;
+
+                &lt;View style={styles.bodyViewStyle}&gt;
+                    &lt;CustomInfoModal
+                        satellite={this.state.satelliteModalSatellite}
+                        isModalVisible={this.state.satelliteModalVisible}
+                        closeModal={() =&gt; this.toggleSatelliteModal()}
+                        orbitEnabled={this.isOrbitEnabledForSatelliteInModal()}
+                        orbitButtonCallback={this.toggleOrbitVisibility}
+                    /&gt;
+                &lt;/View&gt;
+
+                &lt;SlidingPanel
+                    headerLayoutHeight={50}
+                    onAnimationStop={this.toggleSlidePanel}
+                    headerLayout={() =&gt;
+                        &lt;View style={styles.headerLayoutStyle}&gt;
+                            &lt;Text style={styles.commonTextStyle}&gt;{this.state.slidingPanelText}&lt;/Text&gt;
+                        &lt;/View&gt;
+                    }
+                    allowDragging={true}
+                    slidingPanelLayout={() =&gt;
+                        &lt;View style={styles.slidingPanelLayoutStyle}&gt;
+                            &lt;View style={{ flex: 1 }}&gt;
+                                &lt;ScrollView style={{ flex: 1 }}&gt;
+                                    &lt;View style={{flex: 1, justifyContent: &apos;center&apos;}}&gt;
+                                        &lt;SectionedMultiSelect
+                                            items={satelliteSelectItems.default}
+                                            uniqueKey=&quot;id&quot;
+                                            subKey=&quot;children&quot;
+                                            selectText=&quot;Choose from catogories..&quot;
+                                            showDropDowns={true}
+                                            readOnlyHeadings={false}
+                                            selectChildren={true}
+                                            showRemoveAll={true}
+                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
+                                            selectedItems={this.state.selectedItems}
+                                            confirmText={`${this.state.maxItems ? &apos;Max satellites selected&apos; : &apos;Confirm&apos;}`}
+                                        /&gt;
+                                    &lt;/View&gt;
+
+                                    &lt;View style={[styles.hairlineSplitLine]}/&gt;
+
+                                    &lt;View
+                                        style={{
+                                            flex: 1,
+                                            flexDirection: &apos;row&apos;,
+                                            flexWrap: &apos;wrap&apos;,
+                                            alignItems: &apos;center&apos;,
+                                            marginVertical: 10,
+                                        }}
+                                    &gt;
+                                        &lt;TextInput
+                                            style={{
+                                                height: 40,
+                                                width: &apos;70%&apos;,
+                                                paddingLeft: &apos;3%&apos;,
+                                            }}
+                                            placeholder=&quot;Choose by typing satellite ID&quot;
+                                            ref={this.manualSatSelectTextInput}
+                                            keyboardType=&apos;numeric&apos;
+                                            value={this.state.text}
+                                        /&gt;
+                                        &lt;View style={{ width: &apos;20%&apos;}}&gt;
+                                            &lt;Button title=&quot;Add!&quot; onPress={this.addManual} /&gt;
+                                        &lt;/View&gt;
+                                    &lt;/View&gt;
+
+                                    &lt;View
+                                        style={{
+                                            flexWrap: &apos;wrap&apos;,
+                                            alignItems: &apos;center&apos;,
+                                            justifyContent: &apos;flex-start&apos;,
+                                            flexDirection: &apos;row&apos;,
+                                        }}
+                                    &gt;
+                                        {
+                                            this.state.selectedItemsManual.length &gt; 1 ? (
+                                                &lt;View
+                                                    style={{
+                                                        overflow: &apos;hidden&apos;,
+                                                        justifyContent: &apos;center&apos;,
+                                                        height: 34,
+                                                        borderColor: colors.selectedBubble,
+                                                        flexDirection: &apos;row&apos;,
+                                                        alignItems: &apos;center&apos;,
+                                                        paddingLeft: 10,
+                                                        margin: 3,
+                                                        paddingTop: 0,
+                                                        paddingRight: 10,
+                                                        paddingBottom: 0,
+                                                        borderRadius: 20,
+                                                        borderWidth: 1,
+                                                    }}
+                                                &gt;
+                                                    &lt;TouchableOpacity
+                                                        onPress={() =&gt; {
+                                                            this.removeManualAll()
+                                                        }}
+                                                        style={{
+                                                            borderTopRightRadius: 20,
+                                                            borderBottomRightRadius: 20,
+                                                        }}
+                                                    &gt;
+                                                        &lt;Text
+                                                            style={{
+                                                                color: colors.selectedBubble,
+                                                                fontSize: 13,
+                                                                marginRight: 0,
+                                                            }}
+                                                        &gt;
+                                                            Remove All
+                                  &lt;/Text&gt;
+                                                    &lt;/TouchableOpacity&gt;
+                                                &lt;/View&gt;
+                                            ) : null
+                                        }
+
+                                        {
+                                            this.state.selectedItemsManual.map((item, key) =&gt; (
+                                                &lt;View
+                                                    style={{
+                                                        overflow: &apos;hidden&apos;,
+                                                        justifyContent: &apos;center&apos;,
+                                                        height: 34,
+                                                        borderWidth: 1,
+                                                        borderRadius: 20,
+                                                        borderColor: colors.selectedBubble,
+                                                        flexDirection: &apos;row&apos;,
+                                                        alignItems: &apos;center&apos;,
+                                                        paddingLeft: 10,
+                                                        margin: 3,
+                                                        paddingTop: 0,
+                                                        paddingRight: 0,
+                                                        paddingBottom: 0,
+                                                        color: colors.selectedBubble,
+                                                    }}
+                                                    key={key}
+                                                &gt;
+                                                    &lt;Text
+                                                        numberOfLines={1}
+                                                        style={{
+                                                            fontSize: 13,
+                                                            marginRight: 0,
+                                                            color: colors.selectedBubble,
+                                                        }}
+                                                    &gt;
+                                                        {item}
+                                                    &lt;/Text&gt;
+                                                    &lt;TouchableOpacity
+                                                        onPress={() =&gt; this.removeManual(item)}
+                                                        style={{
+                                                            borderTopRightRadius: 20,
+                                                            borderBottomRightRadius: 20,
+                                                        }}
+                                                    &gt;
+                                                        &lt;IconF
+                                                            name=&quot;x&quot;
+                                                            style={{
+                                                                fontSize: 16,
+                                                                marginHorizontal: 6,
+                                                                marginVertical: 7,
+                                                                color: colors.selectedBubble,
+                                                            }}
+                                                        /&gt;
+                                                    &lt;/TouchableOpacity&gt;
+                                                &lt;/View&gt;
+                                            ))
+                                        }
+                                    &lt;/View&gt;
+
+                                    &lt;View style={styles.hairlineSplitLine}/&gt;
+                                    
+                                    &lt;View style={{flex: 1, flexDirection: &apos;row&apos;, alignItems: &apos;center&apos;, justifyContent: &apos;space-between&apos;}}&gt;
+                                        &lt;View style={{width: &apos;80%&apos;}}&gt;
+                                            &lt;SectionedMultiSelect
+                                                items={groundSegmentSelectItems.default}
+                                                uniqueKey=&quot;id&quot;
+                                                subKey=&quot;children&quot;
+                                                selectText=&quot;Choose from ground segments...&quot;
+                                                showDropDowns={false}
+                                                readOnlyHeadings={true}
+                                                selectChildren={true}
+                                                // expandDropDowns={true} // causes weird bug at bottom part of screen
+                                                showRemoveAll={true}
+                                                onSelectedItemsChange={this.onGroundSegmentSelectedItemsChange}
+                                                selectedItems={this.state.selectedItemsGroundSegment}
+                                            /&gt;
+                                        &lt;/View&gt;
+                                        &lt;View style={{position: &apos;absolute&apos;, top: 15, right: 25}}&gt;
+                                            &lt;TouchableOpacity onPress={this.toggleGroundSegmentModal}&gt;
+                                                &lt;IconF name=&quot;info&quot; size={30} color=&quot;gray&quot; style={styles.iconShadow}/&gt;
+                                            &lt;/TouchableOpacity&gt;
+                                        &lt;/View&gt;
+                                        &lt;View&gt;&lt;/View&gt;
+                                    &lt;/View&gt;
+                                    
+
+                                    &lt;Modal
+                                        isVisible={this.state.groundSegmentModalVisible}
+                                        useNativeDriver={true}
+                                        onBackdropPress={this.toggleGroundSegmentModal}
+                                    &gt;
+                                        &lt;View style={styles.groundSegmentModal}&gt;
+                                            &lt;View style={{height: &apos;93%&apos;}}&gt;
+                                                &lt;ScrollView&gt;
+                                                    &lt;Text style={styles.groundSegmentHeading}&gt;Master Control Stations and Alternate MCS&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentColors}&gt;Red and Gold&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentText}&gt;The master control station, located at Schriever Air Force Base in Colorado Springs, Colorado, is responsible for overall management of the remote monitoring and transmission sites. GPS ephemeris being a tabulation of computed positions, velocities and derived right ascension and declination of GPS satellites at specific times, replace &quot;position&quot; with &quot;ephemeris&quot; because the Master Control Station computes not only position but also velocity, right ascension and declination parameters for eventual upload to GPS satellites.&lt;/Text&gt;
+                                                
+                                                    &lt;Text style={[styles.groundSegmentHeading, {marginTop: 5}]}&gt;Monitor Stations&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentColors}&gt;AFMS blue, AFSCN yellow, NGA purple&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentText}&gt;Six monitor stations are located at Schriever Air Force Base in Colorado, Cape Canaveral, Florida, Hawaii, Ascension Island in the Atlantic Ocean, Diego Garcia Atoll in the Indian Ocean, and Kwajalein Island in the South Pacific Ocean.Six additional monitoring stations were added in 2005 in Argentina, Bahrain, United Kingdom, Ecuador, Washington DC, and Australia. Each of the monitor stations checks the exact altitude, position, speed, and overall health of the orbiting satellites. The control segment uses measurements collected by the monitor stations to predict the behavior of each satellite&apos;s orbit and clock. The prediction data is up-linked, or transmitted, to the satellites for transmission back to the users. The control segment also ensures that the GPS satellite orbits and clocks remain within acceptable limits. A station can track up to 11 satellites at a time. This &quot;check-up&quot; is performed twice a day, by each station, as the satellites complete their journeys around the earth. Noted variations, such as those caused by the gravity of the moon, sun and the pressure of solar radiation, are passed along to the master control station.&lt;/Text&gt;
+                                                
+                                                    &lt;Text style={[styles.groundSegmentHeading, {marginTop: 5}]}&gt;Ground Antennas&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentColors}&gt;Green&lt;/Text&gt;
+                                                    &lt;Text style={styles.groundSegmentText}&gt;
+                                                        The Ground Antennas uplink data to the satellites via S-band radio signals. These data includes ephemerides and clock correction information transmitted within the Navigation Message, as well as command telemetry from the MCS.
+                                                        This information can be uploaded to each satellite three times per day, i.e., every 8 hours; nevertheless, it is usually updated just once a day.
+                                                    &lt;/Text&gt;
+                                                &lt;/ScrollView&gt;
+                                            &lt;/View&gt;
+                                            &lt;View style={{width: &apos;40%&apos;, marginTop: 10}}&gt;
+                                                &lt;Button title=&quot;Hide info&quot; onPress={this.toggleGroundSegmentModal} /&gt;
+                                            &lt;/View&gt;
+                                        &lt;/View&gt;
+                                    &lt;/Modal&gt;
+
+                                    &lt;View style={[styles.hairlineSplitLine]}/&gt;
+
+                                    &lt;View style={{marginHorizontal: 10, marginTop: 10}}&gt;
+                                        &lt;Text&gt;Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)&lt;/Text&gt;
+                                        &lt;Slider
+                                            value={this.state.timeSpeedSliderValue}
+                                            minimumValue={1}
+                                            maximumValue={10000}
+                                            onValueChange={(val) =&gt; this.setState({ timeSpeedSliderValue: val })}
+                                        /&gt;
+                                    &lt;/View&gt;
+
+                                    &lt;View style={{ paddingBottom: 400 }}&gt;&lt;/View&gt;
+                                &lt;/ScrollView&gt;
+                            &lt;/View&gt;
+                        &lt;/View&gt;
+                    }
+                /&gt;
+
+                &lt;FlashMessage
+                    position={&quot;top&quot;}
+                    autoHide={true}
+                /&gt;
+            &lt;/View&gt;
+        );
+    }
+}
+
+module.exports = satviz
+
+// Constants used in styles
+const { width, height } = Dimensions.get(&apos;window&apos;);
+
+const colors = {
+    selectedBubble: &apos;#848787&apos;,
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    bodyViewStyle: {
+        flex: 1,
+        position: &apos;absolute&apos;,
+        justifyContent: &apos;center&apos;,
+        alignItems: &apos;center&apos;,
+    },
+    arView: {
+        flex: 1,
+        position: &apos;absolute&apos;,
+        height: &apos;100%&apos;,
+    },
+    headerLayoutStyle: {
+        width,
+        height: 50,
+        backgroundColor: &apos;grey&apos;,
+        justifyContent: &apos;center&apos;,
+        alignItems: &apos;center&apos;,
+    },
+    slidingPanelLayoutStyle: {
+        width,
+        height,
+        backgroundColor: &apos;#ffffff&apos;,
+    },
+    commonTextStyle: {
+        color: &apos;white&apos;,
+        fontSize: 18,
+    },
+
+    modalIcon: {
+        position: &apos;absolute&apos;,
+        right: &apos;5%&apos;,
+        top: &apos;2%&apos;,
+    },
+    helpModal: {
+        backgroundColor: &quot;white&quot;,
+        marginHorizontal: &apos;10%&apos;,
+        padding: 15,
+        height: &apos;50%&apos;,
+        textAlign: &apos;center&apos;,
+        alignItems: &apos;center&apos;,
+    },
+    helpModalHeading: {
+        fontWeight:&apos;bold&apos;,
+        textAlign: &apos;center&apos;,
+        fontSize: 16
+    },
+    modalCloseIcon: {
+        position: &apos;absolute&apos;,
+        right: 9,
+        top: 9,
+    },
+
+    groundSegmentModal: {
+        backgroundColor: &quot;white&quot;,
+        marginHorizontal: &apos;10%&apos;,
+        height: &apos;80%&apos;,
+        textAlign: &apos;right&apos;,
+        alignItems: &apos;center&apos;,
+        padding: &apos;3%&apos;,
+        paddingBottom: 0,
+    },
+    groundSegmentHeading: {
+        fontWeight:&apos;bold&apos;,
+        textAlign: &apos;center&apos;,
+        fontSize: 16
+    },
+    groundSegmentText: {
+        textAlign: &apos;justify&apos;,
+    },
+    groundSegmentColors: {
+        textAlign: &apos;center&apos;,
+        fontSize: 12
+    },
+
+    hairlineSplitLine: {
+        borderBottomColor: &apos;black&apos;,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+
+    iconShadow: {
+        shadowOpacity: 2,
+        textShadowRadius: 2,
+        textShadowOffset:{width: 0,height: 0}
+    },
+});
+</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
