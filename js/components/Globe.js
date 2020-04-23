@@ -116,74 +116,7 @@ export default class Globe extends Component {
                 // Call ST funtion to get data according to newly added IDs
                 this.loading = true;
 
-                // Get date of satellite tle storage
-                let datePairs;
-                let additionDateKeys = addition.map(key => key + "Date");
-                try {
-                    datePairs = await AsyncStorage.multiGet(additionDateKeys);
-                } catch(e) {
-                    console.log("Error happened when retrieving dates of TLEs");
-                    console.log(e);
-                }
-
-                let idtoGetFromStorage = [];
-                let idToGetFromWeb = [];
-
-                // When date is udefined ->value is not in storage 
-                // pair[0] is key, pair[1] is value
-                let dateNow = new Date();
-                const dayLenghtInMS = 86400000;
-                datePairs.forEach(pair => {
-                    if (pair[1] === null) {
-                        idToGetFromWeb.push(pair[0]);
-                    } else {
-                        let num = Number(pair[1]);
-                        let dateFromStorage = new Date(num);
-                        let diff = dateNow.getTime() - dateFromStorage.getTime();
-
-                        if (diff > dayLenghtInMS) {
-                            idToGetFromWeb.push(pair[0]);
-                        } else {
-                            idtoGetFromStorage.push(pair[0]);
-                        }
-                    }
-                });
-
-                idToGetFromWeb = idToGetFromWeb.map(id => id.substring(0, 5))
-                idtoGetFromStorage = idtoGetFromStorage.map(id => id.substring(0, 5))
-
-                let storageTLEPairs;
-                let storageTLE = [];
-                try {
-                    storageTLEPairs = await AsyncStorage.multiGet(idtoGetFromStorage);
-                } catch(e) {
-                    console.log("Error happened when retrieving value of TLEs");
-                    console.log(e);
-                }
-
-                storageTLEPairs.forEach(pair => {
-                    if (pair[1] === null) {
-                        // Shouldnt happen
-                        idToGetFromWeb.push(pair[0]);
-                    } else {
-                        storageTLE.push(pair[1]);
-                    }
-                });
-
-                let data = [];
-                if (idToGetFromWeb.length > 0) {
-                    data = await this.ST.getTLEs(idToGetFromWeb);
-
-                    // Convert TLE string to line separated array
-                    data =  data.split('\r\n');
-
-                    this.saveTLEsToAsyncStorage(data);
-                }
-
-                // storageTLE -> unfold form line1;line2
-                storageTLE = this.formatTLEFromAsyncStorage(storageTLE);
-
-                this.tle = [...storageTLE, ...data];
+                this.tle = await this.getTLEsFromWebAndStorage(addition);
 
                 sats = this.parseData();
             }
@@ -220,6 +153,91 @@ export default class Globe extends Component {
         }
     }
 
+    /**
+     * Gets TLEs of satellites with given ids from web service or from async storage.
+     * 
+     * @param {Array.<string>} ids ID of the satellites for which we want to obtain TLEs
+     * 
+     * @returns {Array.<string>} TLE lines in format [TLE1 line1, TLE1 line2, TLE2 line1, ...]
+     */
+    getTLEsFromWebAndStorage = async (ids) => {
+        // Get date of satellite tle storage
+        let datePairs;
+        let additionDateKeys = ids.map(key => key + "Date");
+        try {
+            datePairs = await AsyncStorage.multiGet(additionDateKeys);
+        } catch(e) {
+            console.log("Error happened when retrieving dates of TLEs");
+            console.log(e);
+        }
+
+        let idtoGetFromStorage = [];
+        let idToGetFromWeb = [];
+
+        // When date is udefined ->value is not in storage 
+        // pair[0] is key, pair[1] is value
+        let dateNow = new Date();
+        const dayLenghtInMS = 86400000;
+        datePairs.forEach(pair => {
+            if (pair[1] === null) {
+                idToGetFromWeb.push(pair[0]);
+            } else {
+                let num = Number(pair[1]);
+                let dateFromStorage = new Date(num);
+                let diff = dateNow.getTime() - dateFromStorage.getTime();
+
+                if (diff > dayLenghtInMS) {
+                    idToGetFromWeb.push(pair[0]);
+                } else {
+                    idtoGetFromStorage.push(pair[0]);
+                }
+            }
+        });
+
+        idToGetFromWeb = idToGetFromWeb.map(id => id.substring(0, 5))
+        idtoGetFromStorage = idtoGetFromStorage.map(id => id.substring(0, 5))
+
+        let storageTLEPairs;
+        let storageTLE = [];
+        try {
+            storageTLEPairs = await AsyncStorage.multiGet(idtoGetFromStorage);
+        } catch(e) {
+            console.log("Error happened when retrieving value of TLEs");
+            console.log(e);
+        }
+
+        storageTLEPairs.forEach(pair => {
+            if (pair[1] === null) {
+                // Shouldnt happen
+                idToGetFromWeb.push(pair[0]);
+            } else {
+                storageTLE.push(pair[1]);
+            }
+        });
+
+        let data = [];
+        if (idToGetFromWeb.length > 0) {
+            data = await this.ST.getTLEs(idToGetFromWeb);
+
+            // Convert TLE string to line separated array
+            data =  data.split('\r\n');
+
+            this.saveTLEsToAsyncStorage(data);
+        }
+
+        // storageTLE -> unfold form line1;line2
+        storageTLE = this.formatTLEFromAsyncStorage(storageTLE);
+
+        return [...storageTLE, ...data];
+    }
+
+    /**
+     * Formats TLEs for using from data obtained from Async Storage.
+     * 
+     * @param {Array.<string>} data TLE data from Async Storage
+     * 
+     * @returns {Array.<string>} Formated TLE data
+     */
     formatTLEFromAsyncStorage = (data) => {
         let arr = [];
 
@@ -232,9 +250,13 @@ export default class Globe extends Component {
         return arr;
     }
 
+    /**
+     * Saves TLE data to Async Storage in correct format.
+     * 
+     * @param {Array.<string>} data TLE data to store in Async Storage
+     * 
+     */
     saveTLEsToAsyncStorage = async (data) => {
-        console.log("Saving data");
-
         let pairsToSave = [];
 
         for (let i = 0; i < data.length - 1; i += 2) {
@@ -256,6 +278,7 @@ export default class Globe extends Component {
             await AsyncStorage.multiSet([...pairsToSave, ...datePairs])
         } catch(e) {
             console.log("Error occured while saving data");
+            console.log(e);
         }
     }
 
