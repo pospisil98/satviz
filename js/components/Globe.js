@@ -18,6 +18,8 @@ import {
     ViroPolyline,
 } from 'react-viro';
 
+import AsyncStorage from '@react-native-community/async-storage';
+
 import SpaceTrack from '../SpaceTrack';
 import SatelliteObject from '../SatelliteObject';
 
@@ -113,10 +115,67 @@ export default class Globe extends Component {
             if (addition.length > 0) {
                 // Call ST funtion to get data according to newly added IDs
                 this.loading = true;
-                let data = await this.ST.getTLEs(addition);
 
-                // Convert TLE string to line separated array
-                this.tle = data.split('\r\n');
+
+                // Get date of satellite tle storage
+                let datePairs;
+                try {
+                    datePairs = await AsyncStorage.multiGet(addition);
+                } catch(e) {
+                    console.log("Error happened when retrieving dates of TLEs");
+                    console.log(e);
+                }
+
+                console.log("Date pairs");
+                console.log(datePairs);
+
+                let idtoGetFromStorage = [];
+                let idToGetFromWeb = [];
+
+                // When date is udefined ->value is not in storage 
+                // pair[0] is key, pair[1] is value
+                datePairs.forEach(pair => {
+                    if (pair[1] === null) {
+                        idToGetFromWeb.push(pair[0]);
+                    } else {
+                        // TODO: check date older than 1 day
+
+                        idtoGetFromStorage.push(pair[0]);
+                    }
+                });
+
+                let storageTLEPairs;
+                let storageTLE = [];
+                try {
+                    storageTLEPairs = await AsyncStorage.multiGet(idtoGetFromStorage);
+                } catch(e) {
+                    console.log("Error happened when retrieving value of TLEs");
+                    console.log(e);
+                }
+
+                storageTLEPairs.forEach(pair => {
+                    if (pair[1] === null) {
+                        // Shouldnt happen
+                        idToGetFromWeb.push(pair[0]);
+                    } else {
+                        storageTLE.push(pair[1]);
+                    }
+                });
+
+                let data = [];
+                if (idToGetFromWeb.length > 0) {
+                    data = await this.ST.getTLEs(idToGetFromWeb);
+
+                    // Convert TLE string to line separated array
+                    data =  data.split('\r\n');
+
+                    this.saveTLEsToAsyncStorage(data);
+                }
+
+                // storageTLE -> unfold form line1;line2
+                storageTLE = this.formatTLEFromAsyncStorage(storageTLE);
+
+                this.tle = [...storageTLE, ...data];
 
                 sats = this.parseData();
             }
@@ -150,6 +209,44 @@ export default class Globe extends Component {
             this.setState({
                 orbitOpacity: this.props.orbitOpacity,
             });
+        }
+    }
+
+    formatTLEFromAsyncStorage = (data) => {
+        let arr = [];
+
+        data.forEach(e => {
+            let tle = e.split(';');
+            arr.push(tle[0]);
+            arr.push(tle[1]);
+        });
+
+        return arr;
+    }
+
+    saveTLEsToAsyncStorage = async (data) => {
+        console.log("Saving data");
+
+        let pairsToSave = [];
+
+        for (let i = 0; i < data.length - 1; i += 2) {
+            let val = data[i] + ';' + data[i + 1];
+            let id = data[i].substr(2,5);
+            
+            pairsToSave.push([id, val]);
+        }
+
+        let datePairs;
+        let currentTimestamp = Math.round((new Date()).getTime() / 1000).toString();
+
+        datePairs = pairsToSave.map(pair => {
+            return ([pair[0] + "Date", currentTimestamp]);
+        });
+
+        try {
+            await AsyncStorage.multiSet([...pairsToSave, ...datePairs])
+        } catch(e) {
+            console.log("Error occured while saving data");
         }
     }
 
