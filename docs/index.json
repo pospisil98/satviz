@@ -1756,7 +1756,7 @@
     "__docId__": 109,
     "kind": "file",
     "name": "satviz/js/components/Globe.js",
-    "content": "/** \r\n *  @fileOverview Globe component providing all the visualization.\r\n *\r\n *  @author       Vojtěch Pospíšil\r\n */\r\n\r\n\"use strict\";\r\n\r\nimport React, { Component } from 'react';\r\n\r\nimport {\r\n    ViroMaterials,\r\n    ViroNode,\r\n    Viro3DObject,\r\n    ViroAmbientLight,\r\n    ViroSphere,\r\n    ViroBox,\r\n    ViroPolyline,\r\n} from 'react-viro';\r\n\r\nimport SpaceTrack from '../SpaceTrack';\r\nimport SatelliteObject from '../SatelliteObject';\r\n\r\n\r\nvar satellite = require('satellite.js');\r\nvar Clock = require('timetravel').Clock;\r\n\r\n/**\r\n * Component representing virtual globe with satellites.\r\n */\r\nexport default class Globe extends Component {\r\n    constructor(props) {\r\n        super(props);\r\n\r\n        this.state = {\r\n            /** Currently visualized satellite objects\r\n             * @type {Array.<Object>} */\r\n            satellites: [],\r\n            /** Currently visualized satellite IDs\r\n             * @type {Array.<string>} */\r\n            currentSatelliteIDs: [],\r\n            /** IDs of sats without orbit rendered \r\n             * @type {Array<string>} */\r\n            excludedOrbits: [],\r\n            /** Opacity of orbit line\r\n             * @type {number} */\r\n            orbitOpacity: 0.8,\r\n            /** Rotation around individual axis to compensate globe rotation\r\n             * @type {Array.<number>} */\r\n            groundRotationCompensation: [0, 0, 0]\r\n        }\r\n\r\n        /** Compensation of model rotation on different targets\r\n         *  @type {Array.<number>} */\r\n        this.modelListRotation = [0, 0, 0];\r\n        if (this.props.flatTarget) {\r\n            this.modelListRotation = [0, -143, 0];\r\n        } else {\r\n            this.modelListRotation = [0, -173, 0];\r\n        }\r\n\r\n        /** SpaceTrack object for getting data from Satellite Catalog\r\n         * @type {SpaceTrack} */\r\n        this.ST = new SpaceTrack();\r\n\r\n        /** State of globe data loading\r\n         * @type {boolean} */\r\n        this.loading = false;\r\n\r\n        /** Number of segments in one orbit\r\n         * @type {number} */\r\n        this.orbitSegmentCount = 100;\r\n        /** Timestamps of orbits starting times \r\n         * @type {Object<string, any>} */\r\n        this.orbitTimestamps = {};\r\n        /** Points of satellite orbits \r\n         * @type {Object<string, Array.<Array.<number>>> */\r\n        this.orbitPoints = {};\r\n\r\n        /** Globe custom clock with special functions\r\n         * @type {Clock}\r\n         */\r\n        this.clock = new Clock();\r\n\r\n        /** Last globe rotation time for optimized rotating\r\n         * @type {Clock.time}\r\n         */\r\n        this.lastRotationTime = this.clock.time();\r\n\r\n        /** Timer for satellite motion simulation */\r\n        this.moveTimer = setInterval(this.updatePositions, 100);\r\n        /** Timer for globe rotation simulation */\r\n        this.rotationTimer = setInterval(this.updateRotation, 30);\r\n    }\r\n\r\n    async componentDidUpdate(prevProps, prevState) {\r\n        // Fix for problem where numbers starting with zeros was casted to number\r\n        let propIDs;\r\n        if (this.props.satelliteIDs) {\r\n            propIDs = this.props.satelliteIDs.map(id => {\r\n                return (\"00000\" + id.toString()).slice(-5);\r\n            });\r\n        }\r\n\r\n        // Check whether two arrays have same elements or not\r\n        let areIDsSame = (propIDs.length === this.state.currentSatelliteIDs.length) && propIDs.every(value => this.state.currentSatelliteIDs.includes(value));\r\n\r\n        if (!areIDsSame && this.loading === false) {\r\n            let addition = propIDs.filter(x => !this.state.currentSatelliteIDs.includes(x));\r\n\r\n            let sats = [];\r\n\r\n            if (addition.length > 0) {\r\n                // Call ST funtion to get data according to newly added IDs\r\n                this.loading = true;\r\n                let data = await this.ST.getTLEs(addition);\r\n\r\n                // Convert TLE string to line separated array\r\n                this.tle = data.split('\\r\\n');\r\n\r\n                sats = this.parseData();\r\n            }\r\n\r\n            // Get satellites which will be not removed from current ones\r\n            let keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));\r\n\r\n            // Get IDs of all visualized satellites\r\n            let curr = [...sats, ...keptFromCurrentObjects].map(sat => (sat.id).toString());\r\n\r\n            this.setState({\r\n                satellites: [...sats, ...keptFromCurrentObjects],\r\n                currentSatelliteIDs: curr,\r\n            })\r\n        }\r\n\r\n        // Readjust custom clock speed \r\n        if (this.props.timeScale !== prevProps.timeScale) {\r\n            this.clock.stop();\r\n            this.clock.speed(this.props.timeScale).time(this.clock.time());\r\n            this.clock.start();\r\n        }\r\n\r\n        // Update state for component rerender\r\n        if (this.props.orbitIDs !== prevProps.orbitIDs) {\r\n            this.setState({\r\n                excludedOrbits: [...this.props.orbitIDs],\r\n            });\r\n        }\r\n        if (this.props.orbitOpacity !== prevProps.orbitOpacity) {\r\n            this.setState({\r\n                orbitOpacity: this.props.orbitOpacity,\r\n            });\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Parses downloaded TLE data into satellite objects and stops loading of data.\r\n     * \r\n     * @returns {Array.<SatelliteObject>}\r\n     */\r\n    parseData = () => {\r\n        let satelliteObjects = this.convertTLEtoSatelliteObjectCollection();\r\n        this.loading = false;\r\n\r\n        return satelliteObjects;\r\n    }\r\n\r\n    /**\r\n     * Updates positions of currently visualized satellites.\r\n     */\r\n    updatePositions = () => {\r\n        if (this.state.satellites.length > 0) {\r\n            let copy = [...this.state.satellites]\r\n\r\n            // Sometime there is error in position propagation according to satellite.js documentation\r\n            // so its needed to store IDs of sats which will be later removed\r\n            let removeIDs = [];\r\n\r\n            copy.forEach((sat) => {\r\n                try {\r\n                    sat.updatePosition(new Date(this.clock.time()));\r\n                } catch (error) {\r\n                    removeIDs.push(sat.id);\r\n                    this.props.removeSatelliteCallback(sat.id);\r\n                }\r\n            });\r\n\r\n            let cleaned = [...copy];\r\n            removeIDs.forEach(id => {\r\n                cleaned = cleaned.filter(sat => sat.id !== id);\r\n            });\r\n\r\n            this.setState({ satellites: cleaned });\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Updates rotation of earth (satellites) according to real globe rotation.\r\n     */\r\n    updateRotation = () => {\r\n        const rotationPerSecond = 0.00417807901;\r\n\r\n        let now = this.clock.time();\r\n        let difference = (now - this.lastRotationTime);\r\n\r\n        let additionalRotation = difference * (rotationPerSecond / 1000);\r\n\r\n        let rotation = (-this.state.groundRotationCompensation[1] + additionalRotation);\r\n        rotation = rotation % 360;\r\n\r\n        // Rotate Earth only if rotation is > 1 degreee (faster timescales, or long realtime visualization)\r\n        if (rotation > 1) {\r\n            this.setState({\r\n                groundRotationCompensation: [0, -rotation, 0],\r\n            });\r\n\r\n            this.lastRotationTime = now;\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Converts downloaded TLE data to SatelliteObjects array.\r\n     * \r\n     * @returns {Array.<SatelliteObject>} Converted TLEs into SatelliteObjects\r\n     */\r\n    convertTLEtoSatelliteObjectCollection = () => {\r\n        var tleIndex = 0;\r\n        var idIndex = 0;\r\n        var satrec;\r\n        var satelliteObjects = [];\r\n\r\n        // indexes are += 2 because each TLE has 2 lines\r\n        for (tleIndex = 0; tleIndex < this.tle.length - 1; tleIndex += 2) {\r\n            satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);\r\n            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec, [this.tle[tleIndex], this.tle[tleIndex + 1]]))\r\n            idIndex += 1;\r\n        }\r\n\r\n        return satelliteObjects;\r\n    }\r\n\r\n    /**\r\n     * Processes click on visualized satelite.\r\n     * \r\n     * @param {string} id ID of clicked satellite\r\n     */\r\n    onModelClick = (id) => {\r\n        let satelliteObject = this.state.satellites.filter((sat) => {\r\n            return sat.id == id;\r\n        })\r\n\r\n        this.props.satelliteClickCallback(satelliteObject);\r\n    }\r\n\r\n    /**\r\n     * Gets material for ground segment visualiziaton based on its ID.\r\n     * \r\n     * @param {number} segmentID ID of ground segment\r\n     * \r\n     * @returns {string} Material name\r\n     */\r\n    getMaterialForGroundSegment = (segmentID) => {\r\n        if (segmentID === 11) {\r\n            return \"red\";\r\n        } else if (segmentID === 12) {\r\n            return \"gold\";\r\n        } else if (segmentID >= 13 && segmentID <= 16) {\r\n            return \"green\";\r\n        } else if (segmentID >= 21 && segmentID <= 26) {\r\n            return \"blue\";\r\n        } else if (segmentID >= 31 && segmentID <= 37) {\r\n            return \"yellow\";\r\n        } else if (segmentID >= 41 && segmentID <= 50) {\r\n            return \"purple\";\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Gets position of ground segment with given ID for visualiziation.\r\n     * \r\n     * @param {string} segmentID ID of segment\r\n     * \r\n     * @returns {Array.<number>} Position in ViroCoords\r\n     */\r\n    getPositionForGroundSegment = (segmentID) => {\r\n        let denominator;\r\n\r\n        if (this.props.flatTarget) {\r\n            denominator = 80000;\r\n        } else {\r\n            denominator = 38500;\r\n        }\r\n\r\n        let city = groundSegmentIDtoCity[segmentID];\r\n        let coordsOriginal = groundSegmentEciCoords[city];\r\n\r\n        let x = coordsOriginal.x / denominator;\r\n        let y = coordsOriginal.y / denominator;\r\n        let z = coordsOriginal.z / denominator;\r\n\r\n        // Conversion from ECI to ViroCoords\r\n        return [y, z, x];\r\n    }\r\n\r\n    /**\r\n     * Decides whether enough time, one rotation, has passed for satellite orbit to be updated.\r\n     * \r\n     * @param {string} satID ID of satellite orbit to be checked\r\n     * @param {Date} orbitTime Current time \r\n     * \r\n     * @returns {boolean} Decision whether to update or not\r\n     */\r\n    shouldUpdateOrbit = (satID, orbitTime) => {\r\n        if (!(satID in this.orbitTimestamps)) {\r\n            return true;\r\n        }\r\n\r\n        let maxtime = new Date(this.orbitTimestamps[satID]);\r\n        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);\r\n\r\n        if (this.clock.time() > maxtime) {\r\n            return true;\r\n        }\r\n\r\n        return false;\r\n    }\r\n\r\n    /**\r\n     * Maps selected ground segment IDs to models for render.\r\n     * \r\n     * @returns {Array.<ViroSphere>} Array of 3D spheres as position visualization\r\n     */\r\n    getGroundSegmentToRender = () => {\r\n        let segmentList;\r\n\r\n        if (!this.loading) {\r\n            segmentList = this.props.groundSegmentIDs.map((segmentID) => {\r\n                let materialName = this.getMaterialForGroundSegment(segmentID);\r\n                let position = this.getPositionForGroundSegment(segmentID);\r\n\r\n                return (\r\n                    <ViroSphere\r\n                        key={segmentID}\r\n                        heightSegmentCount={8}\r\n                        widthSegmentCount={8}\r\n                        radius={0.006}\r\n                        position={position}\r\n                        materials={[materialName]}\r\n                    />\r\n                );\r\n            });\r\n        }\r\n\r\n        return segmentList;\r\n    }\r\n\r\n    /**\r\n     * Maps selected satellite IDs to models for render.\r\n     * \r\n     * @returns {Array.<ViroSphere|Viro3DObject>} Array of 3D models as satellite visualization\r\n     */\r\n    getSatellitesToRender = () => {\r\n        let modelList;\r\n\r\n        if (!this.loading) {\r\n            modelList = this.state.satellites.map((sat) => {\r\n                if (sat.description === \"DEFAULT\") {\r\n                    return (\r\n                        <ViroSphere\r\n                            key={sat.id}\r\n                            heightSegmentCount={10}\r\n                            widthSegmentCount={10}\r\n                            radius={0.01}\r\n                            position={sat.position}\r\n                            materials={[\"gray\"]}\r\n\r\n                            highAccuracyEvents={false}\r\n                            onClick={() => {\r\n                                this.onModelClick(sat.id);\r\n                            }}\r\n\r\n                            renderingOrder={10}\r\n                        />\r\n                    );\r\n                }\r\n\r\n                return (\r\n                    <Viro3DObject\r\n                        key={sat.id}\r\n                        source={sat.modelPath}\r\n                        resources={sat.resources}\r\n                        position={sat.position}\r\n                        scale={sat.scale}\r\n                        rotation={sat.rotation}\r\n                        type={sat.modelType}\r\n\r\n                        highAccuracyEvents={false}\r\n                        onClick={() => {\r\n                            this.onModelClick(sat.id);\r\n                        }}\r\n\r\n                        renderingOrder={10}\r\n                    />\r\n                )\r\n            });\r\n        }\r\n\r\n        return modelList;\r\n    }\r\n\r\n    /**\r\n     * Maps selected satellite IDs (without excluded ones) to orbits for render.\r\n     * \r\n     * @returns {Array.<ViroPolyline>} Array of Viro Polylines - orbits\r\n     */\r\n    getOrbitsToRender = () => {\r\n        let orbitList;\r\n\r\n        if (!this.loading) {\r\n            orbitList = this.state.satellites.map((sat) => {\r\n                let orbitTime = sat.getOrbitTime();\r\n                if (!this.state.excludedOrbits.includes(sat.id)) {\r\n                    let positions;\r\n\r\n                    if (this.shouldUpdateOrbit(sat.id, orbitTime)) {\r\n                        positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));\r\n\r\n                        this.orbitPoints[sat.id] = positions;\r\n                        this.orbitTimestamps[sat.id] = this.clock.time();\r\n                    } else {\r\n                        positions = this.orbitPoints[sat.id];\r\n                    }\r\n\r\n                    return (\r\n                        <ViroPolyline\r\n                            key={sat.id}\r\n                            position={[0, 0, 0]}\r\n                            points={positions}\r\n                            thickness={0.001}\r\n                            materials={\"red\"}\r\n                            opacity={this.state.orbitOpacity}\r\n                        />\r\n                    );\r\n                }\r\n            });\r\n        }\r\n\r\n        return orbitList;\r\n    }\r\n\r\n    /**\r\n     * Renders flat target version of augumented globe.\r\n     * \r\n     * @returns {ViroNode} Globe with all satelites and orbits.\r\n     */\r\n    renderFlatTargetGlobe = () => {\r\n        let modelList = this.getSatellitesToRender();\r\n        let groundSegmentList = this.getGroundSegmentToRender();\r\n        let orbitsList = this.getOrbitsToRender();\r\n\r\n        return (\r\n            <ViroNode position={[0, 0.2, 0]}>\r\n                <ViroAmbientLight color=\"#FFFFFF\" intensity={2000} temperature={4000} />\r\n\r\n                <Viro3DObject source={require('../res/earth.obj')}\r\n                    resources={[require('../res/earth.mtl'),\r\n                    require('../res/earth_texture.png')]}\r\n                    position={[0.0, 0.0, 0.0]}\r\n                    scale={[0.04, 0.04, 0.04]}\r\n                    rotation={[180, 180, -180]}\r\n                    type=\"OBJ\"\r\n                />\r\n\r\n                <ViroNode rotation={this.modelListRotation}>\r\n                    {groundSegmentList}\r\n\r\n                    <ViroNode rotation={this.state.groundRotationCompensation}>\r\n                        {modelList}\r\n                        {orbitsList}\r\n                    </ViroNode>\r\n                </ViroNode>\r\n            </ViroNode>\r\n        );\r\n    }\r\n\r\n    /**\r\n     * Renders full 3D model of Earth or only its transparent version but with occlusive properties. \r\n     * \r\n     * @returns {<Viro3DObject|ViroNode} Globe for globe target\r\n     */\r\n    renderVirtualGlobe = () => {\r\n        if (this.props.renderVirtualGlobe) {\r\n            return (\r\n                <Viro3DObject source={require('../res/earth.obj')}\r\n                    resources={[require('../res/earth.mtl'),\r\n                    require('../res/earth_texture.png')]}\r\n                    position={[0.0, 0.0, 0.0]}\r\n                    scale={[0.08, 0.08, 0.08]}\r\n                    rotation={[180, -150, -180]}  // Rotated that africa is towards camera\r\n                    type=\"OBJ\"\r\n                />\r\n            );\r\n        } else {\r\n\r\n            return (\r\n                <ViroNode>\r\n                    <ViroSphere\r\n                        heightSegmentCount={20}\r\n                        widthSegmentCount={20}\r\n                        radius={0.17}\r\n                        position={[0, 0, 0]}\r\n                        materials={[\"occlusive\"]}\r\n                        renderingOrder={-1}\r\n                    />\r\n\r\n                    <Viro3DObject source={require('../res/ghostEarth/untitled.obj')}\r\n                        resources={[require('../res/ghostEarth/untitled.mtl'),\r\n                        require('../res/ghostEarth/untitled.png')]}\r\n                        position={[0.0, 0.0, 0.0]}\r\n                        scale={[0.18, 0.18, 0.18]}\r\n                        rotation={[0, -175, 0]}  // rotated that africa is towards camera\r\n                        type=\"OBJ\"\r\n                        opacity={0.3}\r\n                    />\r\n                </ViroNode>\r\n            );\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Renders globe target version of augumented globe.\r\n     * \r\n     * @returns {ViroNode} Globe with all satelites and orbits.\r\n     */\r\n    renderGlobeTargetGlobe = () => {\r\n        let modelList = this.getSatellitesToRender();\r\n        let groundSegmentList = this.getGroundSegmentToRender();\r\n        let orbitsList = this.getOrbitsToRender();\r\n\r\n        return (\r\n            <ViroNode>\r\n                <ViroAmbientLight color=\"#FFFFFF\" />\r\n\r\n                {this.renderVirtualGlobe()}\r\n\r\n                <ViroNode rotation={this.modelListRotation}>\r\n                    {groundSegmentList}\r\n\r\n                    <ViroNode rotation={this.state.groundRotationCompensation}>\r\n                        {modelList}\r\n                        {orbitsList}\r\n                    </ViroNode>\r\n                </ViroNode>\r\n            </ViroNode>\r\n        );\r\n    }\r\n\r\n    /**\r\n     * Decides whether to render flat or globe target globe.\r\n     * \r\n     * @returns {ViroNode} Correct globe with all orbits, satellites and ground segments.\r\n     */\r\n    renderGlobe = () => {\r\n        if (this.props.flatTarget) {\r\n            return this.renderFlatTargetGlobe();\r\n        } else {\r\n            return this.renderGlobeTargetGlobe();\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Renders whole component - visualization\r\n     * \r\n     * @returns {ViroNode} Globe visualization\r\n     */\r\n    render() {\r\n        return (\r\n            <ViroNode>\r\n                {this.renderGlobe()}\r\n            </ViroNode>\r\n        );\r\n    }\r\n}\r\n\r\n/**\r\n * ECI cooardinates of cities with GPS ground segments.\r\n * \r\n * @constant\r\n * @type {Object<string, Object<string, number>>}\r\n */\r\nconst groundSegmentEciCoords = {\r\n    \"schriever\": { \"x\": 3910.3096787548093, \"y\": 3080.3510329695946, \"z\": 3975.5813422691904 },\r\n    \"vandenberg\": { \"x\": 4856.790504752817, \"y\": 1985.1370670602403, \"z\": 3615.737268949631 },\r\n    \"cape\": { \"x\": 2619.008345543573, \"y\": 4961.851777391096, \"z\": 3024.8968340995298 },\r\n    \"ascension\": { \"x\": -3922.7604262692257, \"y\": 4952.862829619637, \"z\": -875.6544312352279 },\r\n    \"diego\": { \"x\": -5170.553732498662, \"y\": -3647.0385227647125, \"z\": -806.8053933403049 },\r\n    \"kwajalein\": { \"x\": 4093.666061017764, \"y\": -4796.201022830874, \"z\": 960.7141097469664 },\r\n    \"hawaii\": { \"x\": 5786.235355097538, \"y\": -1500.9790587172447, \"z\": 2219.0532011295636 },\r\n    \"greenland\": { \"x\": 410.97339412324754, \"y\": 1434.4349979707606, \"z\": 6181.170740804261 },\r\n    \"hampshire\": { \"x\": 1493.91674263956, \"y\": 4359.107545377384, \"z\": 4396.24767788034 },\r\n    \"britain\": { \"x\": -3078.574521370201, \"y\": 2465.378033770742, \"z\": 4996.687333000982 },\r\n    \"guam\": { \"x\": 1865.487956036825, \"y\": -5918.882386479585, \"z\": 1470.730166121755 },\r\n    \"alaska\": { \"x\": 3016.4701519528826, \"y\": -219.03495480709444, \"z\": 5597.555648180364 },\r\n    \"washington\": { \"x\": 2046.1450152058833, \"y\": 4528.634340221239, \"z\": 3986.0421024686416 },\r\n    \"ecuador\": { \"x\": 2779.402343452063, \"y\": 5740.560921023602, \"z\": -107.89682911058405 },\r\n    \"uruguay\": { \"x\": 304.42572961808673, \"y\": 5325.040877018454, \"z\": -3487.141934869165 },\r\n    \"africa\": { \"x\": -5848.400376263067, \"y\": 1424.0113052546715, \"z\": -2104.612547103142 },\r\n    \"bahrain\": { \"x\": -5582.67664844856, \"y\": -1318.6034421675904, \"z\": 2780.958250256032 },\r\n    \"korea\": { \"x\": 46.677236661753795, \"y\": -5091.781885528575, \"z\": 3829.3084077342232 },\r\n    \"australia\": { \"x\": 1033.5451370010423, \"y\": -5204.347927342779, \"z\": -3528.946706348021 },\r\n    \"zealand\": { \"x\": 3451.4932197311496, \"y\": -3264.5169253457175, \"z\": -4242.601519256618 }\r\n}\r\n\r\n/**\r\n * Specifies city of ground segment by ID.\r\n * \r\n * @constant\r\n * @type {Object<number, string>}\r\n */\r\nconst groundSegmentIDtoCity = {\r\n    11: \"schriever\",\r\n    12: \"vandenberg\",\r\n    13: \"cape\",\r\n    14: \"ascension\",\r\n    15: \"diego\",\r\n    16: \"kwajalein\",\r\n\r\n    21: \"hawaii\",\r\n    22: \"schriever\",\r\n    23: \"cape\",\r\n    24: \"ascension\",\r\n    25: \"diego\",\r\n    26: \"kwajalein\",\r\n\r\n    31: \"greenland\",\r\n    32: \"hampshire\",\r\n    33: \"vandenberg\",\r\n    34: \"hawaii\",\r\n    35: \"britain\",\r\n    36: \"diego\",\r\n    37: \"guam\",\r\n\r\n    41: \"alaska\",\r\n    42: \"washington\",\r\n    43: \"ecuador\",\r\n    44: \"uruguay\",\r\n    45: \"britain\",\r\n    46: \"africa\",\r\n    47: \"bahrain\",\r\n    48: \"korea\",\r\n    49: \"australia\",\r\n    50: \"zealand\"\r\n}\r\n\r\n// Definition of materials for 3D objects rendering.\r\nViroMaterials.createMaterials({\r\n    gray: {\r\n        shininess: 2.0,\r\n        lightingModel: \"Lambert\",\r\n        diffuseColor: \"#A9A9A9\",\r\n    },\r\n    earth: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseTexture: require('../res/earth_texture.png'),\r\n    },\r\n    iss: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#6e6e6e'\r\n    },\r\n    occlusive: {\r\n        diffuseColor: \"#FFFFFFFF\",\r\n        colorWriteMask: [\"None\"],\r\n    },\r\n    red: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#AF0606'\r\n    },\r\n    gold: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#FFC300'\r\n    },\r\n    green: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#06AF48'\r\n    },\r\n    blue: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#067EAF'\r\n    },\r\n    yellow: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#F4F71A'\r\n    },\r\n    purple: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#7504AC'\r\n    }\r\n});\r\n",
+    "content": "/** \r\n *  @fileOverview Globe component providing all the visualization.\r\n *\r\n *  @author       Vojtěch Pospíšil\r\n */\r\n\r\n\"use strict\";\r\n\r\nimport React, { Component } from 'react';\r\n\r\nimport {\r\n    ViroMaterials,\r\n    ViroNode,\r\n    Viro3DObject,\r\n    ViroAmbientLight,\r\n    ViroSphere,\r\n    ViroBox,\r\n    ViroPolyline,\r\n} from 'react-viro';\r\n\r\nimport AsyncStorage from '@react-native-community/async-storage';\r\n\r\nimport SpaceTrack from '../SpaceTrack';\r\nimport SatelliteObject from '../SatelliteObject';\r\n\r\n\r\nvar satellite = require('satellite.js');\r\nvar Clock = require('timetravel').Clock;\r\n\r\n/**\r\n * Component representing virtual globe with satellites.\r\n */\r\nexport default class Globe extends Component {\r\n    constructor(props) {\r\n        super(props);\r\n\r\n        this.state = {\r\n            /** Currently visualized satellite objects\r\n             * @type {Array.<Object>} */\r\n            satellites: [],\r\n            /** Currently visualized satellite IDs\r\n             * @type {Array.<string>} */\r\n            currentSatelliteIDs: [],\r\n            /** IDs of sats without orbit rendered \r\n             * @type {Array<string>} */\r\n            excludedOrbits: [],\r\n            /** Opacity of orbit line\r\n             * @type {number} */\r\n            orbitOpacity: 0.8,\r\n            /** Rotation around individual axis to compensate globe rotation\r\n             * @type {Array.<number>} */\r\n            groundRotationCompensation: [0, 0, 0]\r\n        }\r\n\r\n        /** Compensation of model rotation on different targets\r\n         *  @type {Array.<number>} */\r\n        this.modelListRotation = [0, 0, 0];\r\n        if (this.props.flatTarget) {\r\n            this.modelListRotation = [0, -143, 0];\r\n        } else {\r\n            this.modelListRotation = [0, -173, 0];\r\n        }\r\n\r\n        /** SpaceTrack object for getting data from Satellite Catalog\r\n         * @type {SpaceTrack} */\r\n        this.ST = new SpaceTrack();\r\n\r\n        /** State of globe data loading\r\n         * @type {boolean} */\r\n        this.loading = false;\r\n\r\n        /** Number of segments in one orbit\r\n         * @type {number} */\r\n        this.orbitSegmentCount = 100;\r\n        /** Timestamps of orbits starting times \r\n         * @type {Object<string, any>} */\r\n        this.orbitTimestamps = {};\r\n        /** Points of satellite orbits \r\n         * @type {Object<string, Array.<Array.<number>>> */\r\n        this.orbitPoints = {};\r\n\r\n        /** Globe custom clock with special functions\r\n         * @type {Clock}\r\n         */\r\n        this.clock = new Clock();\r\n\r\n        /** Last globe rotation time for optimized rotating\r\n         * @type {Clock.time}\r\n         */\r\n        this.lastRotationTime = this.clock.time();\r\n\r\n        /** Timer for satellite motion simulation */\r\n        this.moveTimer = setInterval(this.updatePositions, 100);\r\n        /** Timer for globe rotation simulation */\r\n        this.rotationTimer = setInterval(this.updateRotation, 30);\r\n    }\r\n\r\n    async componentDidUpdate(prevProps, prevState) {\r\n        // Fix for problem where numbers starting with zeros was casted to number\r\n        let propIDs;\r\n        if (this.props.satelliteIDs) {\r\n            propIDs = this.props.satelliteIDs.map(id => {\r\n                return (\"00000\" + id.toString()).slice(-5);\r\n            });\r\n        }\r\n\r\n        // Check whether two arrays have same elements or not\r\n        let areIDsSame = (propIDs.length === this.state.currentSatelliteIDs.length) && propIDs.every(value => this.state.currentSatelliteIDs.includes(value));\r\n\r\n        if (!areIDsSame && this.loading === false) {\r\n            let addition = propIDs.filter(x => !this.state.currentSatelliteIDs.includes(x));\r\n\r\n            let sats = [];\r\n\r\n            if (addition.length > 0) {\r\n                // Call ST funtion to get data according to newly added IDs\r\n                this.loading = true;\r\n\r\n                this.tle = await this.getTLEsFromWebAndStorage(addition);\r\n\r\n                sats = this.parseData();\r\n            }\r\n\r\n            // Get satellites which will be not removed from current ones\r\n            let keptFromCurrentObjects = this.state.satellites.filter(sat => propIDs.includes((sat.id).toString()));\r\n\r\n            // Get IDs of all visualized satellites\r\n            let curr = [...sats, ...keptFromCurrentObjects].map(sat => (sat.id).toString());\r\n\r\n            this.setState({\r\n                satellites: [...sats, ...keptFromCurrentObjects],\r\n                currentSatelliteIDs: curr,\r\n            })\r\n        }\r\n\r\n        // Readjust custom clock speed \r\n        if (this.props.timeScale !== prevProps.timeScale) {\r\n            this.clock.stop();\r\n            this.clock.speed(this.props.timeScale).time(this.clock.time());\r\n            this.clock.start();\r\n        }\r\n\r\n        // Update state for component rerender\r\n        if (this.props.orbitIDs !== prevProps.orbitIDs) {\r\n            this.setState({\r\n                excludedOrbits: [...this.props.orbitIDs],\r\n            });\r\n        }\r\n        if (this.props.orbitOpacity !== prevProps.orbitOpacity) {\r\n            this.setState({\r\n                orbitOpacity: this.props.orbitOpacity,\r\n            });\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Gets TLEs of satellites with given ids from web service or from async storage.\r\n     * \r\n     * @param {Array.<string>} ids ID of the satellites for which we want to obtain TLEs\r\n     * \r\n     * @returns {Array.<string>} TLE lines in format [TLE1 line1, TLE1 line2, TLE2 line1, ...]\r\n     */\r\n    getTLEsFromWebAndStorage = async (ids) => {\r\n        // Get date of satellite tle storage\r\n        let datePairs;\r\n        let additionDateKeys = ids.map(key => key + \"Date\");\r\n        try {\r\n            datePairs = await AsyncStorage.multiGet(additionDateKeys);\r\n        } catch(e) {\r\n            console.log(\"Error happened when retrieving dates of TLEs\");\r\n            console.log(e);\r\n        }\r\n\r\n        let idtoGetFromStorage = [];\r\n        let idToGetFromWeb = [];\r\n\r\n        // When date is udefined ->value is not in storage \r\n        // pair[0] is key, pair[1] is value\r\n        let dateNow = new Date();\r\n        const dayLenghtInMS = 86400000;\r\n        datePairs.forEach(pair => {\r\n            if (pair[1] === null) {\r\n                idToGetFromWeb.push(pair[0]);\r\n            } else {\r\n                let num = Number(pair[1]);\r\n                let dateFromStorage = new Date(num);\r\n                let diff = dateNow.getTime() - dateFromStorage.getTime();\r\n\r\n                if (diff > dayLenghtInMS) {\r\n                    idToGetFromWeb.push(pair[0]);\r\n                } else {\r\n                    idtoGetFromStorage.push(pair[0]);\r\n                }\r\n            }\r\n        });\r\n\r\n        idToGetFromWeb = idToGetFromWeb.map(id => id.substring(0, 5))\r\n        idtoGetFromStorage = idtoGetFromStorage.map(id => id.substring(0, 5))\r\n\r\n        let storageTLEPairs;\r\n        let storageTLE = [];\r\n        try {\r\n            storageTLEPairs = await AsyncStorage.multiGet(idtoGetFromStorage);\r\n        } catch(e) {\r\n            console.log(\"Error happened when retrieving value of TLEs\");\r\n            console.log(e);\r\n        }\r\n\r\n        storageTLEPairs.forEach(pair => {\r\n            if (pair[1] === null) {\r\n                // Shouldnt happen\r\n                idToGetFromWeb.push(pair[0]);\r\n            } else {\r\n                storageTLE.push(pair[1]);\r\n            }\r\n        });\r\n\r\n        let data = [];\r\n        if (idToGetFromWeb.length > 0) {\r\n            data = await this.ST.getTLEs(idToGetFromWeb);\r\n\r\n            // Convert TLE string to line separated array\r\n            data =  data.split('\\r\\n');\r\n\r\n            this.saveTLEsToAsyncStorage(data);\r\n        }\r\n\r\n        // storageTLE -> unfold form line1;line2\r\n        storageTLE = this.formatTLEFromAsyncStorage(storageTLE);\r\n\r\n        return [...storageTLE, ...data];\r\n    }\r\n\r\n    /**\r\n     * Formats TLEs for using from data obtained from Async Storage.\r\n     * \r\n     * @param {Array.<string>} data TLE data from Async Storage\r\n     * \r\n     * @returns {Array.<string>} Formated TLE data\r\n     */\r\n    formatTLEFromAsyncStorage = (data) => {\r\n        let arr = [];\r\n\r\n        data.forEach(e => {\r\n            let tle = e.split(';');\r\n            arr.push(tle[0]);\r\n            arr.push(tle[1]);\r\n        });\r\n\r\n        return arr;\r\n    }\r\n\r\n    /**\r\n     * Saves TLE data to Async Storage in correct format.\r\n     * \r\n     * @param {Array.<string>} data TLE data to store in Async Storage\r\n     * \r\n     */\r\n    saveTLEsToAsyncStorage = async (data) => {\r\n        let pairsToSave = [];\r\n\r\n        for (let i = 0; i < data.length - 1; i += 2) {\r\n            let val = data[i] + ';' + data[i + 1];\r\n            let id = data[i].substr(2,5);\r\n            \r\n            pairsToSave.push([id, val]);\r\n        }\r\n\r\n        let datePairs;\r\n        // Timestamp in js is in ms \r\n        let currentTimestamp = Math.round((new Date()).getTime()).toString();\r\n\r\n        datePairs = pairsToSave.map(pair => {\r\n            return ([pair[0] + \"Date\", currentTimestamp]);\r\n        });\r\n\r\n        try {\r\n            await AsyncStorage.multiSet([...pairsToSave, ...datePairs])\r\n        } catch(e) {\r\n            console.log(\"Error occured while saving data\");\r\n            console.log(e);\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Parses downloaded TLE data into satellite objects and stops loading of data.\r\n     * \r\n     * @returns {Array.<SatelliteObject>}\r\n     */\r\n    parseData = () => {\r\n        let satelliteObjects = this.convertTLEtoSatelliteObjectCollection();\r\n        this.loading = false;\r\n\r\n        return satelliteObjects;\r\n    }\r\n\r\n    /**\r\n     * Updates positions of currently visualized satellites.\r\n     */\r\n    updatePositions = () => {\r\n        if (this.state.satellites.length > 0) {\r\n            let copy = [...this.state.satellites]\r\n\r\n            // Sometime there is error in position propagation according to satellite.js documentation\r\n            // so its needed to store IDs of sats which will be later removed\r\n            let removeIDs = [];\r\n\r\n            copy.forEach((sat) => {\r\n                try {\r\n                    sat.updatePosition(new Date(this.clock.time()));\r\n                } catch (error) {\r\n                    removeIDs.push(sat.id);\r\n                    this.props.removeSatelliteCallback(sat.id);\r\n                }\r\n            });\r\n\r\n            let cleaned = [...copy];\r\n            removeIDs.forEach(id => {\r\n                cleaned = cleaned.filter(sat => sat.id !== id);\r\n            });\r\n\r\n            this.setState({ satellites: cleaned });\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Updates rotation of earth (satellites) according to real globe rotation.\r\n     */\r\n    updateRotation = () => {\r\n        const rotationPerSecond = 0.00417807901;\r\n\r\n        let now = this.clock.time();\r\n        let difference = (now - this.lastRotationTime);\r\n\r\n        let additionalRotation = difference * (rotationPerSecond / 1000);\r\n\r\n        let rotation = (-this.state.groundRotationCompensation[1] + additionalRotation);\r\n        rotation = rotation % 360;\r\n\r\n        // Rotate Earth only if rotation is > 1 degreee (faster timescales, or long realtime visualization)\r\n        if (rotation > 1) {\r\n            this.setState({\r\n                groundRotationCompensation: [0, -rotation, 0],\r\n            });\r\n\r\n            this.lastRotationTime = now;\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Converts downloaded TLE data to SatelliteObjects array.\r\n     * \r\n     * @returns {Array.<SatelliteObject>} Converted TLEs into SatelliteObjects\r\n     */\r\n    convertTLEtoSatelliteObjectCollection = () => {\r\n        var tleIndex = 0;\r\n        var idIndex = 0;\r\n        var satrec;\r\n        var satelliteObjects = [];\r\n\r\n        // indexes are += 2 because each TLE has 2 lines\r\n        for (tleIndex = 0; tleIndex < this.tle.length - 1; tleIndex += 2) {\r\n            satrec = satellite.twoline2satrec(this.tle[tleIndex], this.tle[tleIndex + 1]);\r\n            satelliteObjects.push(new SatelliteObject(satrec.satnum, satrec, [this.tle[tleIndex], this.tle[tleIndex + 1]]))\r\n            idIndex += 1;\r\n        }\r\n\r\n        return satelliteObjects;\r\n    }\r\n\r\n    /**\r\n     * Processes click on visualized satelite.\r\n     * \r\n     * @param {string} id ID of clicked satellite\r\n     */\r\n    onModelClick = (id) => {\r\n        let satelliteObject = this.state.satellites.filter((sat) => {\r\n            return sat.id == id;\r\n        })\r\n\r\n        this.props.satelliteClickCallback(satelliteObject);\r\n    }\r\n\r\n    /**\r\n     * Gets material for ground segment visualiziaton based on its ID.\r\n     * \r\n     * @param {number} segmentID ID of ground segment\r\n     * \r\n     * @returns {string} Material name\r\n     */\r\n    getMaterialForGroundSegment = (segmentID) => {\r\n        if (segmentID === 11) {\r\n            return \"red\";\r\n        } else if (segmentID === 12) {\r\n            return \"gold\";\r\n        } else if (segmentID >= 13 && segmentID <= 16) {\r\n            return \"green\";\r\n        } else if (segmentID >= 21 && segmentID <= 26) {\r\n            return \"blue\";\r\n        } else if (segmentID >= 31 && segmentID <= 37) {\r\n            return \"yellow\";\r\n        } else if (segmentID >= 41 && segmentID <= 50) {\r\n            return \"purple\";\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Gets position of ground segment with given ID for visualiziation.\r\n     * \r\n     * @param {string} segmentID ID of segment\r\n     * \r\n     * @returns {Array.<number>} Position in ViroCoords\r\n     */\r\n    getPositionForGroundSegment = (segmentID) => {\r\n        let denominator;\r\n\r\n        if (this.props.flatTarget) {\r\n            denominator = 80000;\r\n        } else {\r\n            denominator = 38500;\r\n        }\r\n\r\n        let city = groundSegmentIDtoCity[segmentID];\r\n        let coordsOriginal = groundSegmentEciCoords[city];\r\n\r\n        let x = coordsOriginal.x / denominator;\r\n        let y = coordsOriginal.y / denominator;\r\n        let z = coordsOriginal.z / denominator;\r\n\r\n        // Conversion from ECI to ViroCoords\r\n        return [y, z, x];\r\n    }\r\n\r\n    /**\r\n     * Decides whether enough time, one rotation, has passed for satellite orbit to be updated.\r\n     * \r\n     * @param {string} satID ID of satellite orbit to be checked\r\n     * @param {Date} orbitTime Current time \r\n     * \r\n     * @returns {boolean} Decision whether to update or not\r\n     */\r\n    shouldUpdateOrbit = (satID, orbitTime) => {\r\n        if (!(satID in this.orbitTimestamps)) {\r\n            return true;\r\n        }\r\n\r\n        let maxtime = new Date(this.orbitTimestamps[satID]);\r\n        maxtime.setMinutes(maxtime.getMinutes() + orbitTime);\r\n\r\n        if (this.clock.time() > maxtime) {\r\n            return true;\r\n        }\r\n\r\n        return false;\r\n    }\r\n\r\n    /**\r\n     * Maps selected ground segment IDs to models for render.\r\n     * \r\n     * @returns {Array.<ViroSphere>} Array of 3D spheres as position visualization\r\n     */\r\n    getGroundSegmentToRender = () => {\r\n        let segmentList;\r\n\r\n        if (!this.loading) {\r\n            segmentList = this.props.groundSegmentIDs.map((segmentID) => {\r\n                let materialName = this.getMaterialForGroundSegment(segmentID);\r\n                let position = this.getPositionForGroundSegment(segmentID);\r\n\r\n                return (\r\n                    <ViroSphere\r\n                        key={segmentID}\r\n                        heightSegmentCount={8}\r\n                        widthSegmentCount={8}\r\n                        radius={0.006}\r\n                        position={position}\r\n                        materials={[materialName]}\r\n                    />\r\n                );\r\n            });\r\n        }\r\n\r\n        return segmentList;\r\n    }\r\n\r\n    /**\r\n     * Maps selected satellite IDs to models for render.\r\n     * \r\n     * @returns {Array.<ViroSphere|Viro3DObject>} Array of 3D models as satellite visualization\r\n     */\r\n    getSatellitesToRender = () => {\r\n        let modelList;\r\n\r\n        if (!this.loading) {\r\n            modelList = this.state.satellites.map((sat) => {\r\n                if (sat.description === \"DEFAULT\") {\r\n                    return (\r\n                        <ViroSphere\r\n                            key={sat.id}\r\n                            heightSegmentCount={10}\r\n                            widthSegmentCount={10}\r\n                            radius={0.01}\r\n                            position={sat.position}\r\n                            materials={[\"gray\"]}\r\n\r\n                            highAccuracyEvents={false}\r\n                            onClick={() => {\r\n                                this.onModelClick(sat.id);\r\n                            }}\r\n\r\n                            renderingOrder={10}\r\n                        />\r\n                    );\r\n                }\r\n\r\n                return (\r\n                    <Viro3DObject\r\n                        key={sat.id}\r\n                        source={sat.modelPath}\r\n                        resources={sat.resources}\r\n                        position={sat.position}\r\n                        scale={sat.scale}\r\n                        rotation={sat.rotation}\r\n                        type={sat.modelType}\r\n\r\n                        highAccuracyEvents={false}\r\n                        onClick={() => {\r\n                            this.onModelClick(sat.id);\r\n                        }}\r\n\r\n                        renderingOrder={10}\r\n                    />\r\n                )\r\n            });\r\n        }\r\n\r\n        return modelList;\r\n    }\r\n\r\n    /**\r\n     * Maps selected satellite IDs (without excluded ones) to orbits for render.\r\n     * \r\n     * @returns {Array.<ViroPolyline>} Array of Viro Polylines - orbits\r\n     */\r\n    getOrbitsToRender = () => {\r\n        let orbitList;\r\n\r\n        if (!this.loading) {\r\n            orbitList = this.state.satellites.map((sat) => {\r\n                let orbitTime = sat.getOrbitTime();\r\n                if (!this.state.excludedOrbits.includes(sat.id)) {\r\n                    let positions;\r\n\r\n                    if (this.shouldUpdateOrbit(sat.id, orbitTime)) {\r\n                        positions = sat.getPointsForOrbit(this.orbitSegmentCount, new Date(this.clock.time()));\r\n\r\n                        this.orbitPoints[sat.id] = positions;\r\n                        this.orbitTimestamps[sat.id] = this.clock.time();\r\n                    } else {\r\n                        positions = this.orbitPoints[sat.id];\r\n                    }\r\n\r\n                    return (\r\n                        <ViroPolyline\r\n                            key={sat.id}\r\n                            position={[0, 0, 0]}\r\n                            points={positions}\r\n                            thickness={0.001}\r\n                            materials={\"red\"}\r\n                            opacity={this.state.orbitOpacity}\r\n                        />\r\n                    );\r\n                }\r\n            });\r\n        }\r\n\r\n        return orbitList;\r\n    }\r\n\r\n    /**\r\n     * Renders flat target version of augumented globe.\r\n     * \r\n     * @returns {ViroNode} Globe with all satelites and orbits.\r\n     */\r\n    renderFlatTargetGlobe = () => {\r\n        let modelList = this.getSatellitesToRender();\r\n        let groundSegmentList = this.getGroundSegmentToRender();\r\n        let orbitsList = this.getOrbitsToRender();\r\n\r\n        return (\r\n            <ViroNode position={[0, 0.2, 0]}>\r\n                <ViroAmbientLight color=\"#FFFFFF\" intensity={2000} temperature={4000} />\r\n\r\n                <Viro3DObject source={require('../res/earth.obj')}\r\n                    resources={[require('../res/earth.mtl'),\r\n                    require('../res/earth_texture.png')]}\r\n                    position={[0.0, 0.0, 0.0]}\r\n                    scale={[0.04, 0.04, 0.04]}\r\n                    rotation={[180, 180, -180]}\r\n                    type=\"OBJ\"\r\n                />\r\n\r\n                <ViroNode rotation={this.modelListRotation}>\r\n                    {groundSegmentList}\r\n\r\n                    <ViroNode rotation={this.state.groundRotationCompensation}>\r\n                        {modelList}\r\n                        {orbitsList}\r\n                    </ViroNode>\r\n                </ViroNode>\r\n            </ViroNode>\r\n        );\r\n    }\r\n\r\n    /**\r\n     * Renders full 3D model of Earth or only its transparent version but with occlusive properties. \r\n     * \r\n     * @returns {<Viro3DObject|ViroNode} Globe for globe target\r\n     */\r\n    renderVirtualGlobe = () => {\r\n        if (this.props.renderVirtualGlobe) {\r\n            return (\r\n                <Viro3DObject source={require('../res/earth.obj')}\r\n                    resources={[require('../res/earth.mtl'),\r\n                    require('../res/earth_texture.png')]}\r\n                    position={[0.0, 0.0, 0.0]}\r\n                    scale={[0.08, 0.08, 0.08]}\r\n                    rotation={[180, -150, -180]}  // Rotated that africa is towards camera\r\n                    type=\"OBJ\"\r\n                />\r\n            );\r\n        } else {\r\n\r\n            return (\r\n                <ViroNode>\r\n                    <ViroSphere\r\n                        heightSegmentCount={20}\r\n                        widthSegmentCount={20}\r\n                        radius={0.17}\r\n                        position={[0, 0, 0]}\r\n                        materials={[\"occlusive\"]}\r\n                        renderingOrder={-1}\r\n                    />\r\n\r\n                    <Viro3DObject source={require('../res/ghostEarth/untitled.obj')}\r\n                        resources={[require('../res/ghostEarth/untitled.mtl'),\r\n                        require('../res/ghostEarth/untitled.png')]}\r\n                        position={[0.0, 0.0, 0.0]}\r\n                        scale={[0.18, 0.18, 0.18]}\r\n                        rotation={[0, -175, 0]}  // rotated that africa is towards camera\r\n                        type=\"OBJ\"\r\n                        opacity={0.3}\r\n                    />\r\n                </ViroNode>\r\n            );\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Renders globe target version of augumented globe.\r\n     * \r\n     * @returns {ViroNode} Globe with all satelites and orbits.\r\n     */\r\n    renderGlobeTargetGlobe = () => {\r\n        let modelList = this.getSatellitesToRender();\r\n        let groundSegmentList = this.getGroundSegmentToRender();\r\n        let orbitsList = this.getOrbitsToRender();\r\n\r\n        return (\r\n            <ViroNode>\r\n                <ViroAmbientLight color=\"#FFFFFF\" />\r\n\r\n                {this.renderVirtualGlobe()}\r\n\r\n                <ViroNode rotation={this.modelListRotation}>\r\n                    {groundSegmentList}\r\n\r\n                    <ViroNode rotation={this.state.groundRotationCompensation}>\r\n                        {modelList}\r\n                        {orbitsList}\r\n                    </ViroNode>\r\n                </ViroNode>\r\n            </ViroNode>\r\n        );\r\n    }\r\n\r\n    /**\r\n     * Decides whether to render flat or globe target globe.\r\n     * \r\n     * @returns {ViroNode} Correct globe with all orbits, satellites and ground segments.\r\n     */\r\n    renderGlobe = () => {\r\n        if (this.props.flatTarget) {\r\n            return this.renderFlatTargetGlobe();\r\n        } else {\r\n            return this.renderGlobeTargetGlobe();\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Renders whole component - visualization\r\n     * \r\n     * @returns {ViroNode} Globe visualization\r\n     */\r\n    render() {\r\n        return (\r\n            <ViroNode>\r\n                {this.renderGlobe()}\r\n            </ViroNode>\r\n        );\r\n    }\r\n}\r\n\r\n/**\r\n * ECI cooardinates of cities with GPS ground segments.\r\n * \r\n * @constant\r\n * @type {Object<string, Object<string, number>>}\r\n */\r\nconst groundSegmentEciCoords = {\r\n    \"schriever\": { \"x\": 3910.3096787548093, \"y\": 3080.3510329695946, \"z\": 3975.5813422691904 },\r\n    \"vandenberg\": { \"x\": 4856.790504752817, \"y\": 1985.1370670602403, \"z\": 3615.737268949631 },\r\n    \"cape\": { \"x\": 2619.008345543573, \"y\": 4961.851777391096, \"z\": 3024.8968340995298 },\r\n    \"ascension\": { \"x\": -3922.7604262692257, \"y\": 4952.862829619637, \"z\": -875.6544312352279 },\r\n    \"diego\": { \"x\": -5170.553732498662, \"y\": -3647.0385227647125, \"z\": -806.8053933403049 },\r\n    \"kwajalein\": { \"x\": 4093.666061017764, \"y\": -4796.201022830874, \"z\": 960.7141097469664 },\r\n    \"hawaii\": { \"x\": 5786.235355097538, \"y\": -1500.9790587172447, \"z\": 2219.0532011295636 },\r\n    \"greenland\": { \"x\": 410.97339412324754, \"y\": 1434.4349979707606, \"z\": 6181.170740804261 },\r\n    \"hampshire\": { \"x\": 1493.91674263956, \"y\": 4359.107545377384, \"z\": 4396.24767788034 },\r\n    \"britain\": { \"x\": -3078.574521370201, \"y\": 2465.378033770742, \"z\": 4996.687333000982 },\r\n    \"guam\": { \"x\": 1865.487956036825, \"y\": -5918.882386479585, \"z\": 1470.730166121755 },\r\n    \"alaska\": { \"x\": 3016.4701519528826, \"y\": -219.03495480709444, \"z\": 5597.555648180364 },\r\n    \"washington\": { \"x\": 2046.1450152058833, \"y\": 4528.634340221239, \"z\": 3986.0421024686416 },\r\n    \"ecuador\": { \"x\": 2779.402343452063, \"y\": 5740.560921023602, \"z\": -107.89682911058405 },\r\n    \"uruguay\": { \"x\": 304.42572961808673, \"y\": 5325.040877018454, \"z\": -3487.141934869165 },\r\n    \"africa\": { \"x\": -5848.400376263067, \"y\": 1424.0113052546715, \"z\": -2104.612547103142 },\r\n    \"bahrain\": { \"x\": -5582.67664844856, \"y\": -1318.6034421675904, \"z\": 2780.958250256032 },\r\n    \"korea\": { \"x\": 46.677236661753795, \"y\": -5091.781885528575, \"z\": 3829.3084077342232 },\r\n    \"australia\": { \"x\": 1033.5451370010423, \"y\": -5204.347927342779, \"z\": -3528.946706348021 },\r\n    \"zealand\": { \"x\": 3451.4932197311496, \"y\": -3264.5169253457175, \"z\": -4242.601519256618 }\r\n}\r\n\r\n/**\r\n * Specifies city of ground segment by ID.\r\n * \r\n * @constant\r\n * @type {Object<number, string>}\r\n */\r\nconst groundSegmentIDtoCity = {\r\n    11: \"schriever\",\r\n    12: \"vandenberg\",\r\n    13: \"cape\",\r\n    14: \"ascension\",\r\n    15: \"diego\",\r\n    16: \"kwajalein\",\r\n\r\n    21: \"hawaii\",\r\n    22: \"schriever\",\r\n    23: \"cape\",\r\n    24: \"ascension\",\r\n    25: \"diego\",\r\n    26: \"kwajalein\",\r\n\r\n    31: \"greenland\",\r\n    32: \"hampshire\",\r\n    33: \"vandenberg\",\r\n    34: \"hawaii\",\r\n    35: \"britain\",\r\n    36: \"diego\",\r\n    37: \"guam\",\r\n\r\n    41: \"alaska\",\r\n    42: \"washington\",\r\n    43: \"ecuador\",\r\n    44: \"uruguay\",\r\n    45: \"britain\",\r\n    46: \"africa\",\r\n    47: \"bahrain\",\r\n    48: \"korea\",\r\n    49: \"australia\",\r\n    50: \"zealand\"\r\n}\r\n\r\n// Definition of materials for 3D objects rendering.\r\nViroMaterials.createMaterials({\r\n    gray: {\r\n        shininess: 2.0,\r\n        lightingModel: \"Lambert\",\r\n        diffuseColor: \"#A9A9A9\",\r\n    },\r\n    earth: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseTexture: require('../res/earth_texture.png'),\r\n    },\r\n    iss: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#6e6e6e'\r\n    },\r\n    occlusive: {\r\n        diffuseColor: \"#FFFFFFFF\",\r\n        colorWriteMask: [\"None\"],\r\n    },\r\n    red: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#AF0606'\r\n    },\r\n    gold: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#FFC300'\r\n    },\r\n    green: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#06AF48'\r\n    },\r\n    blue: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#067EAF'\r\n    },\r\n    yellow: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#F4F71A'\r\n    },\r\n    purple: {\r\n        lightingModel: \"Blinn\",\r\n        diffuseColor: '#7504AC'\r\n    }\r\n});\r\n",
     "static": true,
     "longname": "C:/Users/Vojcek/Desktop/BP/CODES/satviz/js/components/Globe.js",
     "access": "public",
@@ -1775,7 +1775,7 @@
     "importPath": "satviz/satviz/js/components/Globe.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 25,
+    "lineNumber": 27,
     "undocument": true,
     "type": {
       "types": [
@@ -1796,7 +1796,7 @@
     "importPath": "satviz/satviz/js/components/Globe.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 26,
+    "lineNumber": 28,
     "undocument": true,
     "type": {
       "types": [
@@ -1817,7 +1817,7 @@
     "importPath": "satviz/satviz/js/components/Globe.js",
     "importStyle": "Globe",
     "description": "Component representing virtual globe with satellites.",
-    "lineNumber": 31,
+    "lineNumber": 33,
     "interface": false,
     "extends": [
       "react~Component"
@@ -1834,7 +1834,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#constructor",
     "access": "public",
     "description": null,
-    "lineNumber": 32,
+    "lineNumber": 34,
     "undocument": true
   },
   {
@@ -1846,7 +1846,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#state",
     "access": "public",
     "description": null,
-    "lineNumber": 35,
+    "lineNumber": 37,
     "undocument": true,
     "type": {
       "types": [
@@ -1863,7 +1863,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#modelListRotation",
     "access": "public",
     "description": null,
-    "lineNumber": 55,
+    "lineNumber": 57,
     "undocument": true,
     "type": {
       "types": [
@@ -1880,7 +1880,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#ST",
     "access": "public",
     "description": "SpaceTrack object for getting data from Satellite Catalog",
-    "lineNumber": 64,
+    "lineNumber": 66,
     "type": {
       "nullable": null,
       "types": [
@@ -1899,7 +1899,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#loading",
     "access": "public",
     "description": "State of globe data loading",
-    "lineNumber": 68,
+    "lineNumber": 70,
     "type": {
       "nullable": null,
       "types": [
@@ -1918,7 +1918,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#orbitSegmentCount",
     "access": "public",
     "description": "Number of segments in one orbit",
-    "lineNumber": 72,
+    "lineNumber": 74,
     "type": {
       "nullable": null,
       "types": [
@@ -1937,7 +1937,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#orbitTimestamps",
     "access": "public",
     "description": "Timestamps of orbits starting times ",
-    "lineNumber": 75,
+    "lineNumber": 77,
     "type": {
       "nullable": null,
       "types": [
@@ -1956,7 +1956,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#orbitPoints",
     "access": "public",
     "description": "Points of satellite orbits ",
-    "lineNumber": 78,
+    "lineNumber": 80,
     "type": {
       "nullable": null,
       "types": [
@@ -1975,7 +1975,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#clock",
     "access": "public",
     "description": "Globe custom clock with special functions",
-    "lineNumber": 83,
+    "lineNumber": 85,
     "type": {
       "nullable": null,
       "types": [
@@ -1994,7 +1994,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#lastRotationTime",
     "access": "public",
     "description": "Last globe rotation time for optimized rotating",
-    "lineNumber": 88,
+    "lineNumber": 90,
     "type": {
       "nullable": null,
       "types": [
@@ -2013,7 +2013,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#moveTimer",
     "access": "public",
     "description": "Timer for satellite motion simulation",
-    "lineNumber": 91,
+    "lineNumber": 93,
     "type": {
       "types": [
         "*"
@@ -2029,7 +2029,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#rotationTimer",
     "access": "public",
     "description": "Timer for globe rotation simulation",
-    "lineNumber": 93,
+    "lineNumber": 95,
     "type": {
       "types": [
         "*"
@@ -2047,7 +2047,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#componentDidUpdate",
     "access": "public",
     "description": null,
-    "lineNumber": 96,
+    "lineNumber": 98,
     "undocument": true,
     "params": [
       {
@@ -2085,13 +2085,125 @@
   {
     "__docId__": 130,
     "kind": "member",
+    "name": "getTLEsFromWebAndStorage",
+    "memberof": "satviz/js/components/Globe.js~Globe",
+    "static": false,
+    "longname": "satviz/js/components/Globe.js~Globe#getTLEsFromWebAndStorage",
+    "access": "public",
+    "description": "Gets TLEs of satellites with given ids from web service or from async storage.",
+    "lineNumber": 163,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Array.<string>} TLE lines in format [TLE1 line1, TLE1 line2, TLE2 line1, ...]"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Array.<string>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "ids",
+        "description": "ID of the satellites for which we want to obtain TLEs"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Array.<string>"
+      ],
+      "spread": false,
+      "description": "TLE lines in format [TLE1 line1, TLE1 line2, TLE2 line1, ...]"
+    },
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 131,
+    "kind": "member",
+    "name": "formatTLEFromAsyncStorage",
+    "memberof": "satviz/js/components/Globe.js~Globe",
+    "static": false,
+    "longname": "satviz/js/components/Globe.js~Globe#formatTLEFromAsyncStorage",
+    "access": "public",
+    "description": "Formats TLEs for using from data obtained from Async Storage.",
+    "lineNumber": 241,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Array.<string>} Formated TLE data"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Array.<string>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "TLE data from Async Storage"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Array.<string>"
+      ],
+      "spread": false,
+      "description": "Formated TLE data"
+    },
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 132,
+    "kind": "member",
+    "name": "saveTLEsToAsyncStorage",
+    "memberof": "satviz/js/components/Globe.js~Globe",
+    "static": false,
+    "longname": "satviz/js/components/Globe.js~Globe#saveTLEsToAsyncStorage",
+    "access": "public",
+    "description": "Saves TLE data to Async Storage in correct format.",
+    "lineNumber": 259,
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Array.<string>"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "data",
+        "description": "TLE data to store in Async Storage"
+      }
+    ],
+    "type": {
+      "types": [
+        "*"
+      ]
+    }
+  },
+  {
+    "__docId__": 133,
+    "kind": "member",
     "name": "parseData",
     "memberof": "satviz/js/components/Globe.js~Globe",
     "static": false,
     "longname": "satviz/js/components/Globe.js~Globe#parseData",
     "access": "public",
     "description": "Parses downloaded TLE data into satellite objects and stops loading of data.",
-    "lineNumber": 161,
+    "lineNumber": 290,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2113,7 +2225,7 @@
     }
   },
   {
-    "__docId__": 132,
+    "__docId__": 135,
     "kind": "member",
     "name": "updatePositions",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2121,7 +2233,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#updatePositions",
     "access": "public",
     "description": "Updates positions of currently visualized satellites.",
-    "lineNumber": 171,
+    "lineNumber": 300,
     "type": {
       "types": [
         "*"
@@ -2129,7 +2241,7 @@
     }
   },
   {
-    "__docId__": 133,
+    "__docId__": 136,
     "kind": "member",
     "name": "updateRotation",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2137,7 +2249,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#updateRotation",
     "access": "public",
     "description": "Updates rotation of earth (satellites) according to real globe rotation.",
-    "lineNumber": 200,
+    "lineNumber": 329,
     "type": {
       "types": [
         "*"
@@ -2145,7 +2257,7 @@
     }
   },
   {
-    "__docId__": 135,
+    "__docId__": 138,
     "kind": "member",
     "name": "convertTLEtoSatelliteObjectCollection",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2153,7 +2265,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#convertTLEtoSatelliteObjectCollection",
     "access": "public",
     "description": "Converts downloaded TLE data to SatelliteObjects array.",
-    "lineNumber": 226,
+    "lineNumber": 355,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2175,7 +2287,7 @@
     }
   },
   {
-    "__docId__": 136,
+    "__docId__": 139,
     "kind": "member",
     "name": "onModelClick",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2183,7 +2295,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#onModelClick",
     "access": "public",
     "description": "Processes click on visualized satelite.",
-    "lineNumber": 247,
+    "lineNumber": 376,
     "params": [
       {
         "nullable": null,
@@ -2203,7 +2315,7 @@
     }
   },
   {
-    "__docId__": 137,
+    "__docId__": 140,
     "kind": "member",
     "name": "getMaterialForGroundSegment",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2211,7 +2323,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#getMaterialForGroundSegment",
     "access": "public",
     "description": "Gets material for ground segment visualiziaton based on its ID.",
-    "lineNumber": 262,
+    "lineNumber": 391,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2245,7 +2357,7 @@
     }
   },
   {
-    "__docId__": 138,
+    "__docId__": 141,
     "kind": "member",
     "name": "getPositionForGroundSegment",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2253,7 +2365,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#getPositionForGroundSegment",
     "access": "public",
     "description": "Gets position of ground segment with given ID for visualiziation.",
-    "lineNumber": 285,
+    "lineNumber": 414,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2287,7 +2399,7 @@
     }
   },
   {
-    "__docId__": 139,
+    "__docId__": 142,
     "kind": "member",
     "name": "shouldUpdateOrbit",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2295,7 +2407,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#shouldUpdateOrbit",
     "access": "public",
     "description": "Decides whether enough time, one rotation, has passed for satellite orbit to be updated.",
-    "lineNumber": 313,
+    "lineNumber": 442,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2339,7 +2451,7 @@
     }
   },
   {
-    "__docId__": 140,
+    "__docId__": 143,
     "kind": "member",
     "name": "getGroundSegmentToRender",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2347,7 +2459,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#getGroundSegmentToRender",
     "access": "public",
     "description": "Maps selected ground segment IDs to models for render.",
-    "lineNumber": 333,
+    "lineNumber": 462,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2369,7 +2481,7 @@
     }
   },
   {
-    "__docId__": 141,
+    "__docId__": 144,
     "kind": "member",
     "name": "getSatellitesToRender",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2377,7 +2489,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#getSatellitesToRender",
     "access": "public",
     "description": "Maps selected satellite IDs to models for render.",
-    "lineNumber": 362,
+    "lineNumber": 491,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2399,7 +2511,7 @@
     }
   },
   {
-    "__docId__": 142,
+    "__docId__": 145,
     "kind": "member",
     "name": "getOrbitsToRender",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2407,7 +2519,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#getOrbitsToRender",
     "access": "public",
     "description": "Maps selected satellite IDs (without excluded ones) to orbits for render.",
-    "lineNumber": 416,
+    "lineNumber": 545,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2429,7 +2541,7 @@
     }
   },
   {
-    "__docId__": 143,
+    "__docId__": 146,
     "kind": "member",
     "name": "renderFlatTargetGlobe",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2437,7 +2549,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#renderFlatTargetGlobe",
     "access": "public",
     "description": "Renders flat target version of augumented globe.",
-    "lineNumber": 456,
+    "lineNumber": 585,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2459,7 +2571,7 @@
     }
   },
   {
-    "__docId__": 144,
+    "__docId__": 147,
     "kind": "member",
     "name": "renderVirtualGlobe",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2467,7 +2579,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#renderVirtualGlobe",
     "access": "public",
     "description": "Renders full 3D model of Earth or only its transparent version but with occlusive properties. ",
-    "lineNumber": 491,
+    "lineNumber": 620,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2490,7 +2602,7 @@
     }
   },
   {
-    "__docId__": 145,
+    "__docId__": 148,
     "kind": "member",
     "name": "renderGlobeTargetGlobe",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2498,7 +2610,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#renderGlobeTargetGlobe",
     "access": "public",
     "description": "Renders globe target version of augumented globe.",
-    "lineNumber": 535,
+    "lineNumber": 664,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2520,7 +2632,7 @@
     }
   },
   {
-    "__docId__": 146,
+    "__docId__": 149,
     "kind": "member",
     "name": "renderGlobe",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2528,7 +2640,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#renderGlobe",
     "access": "public",
     "description": "Decides whether to render flat or globe target globe.",
-    "lineNumber": 563,
+    "lineNumber": 692,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2550,7 +2662,7 @@
     }
   },
   {
-    "__docId__": 147,
+    "__docId__": 150,
     "kind": "method",
     "name": "render",
     "memberof": "satviz/js/components/Globe.js~Globe",
@@ -2560,7 +2672,7 @@
     "longname": "satviz/js/components/Globe.js~Globe#render",
     "access": "public",
     "description": "Renders whole component - visualization",
-    "lineNumber": 576,
+    "lineNumber": 705,
     "unknown": [
       {
         "tagName": "@returns",
@@ -2578,7 +2690,7 @@
     "params": []
   },
   {
-    "__docId__": 148,
+    "__docId__": 151,
     "kind": "variable",
     "name": "groundSegmentEciCoords",
     "memberof": "satviz/js/components/Globe.js",
@@ -2589,7 +2701,7 @@
     "importPath": "satviz/satviz/js/components/Globe.js",
     "importStyle": null,
     "description": "ECI cooardinates of cities with GPS ground segments.",
-    "lineNumber": 591,
+    "lineNumber": 720,
     "unknown": [
       {
         "tagName": "@constant",
@@ -2607,7 +2719,7 @@
     "ignore": true
   },
   {
-    "__docId__": 149,
+    "__docId__": 152,
     "kind": "variable",
     "name": "groundSegmentIDtoCity",
     "memberof": "satviz/js/components/Globe.js",
@@ -2618,7 +2730,7 @@
     "importPath": "satviz/satviz/js/components/Globe.js",
     "importStyle": null,
     "description": null,
-    "lineNumber": 620,
+    "lineNumber": 749,
     "undocument": true,
     "type": {
       "types": [
@@ -2628,7 +2740,7 @@
     "ignore": true
   },
   {
-    "__docId__": 150,
+    "__docId__": 153,
     "kind": "file",
     "name": "satviz/js/SatelliteObject.js",
     "content": "/** \r\n *  @fileOverview Representation of object behind satellite. \r\n *\r\n *  @author       Vojtěch Pospíšil\r\n */\r\n\r\n\"use strict\";\r\n\r\n/**\r\n* Dictionary of satellite desciption used in other functions.\r\n* @constant\r\n*\r\n* @type {Object<string, string>}\r\n*/\r\nconst descriptions = {\r\n    25544: \"ISS\",\r\n\r\n    24876: \"GPS\",\r\n    25933: \"GPS\",\r\n    26360: \"GPS\",\r\n    26407: \"GPS\",\r\n    26605: \"GPS\",\r\n    27663: \"GPS\",\r\n    27704: \"GPS\",\r\n    28129: \"GPS\",\r\n    28190: \"GPS\",\r\n    28361: \"GPS\",\r\n    28474: \"GPS\",\r\n    28874: \"GPS\",\r\n    29486: \"GPS\",\r\n    29601: \"GPS\",\r\n    32260: \"GPS\",\r\n    32384: \"GPS\",\r\n    32711: \"GPS\",\r\n    35752: \"GPS\",\r\n    36585: \"GPS\",\r\n    37753: \"GPS\",\r\n    38833: \"GPS\",\r\n    39166: \"GPS\",\r\n    39533: \"GPS\",\r\n    39741: \"GPS\",\r\n    40105: \"GPS\",\r\n    40294: \"GPS\",\r\n    40534: \"GPS\",\r\n    40730: \"GPS\",\r\n    41019: \"GPS\",\r\n    41328: \"GPS\",\r\n    43873: \"GPS\",\r\n}\r\n\r\n/**\r\n* Dictionary of special satellite model requirements.\r\n* @constant\r\n*\r\n* @type {Object<string, NodeRequire>}\r\n*/\r\nconst models = {\r\n    \"ISS\": require('./res/models/iss/ISS.glb'),\r\n    \"GPS\": require('./res/models/gps/gps.obj'),\r\n}\r\n\r\n/**\r\n* Dictionary of special satellite model material requirements.\r\n* @constant\r\n*\r\n* @type {Object<string, NodeRequire>}\r\n*/\r\nconst materials = {\r\n    \"GPS\": require('./res/models/gps/gps.mtl'),\r\n}\r\n\r\n/**\r\n * Dictionary of special satellite model material requirements.\r\n * @constant\r\n *\r\n * @type {Object<string, NodeRequire>}\r\n */\r\nconst textures = {\r\n    \"GPS\": require('./res/models/Satellite.mtl'),\r\n}\r\n\r\n/**\r\n * Dictionary of satellite model scales.\r\n * @constant\r\n *\r\n * @type {Object<string, Array.<number>>}\r\n */\r\nconst scales = {\r\n    \"ISS\": [0.1, 0.1, 0.1],\r\n    \"GPS\": [0.03, 0.03, 0.03],\r\n    \"DEFAULT\": [0.0005, 0.0005, 0.0005],\r\n}\r\n\r\n/**\r\n * Dictionary of satellite model rotation.\r\n * @constant\r\n *\r\n * @type {Object<string, Array.<number>>}\r\n */\r\nconst rotations = {\r\n    \"ISS\": [0, 90, 0],\r\n    \"GPS\": [0.0, 0.0, 0.0],\r\n    \"DEFAULT\": [0.0, 0.0, 0.0],\r\n}\r\n\r\n/**\r\n * Dictionary of satellite model types (extensions).\r\n * @constant\r\n *\r\n * @type {Object<string, string>}\r\n */\r\nconst modelTypes = {\r\n    \"ISS\": \"GLB\",\r\n    \"GPS\": \"OBJ\",\r\n}\r\n\r\nvar satellite = require('satellite.js');\r\n\r\n/**\r\n * Object representing space satellite.\r\n */\r\nexport default class SatelliteObject {\r\n\r\n    /**\r\n     * Constructs a satelite object with given properties.\r\n     * \r\n     * @param {string} id ID of satellite from Satellite Catalog\r\n     * @param {Object} satelliteRecord Satellite record of satellite from satellite.js\r\n     * @param {string} tle String version of TLE record\r\n     */\r\n    constructor(id, satelliteRecord, tle) {\r\n        /** ID of satellite in satellite catalog\r\n         *  @type {string} */\r\n        this.id = id;\r\n        /** TLE record of satellite \r\n         * @type {string} */\r\n        this.tle = tle;\r\n        /** Satellite record from satellite.js \r\n         * @type {Object} */\r\n        this.satelliteRecord = satelliteRecord;\r\n        /** Time of last satellite position \r\n         * @type {Object} */\r\n        this.time = null;\r\n\r\n        /** Description of satellite type \r\n         * @type {string} */\r\n        this.description = this.getDescription();\r\n        /** Require of satellite 3D model\r\n         *  @type {NodeRequire}*/\r\n        this.modelPath = models[this.description];\r\n        /** Model type (extension) \r\n         * @type {string} */\r\n        this.modelType = modelTypes[this.description];\r\n        /** All requirements of satellite 3D model \r\n         * @type {Array<NodeRequire>} */\r\n        this.resources = this.getResources();\r\n\r\n        /** Remmaped position of satellite in Viro Coords \r\n         * @type {Array<number>} */\r\n        this.position = [0.0, 0.0, 0.0];\r\n        /** Position of satellite in ECI coords \r\n         * @type {Array<number>} */\r\n        this.positionEci = null;\r\n        /** Scale of satellite model \r\n         * @type {Array<number>} */\r\n        this.scale = scales[this.description];\r\n        /** Rotation of satellite model\r\n         *  @type {Array<number>} */\r\n        this.rotation = rotations[this.description];\r\n        /** Velocity of satellite model in XYZ direction \r\n         * @type {Object<string, number>} */\r\n        this.velocity = {};\r\n    }\r\n\r\n    /**\r\n     * Gathers all needed resources for satellite model.\r\n     * \r\n     * @returns {Array<NodeRequire>} Array of all satellite model additional requirements.\r\n     */\r\n    getResources = () => {\r\n        let material = this.getMaterialPath();\r\n        let texture = this.getTexturePath();\r\n\r\n        let resources = [];\r\n\r\n        if (material !== null) {\r\n            resources.push(material);\r\n        }\r\n\r\n        if (texture !== null) {\r\n            resources.push(texture);\r\n        }\r\n\r\n        return resources;\r\n    }\r\n\r\n    /**\r\n     * Returns material needed by model specified in material dict.\r\n     * \r\n     * @returns {NodeRequire} Requirement or null when nothing special is needed.\r\n     */\r\n    getMaterialPath = () => {\r\n        if (this.description in materials) {\r\n            return materials[this.description];\r\n        } else {\r\n            return null;\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Returns texture needed by model specified in texture dict.\r\n     * \r\n     * @returns {NodeRequire} Requirement or null when nothing special is needed.\r\n     */\r\n    getTexturePath = () => {\r\n        if (this.description in textures) {\r\n            return textures[this.description];\r\n        } else {\r\n            return null;\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Returns desciption string of model specified in description dict.\r\n     * \r\n     * @returns {string} Description or DEFAULT if not defined.\r\n     */\r\n    getDescription = () => {\r\n        if (this.id in descriptions) {\r\n            return descriptions[this.id];\r\n        } else {\r\n            return \"DEFAULT\";\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Updates satellite position to position in given time.\r\n     * \r\n     * @param {Object} datetime Javascript date object.\r\n     */\r\n    updatePosition = (datetime) => {\r\n        let propagation = satellite.propagate(this.satelliteRecord, datetime);\r\n\r\n        this.time = datetime;\r\n        this.velocity = propagation.velocity;\r\n        this.positionEci = propagation.position;\r\n        this.position = this.mapPositionToRange(propagation.position);\r\n    }\r\n\r\n    /**\r\n     * Remaps position value into displayable values in coords used by viro react.\r\n     * \r\n     * @param {Array<number>} value Position in [X, Y, Z] format.\r\n     * \r\n     * @returns {Array<number>} Remapped position in [Y, Z, X] format (Viro coords).\r\n     */\r\n    mapPositionToRange = (value) => {\r\n        const denominator = 25000;\r\n        const base = 10000;\r\n\r\n        let x = value.x / denominator;\r\n        let y = value.y / denominator;\r\n        let z = value.z / denominator;\r\n\r\n        /*\r\n        x = Math.log(Math.abs(value.x)) / Math.log(base);\r\n        y = Math.log(Math.abs(value.y)) / Math.log(base);\r\n        z = Math.log(Math.abs(value.z)) / Math.log(base);\r\n\r\n        value.x < 0 ? x = -x : x = x;\r\n        value.y < 0 ? y = -y : y = y;\r\n        value.z < 0 ? z = -z : z = z; */\r\n\r\n        // conversion from eci to viro coords\r\n        return [y, z, x];\r\n    }\r\n\r\n    /**\r\n     * Formats given data to strings with correct units.\r\n     * \r\n     * @param {Object<string, any>} data Dictionary with data to be formated.\r\n     * \r\n     * @returns {Object<string, string>} Dictionary with data correctly formated for display. \r\n     */\r\n    formatSelectedDataForModal = (data) => {\r\n        let formated = {};\r\n        formated.id = data.id.toString(); // NORAD ID\r\n        formated.intlDes = data.intlDes.toString(); // INTL DESIGNATOR (year, number of launch, piece of launch)\r\n        formated.apogee = data.apogee.toFixed(2).toString() + ' km';\r\n        formated.perigee = data.perigee.toFixed(2).toString() + ' km';\r\n        formated.inclination = this.deg_to_dms(this.radians_to_degrees(data.inclination));\r\n        formated.latitude = satellite.degreesLat(data.positionGeodetic.latitude).toFixed(3);\r\n        formated.longitude = satellite.degreesLong(data.positionGeodetic.longitude).toFixed(3);\r\n        formated.height = data.positionGeodetic.height.toFixed(2).toString() + ' km';\r\n        formated.velocity = data.velocity.toFixed(2).toString() + ' km/s';\r\n        formated.period = data.period.toFixed(0).toString() + ' min';\r\n\r\n        return formated;\r\n    }\r\n\r\n    /**\r\n     * Calculates data needed in information modal window.\r\n     * \r\n     * @returns {Object<string, any>} Dictionary of formated data for usage directly in info modal\r\n     */\r\n    getDataForInfoModal = () => {\r\n        let data = {};\r\n        data.id = this.id;\r\n        data.intlDes = this.getIntlDes();\r\n        data.inclination = this.satelliteRecord.inclo;  // Rads\r\n        data.eccentricity = this.satelliteRecord.ecco;\r\n        data.raan = this.satelliteRecord.nodeo;   // Rads\r\n        data.argPe = this.satelliteRecord.argpo;  // Rads\r\n        data.meanMotion = this.satelliteRecord.no * 60 * 24 / (2 * Math.PI);     // Convert rads/minute to rev/day\r\n\r\n        data.semiMajorAxis = Math.pow(8681663.653 / data.meanMotion, (2 / 3));\r\n        data.semiMinorAxis = data.semiMajorAxis * Math.sqrt(1 - Math.pow(data.eccentricity, 2));\r\n        data.apogee = data.semiMajorAxis * (1 + data.eccentricity) - 6371;\r\n        data.perigee = data.semiMajorAxis * (1 - data.eccentricity) - 6371;\r\n        data.period = 1440.0 / data.meanMotion;\r\n\r\n        // Geodetic position requires GMST time (http://en.wikipedia.org/wiki/Sidereal_time#Definition)\r\n        let gmst = satellite.gstime(new Date(this.time));\r\n        data.positionGeodetic = satellite.eciToGeodetic(this.positionEci, gmst);\r\n\r\n        data.velocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2) + Math.pow(this.velocity.z, 2));\r\n\r\n        return this.formatSelectedDataForModal(data);\r\n    }\r\n\r\n    /**\r\n     * Calculates orbit time of satellite in minutes\r\n     * \r\n     * @returns {number} Orbit time in minutes\r\n     */\r\n    getOrbitTime = () => {\r\n        return (1440.0 / this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));\r\n    }\r\n\r\n    /**\r\n     * Calculates points through one satellite orbit in future (first point is duplicatedat the edn of array).\r\n     * \r\n     * @param {number} numSegments Number of points (segments) in one orbit.\r\n     * @param {any} currentDate Current date / starting date of orbit. \r\n     * \r\n     * @returns {Array<Array<number>>} Array of [x, y, z] positions of points.\r\n     */\r\n    getPointsForOrbit = (numSegments, currentDate) => {\r\n        // in minutes\r\n        let orbitPeriod = 1440.0 / (this.satelliteRecord.no * 60 * 24 / (2 * Math.PI));\r\n        let timeStep = orbitPeriod / numSegments;\r\n\r\n        let startDate = new Date(currentDate);\r\n\r\n        let positions = [];\r\n        for (let i = 0; i <= numSegments; i++) {\r\n            let date = new Date(startDate);\r\n            // Move date by one \"segment duration\"\r\n            date.setMinutes(startDate.getMinutes() + (i * timeStep));\r\n\r\n            let position = satellite.propagate(this.satelliteRecord, date).position;\r\n            positions.push(this.mapPositionToRange(position))\r\n        }\r\n\r\n        // Repeat first point at the end because of ViroPolyline\r\n        positions.push(positions[0]);\r\n\r\n        return positions;\r\n    }\r\n\r\n    /**\r\n     * Composes International Designator of satellite.\r\n     * \r\n     * @returns {string} ITLDES of satellite\r\n     */\r\n    getIntlDes = () => {\r\n        let des = '';\r\n\r\n        let year = this.tle[0].substring(9, 11);\r\n        let prefix = (year > 50) ? '19' : '20';\r\n        year = prefix + year;\r\n\r\n        let rest = this.tle[0].substring(11, 16);\r\n        des = year + '-' + rest;\r\n\r\n        return des;\r\n    }\r\n\r\n    /**\r\n     * Converts degrees to d° m' s\" format.\r\n     * https://stackoverflow.com/questions/5786025/decimal-degrees-to-degrees-minutes-and-seconds-in-javascript/5786627#5786627\r\n     * \r\n     * @param {number} deg Value in degrees\r\n     * \r\n     * @returns {string} Formated degree value (d° m' s\")\r\n     */\r\n    deg_to_dms = (deg) => {\r\n        var d = Math.floor(deg);\r\n        var minfloat = (deg - d) * 60;\r\n        var m = Math.floor(minfloat);\r\n        var secfloat = (minfloat - m) * 60;\r\n        var s = Math.round(secfloat);\r\n        // After rounding, the seconds might become 60. These two if-tests are not necessary if no rounding is done.\r\n        if (s == 60) {\r\n            m++;\r\n            s = 0;\r\n        }\r\n        if (m == 60) {\r\n            d++;\r\n            m = 0;\r\n        }\r\n        return (\"\" + d + \"° \" + m + \"' \" + s + \"\\\"\");\r\n    }\r\n\r\n    /**\r\n     * Converts radian value to degree value.\r\n     * \r\n     * @param {number} radians Value in radians\r\n     * \r\n     * @returns {number} Value in degrees\r\n     */\r\n    radians_to_degrees = (radians) => {\r\n        return radians * (180 / Math.PI);\r\n    }\r\n}",
@@ -2639,7 +2751,7 @@
     "lineNumber": 1
   },
   {
-    "__docId__": 151,
+    "__docId__": 154,
     "kind": "variable",
     "name": "descriptions",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2668,7 +2780,7 @@
     "ignore": true
   },
   {
-    "__docId__": 152,
+    "__docId__": 155,
     "kind": "variable",
     "name": "models",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2689,7 +2801,7 @@
     "ignore": true
   },
   {
-    "__docId__": 153,
+    "__docId__": 156,
     "kind": "variable",
     "name": "materials",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2710,7 +2822,7 @@
     "ignore": true
   },
   {
-    "__docId__": 154,
+    "__docId__": 157,
     "kind": "variable",
     "name": "textures",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2731,7 +2843,7 @@
     "ignore": true
   },
   {
-    "__docId__": 155,
+    "__docId__": 158,
     "kind": "variable",
     "name": "scales",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2752,7 +2864,7 @@
     "ignore": true
   },
   {
-    "__docId__": 156,
+    "__docId__": 159,
     "kind": "variable",
     "name": "rotations",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2773,7 +2885,7 @@
     "ignore": true
   },
   {
-    "__docId__": 157,
+    "__docId__": 160,
     "kind": "variable",
     "name": "modelTypes",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2794,7 +2906,7 @@
     "ignore": true
   },
   {
-    "__docId__": 158,
+    "__docId__": 161,
     "kind": "variable",
     "name": "satellite",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2815,7 +2927,7 @@
     "ignore": true
   },
   {
-    "__docId__": 159,
+    "__docId__": 162,
     "kind": "class",
     "name": "SatelliteObject",
     "memberof": "satviz/js/SatelliteObject.js",
@@ -2830,7 +2942,7 @@
     "interface": false
   },
   {
-    "__docId__": 160,
+    "__docId__": 163,
     "kind": "constructor",
     "name": "constructor",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2875,7 +2987,7 @@
     ]
   },
   {
-    "__docId__": 161,
+    "__docId__": 164,
     "kind": "member",
     "name": "id",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2894,7 +3006,7 @@
     }
   },
   {
-    "__docId__": 162,
+    "__docId__": 165,
     "kind": "member",
     "name": "tle",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2913,7 +3025,7 @@
     }
   },
   {
-    "__docId__": 163,
+    "__docId__": 166,
     "kind": "member",
     "name": "satelliteRecord",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2932,7 +3044,7 @@
     }
   },
   {
-    "__docId__": 164,
+    "__docId__": 167,
     "kind": "member",
     "name": "time",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2951,7 +3063,7 @@
     }
   },
   {
-    "__docId__": 165,
+    "__docId__": 168,
     "kind": "member",
     "name": "description",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2970,7 +3082,7 @@
     }
   },
   {
-    "__docId__": 166,
+    "__docId__": 169,
     "kind": "member",
     "name": "modelPath",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -2989,7 +3101,7 @@
     }
   },
   {
-    "__docId__": 167,
+    "__docId__": 170,
     "kind": "member",
     "name": "modelType",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3008,7 +3120,7 @@
     }
   },
   {
-    "__docId__": 168,
+    "__docId__": 171,
     "kind": "member",
     "name": "resources",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3027,7 +3139,7 @@
     }
   },
   {
-    "__docId__": 169,
+    "__docId__": 172,
     "kind": "member",
     "name": "position",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3046,7 +3158,7 @@
     }
   },
   {
-    "__docId__": 170,
+    "__docId__": 173,
     "kind": "member",
     "name": "positionEci",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3065,7 +3177,7 @@
     }
   },
   {
-    "__docId__": 171,
+    "__docId__": 174,
     "kind": "member",
     "name": "scale",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3084,7 +3196,7 @@
     }
   },
   {
-    "__docId__": 172,
+    "__docId__": 175,
     "kind": "member",
     "name": "rotation",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3103,7 +3215,7 @@
     }
   },
   {
-    "__docId__": 173,
+    "__docId__": 176,
     "kind": "member",
     "name": "velocity",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3122,7 +3234,7 @@
     }
   },
   {
-    "__docId__": 174,
+    "__docId__": 177,
     "kind": "member",
     "name": "getResources",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3152,7 +3264,7 @@
     }
   },
   {
-    "__docId__": 175,
+    "__docId__": 178,
     "kind": "member",
     "name": "getMaterialPath",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3182,7 +3294,7 @@
     }
   },
   {
-    "__docId__": 176,
+    "__docId__": 179,
     "kind": "member",
     "name": "getTexturePath",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3212,7 +3324,7 @@
     }
   },
   {
-    "__docId__": 177,
+    "__docId__": 180,
     "kind": "member",
     "name": "getDescription",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3242,7 +3354,7 @@
     }
   },
   {
-    "__docId__": 178,
+    "__docId__": 181,
     "kind": "member",
     "name": "updatePosition",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3270,7 +3382,7 @@
     }
   },
   {
-    "__docId__": 183,
+    "__docId__": 186,
     "kind": "member",
     "name": "mapPositionToRange",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3312,7 +3424,7 @@
     }
   },
   {
-    "__docId__": 184,
+    "__docId__": 187,
     "kind": "member",
     "name": "formatSelectedDataForModal",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3354,7 +3466,7 @@
     }
   },
   {
-    "__docId__": 185,
+    "__docId__": 188,
     "kind": "member",
     "name": "getDataForInfoModal",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3384,7 +3496,7 @@
     }
   },
   {
-    "__docId__": 186,
+    "__docId__": 189,
     "kind": "member",
     "name": "getOrbitTime",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3414,7 +3526,7 @@
     }
   },
   {
-    "__docId__": 187,
+    "__docId__": 190,
     "kind": "member",
     "name": "getPointsForOrbit",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3466,7 +3578,7 @@
     }
   },
   {
-    "__docId__": 188,
+    "__docId__": 191,
     "kind": "member",
     "name": "getIntlDes",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3496,7 +3608,7 @@
     }
   },
   {
-    "__docId__": 189,
+    "__docId__": 192,
     "kind": "member",
     "name": "deg_to_dms",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3538,7 +3650,7 @@
     }
   },
   {
-    "__docId__": 190,
+    "__docId__": 193,
     "kind": "member",
     "name": "radians_to_degrees",
     "memberof": "satviz/js/SatelliteObject.js~SatelliteObject",
@@ -3580,7 +3692,7 @@
     }
   },
   {
-    "__docId__": 191,
+    "__docId__": 194,
     "kind": "file",
     "name": "satviz/js/SpaceTrack.js",
     "content": "/** \r\n *  @fileOverview Simple class for retrieving data from space-track.org website.\r\n *\r\n *  @author       Vojtěch Pospíšil\r\n */\r\n\r\n\"use strict\";\r\n\r\n/**\r\n* Credentials used for logging in.\r\n* @constant\r\n*\r\n* @type {Object<string, string>}\r\n*/\r\nconst CREDENTIALS = {\r\n    username: 'pospivo1@fel.cvut.cz',\r\n    password: '!6cpBH97VSniwT8'\r\n}\r\n\r\n/**\r\n* URL addreses used by space-track.org API.\r\n* @constant\r\n*\r\n* @type {Object<string, string>}\r\n*/\r\nconst API = {\r\n    dataFirst: \"https://www.space-track.org/basicspacedata/query/class/tle_latest/ORDINAL/1/NORAD_CAT_ID/\",\r\n    dataSecond: \"/orderby/TLE_LINE1 ASC/format/tle\",\r\n\r\n    loginURL: \"https://www.space-track.org/ajaxauth/login\",\r\n}\r\n\r\n/**\r\n * A class representing space-track.org data getter.\r\n */\r\nexport default class SpaceTrack {\r\n\r\n    /**\r\n     * Takes array of satellite IDs and returns TLE records for them.\r\n     * \r\n     * @async\r\n     * @param {Array.<string>} idArray Array of satellite IDs\r\n     * \r\n     * @returns {string} String of TLE records\r\n     */\r\n    getTLEs = async (idArray) => {\r\n        let idString = this.convertIDs(idArray);\r\n\r\n        const request = new Request(API.loginURL, {\r\n            method: 'POST',\r\n            credentials: 'include',\r\n            body: JSON.stringify({\r\n                identity: CREDENTIALS.username,\r\n                password: CREDENTIALS.password,\r\n                query: API.dataFirst + idString + API.dataSecond\r\n            }),\r\n            headers: {\r\n                'Accept': 'application/json',\r\n                'Content-Type': 'application/json'\r\n            },\r\n        });\r\n\r\n        try {\r\n            let response = await fetch(request);\r\n            let data = await response.text();\r\n\r\n            return data;\r\n        } catch (error) {\r\n            console.log(\"Something bad happened in await request process.\");\r\n            return null;\r\n        }\r\n    }\r\n\r\n    /**\r\n     * Takes array of IDs and converts them to comma separated values string\r\n     * \r\n     * @param {Array.<string>} IDs - Satellite IDs \r\n     * \r\n     * @returns {string} Converted values\r\n     */\r\n    convertIDs = (IDs) => {\r\n        let ret = '';\r\n\r\n        if (Array.isArray(IDs) && IDs.length > 0) {\r\n            for (var i = 0; i < IDs.length; i++) {\r\n                let element = IDs[i];\r\n\r\n                ret += element;\r\n\r\n                if (i != (IDs.length - 1)) {\r\n                    ret += ',';\r\n                }\r\n            }\r\n        }\r\n\r\n        return ret;\r\n    }\r\n}",
@@ -3591,7 +3703,7 @@
     "lineNumber": 1
   },
   {
-    "__docId__": 192,
+    "__docId__": 195,
     "kind": "variable",
     "name": "CREDENTIALS",
     "memberof": "satviz/js/SpaceTrack.js",
@@ -3620,7 +3732,7 @@
     "ignore": true
   },
   {
-    "__docId__": 193,
+    "__docId__": 196,
     "kind": "variable",
     "name": "API",
     "memberof": "satviz/js/SpaceTrack.js",
@@ -3641,7 +3753,7 @@
     "ignore": true
   },
   {
-    "__docId__": 194,
+    "__docId__": 197,
     "kind": "class",
     "name": "SpaceTrack",
     "memberof": "satviz/js/SpaceTrack.js",
@@ -3657,7 +3769,7 @@
     "interface": false
   },
   {
-    "__docId__": 195,
+    "__docId__": 198,
     "kind": "member",
     "name": "getTLEs",
     "memberof": "satviz/js/SpaceTrack.js~SpaceTrack",
@@ -3699,7 +3811,7 @@
     }
   },
   {
-    "__docId__": 196,
+    "__docId__": 199,
     "kind": "member",
     "name": "convertIDs",
     "memberof": "satviz/js/SpaceTrack.js~SpaceTrack",
@@ -3741,7 +3853,7 @@
     }
   },
   {
-    "__docId__": 197,
+    "__docId__": 200,
     "kind": "file",
     "name": "satviz/utils/coordsConverter.js",
     "content": "/** \r\n *  @fileOverview Simple class for converting cities locations to ECI coordinates.\r\n *\r\n *  @author       Vojtěch Pospíšil\r\n */\r\n\r\nvar satellite = require('satellite.js');\r\n\r\n/**\r\n * Class representing converter of geodetic coordinates of cities to ECI coordinates.\r\n */\r\nexport default class CoordConverter {\r\n    constructor() {\r\n        /**\r\n         * Names of cities to be converted\r\n         * @type {Array.<string>}\r\n         */\r\n        this.cities = [\r\n            \"schriever\",\r\n            \"vandenberg\",\r\n            \"cape\",\r\n            \"ascension\",\r\n            \"diego\",\r\n            \"kwajalein\",\r\n            \"hawaii\",\r\n            \"greenland\",\r\n            \"hampshire\",\r\n            \"britain\",\r\n            \"guam\",\r\n            \"alaska\",\r\n            \"washington\",\r\n            \"ecuador\",\r\n            \"uruguay\",\r\n            \"africa\",\r\n            \"bahrain\",\r\n            \"korea\",\r\n            \"australia\",\r\n            \"zealand\"\r\n        ];\r\n\r\n        /** \r\n         * Dictionary of latitudes of cities locations\r\n         * @type {Object<string, number>}\r\n         */\r\n        this.latitudes = {\r\n            \"schriever\": 38.800487,\r\n            \"vandenberg\": 34.751841,\r\n            \"cape\": 28.491770,\r\n            \"ascension\": -7.943064,\r\n            \"diego\": -7.315041,\r\n            \"kwajalein\": 8.720267,\r\n            \"hawaii\": 20.491747,\r\n            \"greenland\": 76.515851,\r\n            \"hampshire\": 43.845083,\r\n            \"britain\": 51.901636,\r\n            \"guam\": 13.419102,\r\n            \"alaska\": 61.777863,\r\n            \"washington\": 38.921486,\r\n            \"ecuador\": -0.975709,\r\n            \"uruguay\": -33.352731,\r\n            \"africa\": -19.392172,\r\n            \"bahrain\": 26.015521,\r\n            \"korea\": 37.129097,\r\n            \"australia\": -33.805079,\r\n            \"zealand\": -41.957162\r\n        };\r\n\r\n        /** \r\n         * Dictionary of longitudes of cities locations\r\n         * @type {Object<string, number>}\r\n         */\r\n        this.longitudes = {\r\n            \"schriever\": -104.522903,\r\n            \"vandenberg\": -120.520696,\r\n            \"cape\": -80.578600,\r\n            \"ascension\": -14.372331,\r\n            \"diego\": 72.444928,\r\n            \"kwajalein\": 167.729290,\r\n            \"hawaii\": -157.294502,\r\n            \"greenland\": -68.739511,\r\n            \"hampshire\": -71.669399,\r\n            \"britain\": -1.440593,\r\n            \"guam\": 144.741369,\r\n            \"alaska\": -146.905346,\r\n            \"washington\": -77.066804,\r\n            \"ecuador\": -78.587049,\r\n            \"uruguay\": -56.024181,\r\n            \"africa\": 23.563274,\r\n            \"bahrain\": 50.537233,\r\n            \"korea\": 127.773009,\r\n            \"australia\": 138.480160,\r\n            \"zealand\": 173.842508\r\n        };\r\n    }\r\n\r\n    /**\r\n     * Converts city coordination specified in dictionaries in class into\r\n     * ECI coords and prints them into console.\r\n     */\r\n    convert = () => {\r\n        let geodetic = {\r\n            longitude: satellite.degreesToRadians(),\r\n            latitude: satellite.degreesToRadians(),\r\n            height: 0.8\r\n        };\r\n\r\n        let ecf = satellite.geodeticToEcf(geodetic);\r\n        \r\n        let gmst = satellite.gstime(new Date());\r\n        let eci = satellite.ecfToEci(ecf, gmst);\r\n\r\n        let result = {}\r\n        let date = new Date()\r\n        this.cities.forEach(element => {\r\n            let geodetic = {\r\n                longitude: satellite.degreesToRadians(this.longitudes[element]),\r\n                latitude: satellite.degreesToRadians(this.latitudes[element]),\r\n                height: 0.8\r\n            };\r\n\r\n            let ecf = satellite.geodeticToEcf(geodetic);\r\n            let gmst = satellite.gstime(date);\r\n            let eci = satellite.ecfToEci(ecf, gmst);\r\n\r\n            result[element] = eci;\r\n        });\r\n\r\n        console.log(JSON.stringify(result));\r\n    }\r\n}",
@@ -3752,7 +3864,7 @@
     "lineNumber": 1
   },
   {
-    "__docId__": 198,
+    "__docId__": 201,
     "kind": "variable",
     "name": "satellite",
     "memberof": "satviz/utils/coordsConverter.js",
@@ -3782,7 +3894,7 @@
     "ignore": true
   },
   {
-    "__docId__": 199,
+    "__docId__": 202,
     "kind": "class",
     "name": "CoordConverter",
     "memberof": "satviz/utils/coordsConverter.js",
@@ -3797,7 +3909,7 @@
     "interface": false
   },
   {
-    "__docId__": 200,
+    "__docId__": 203,
     "kind": "constructor",
     "name": "constructor",
     "memberof": "satviz/utils/coordsConverter.js~CoordConverter",
@@ -3811,7 +3923,7 @@
     "undocument": true
   },
   {
-    "__docId__": 201,
+    "__docId__": 204,
     "kind": "member",
     "name": "cities",
     "memberof": "satviz/utils/coordsConverter.js~CoordConverter",
@@ -3830,7 +3942,7 @@
     }
   },
   {
-    "__docId__": 202,
+    "__docId__": 205,
     "kind": "member",
     "name": "latitudes",
     "memberof": "satviz/utils/coordsConverter.js~CoordConverter",
@@ -3849,7 +3961,7 @@
     }
   },
   {
-    "__docId__": 203,
+    "__docId__": 206,
     "kind": "member",
     "name": "longitudes",
     "memberof": "satviz/utils/coordsConverter.js~CoordConverter",
@@ -3868,7 +3980,7 @@
     }
   },
   {
-    "__docId__": 204,
+    "__docId__": 207,
     "kind": "member",
     "name": "convert",
     "memberof": "satviz/utils/coordsConverter.js~CoordConverter",
@@ -3893,7 +4005,7 @@
   },
   {
     "kind": "packageJSON",
-    "content": "{\r\n  \"name\": \"satviz\",\r\n  \"version\": \"0.0.1\",\r\n  \"private\": true,\r\n  \"scripts\": {\r\n    \"start\": \"node node_modules/react-native/local-cli/cli.js start\",\r\n    \"test\": \"jest\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@react-native-community/slider\": \"^1.1.4\",\r\n    \"esdoc\": \"^1.1.0\",\r\n    \"esdoc-ecmascript-proposal-plugin\": \"^1.0.0\",\r\n    \"esdoc-jsx-plugin\": \"^1.0.0\",\r\n    \"esdoc-standard-plugin\": \"^1.0.0\",\r\n    \"jetifier\": \"^1.6.5\",\r\n    \"react\": \"16.8.3\",\r\n    \"react-native\": \"0.59.3\",\r\n    \"react-native-flash-message\": \"^0.1.15\",\r\n    \"react-native-modal\": \"^11.5.4\",\r\n    \"react-native-sectioned-multi-select\": \"^0.7.6\",\r\n    \"react-native-sliding-up-down-panels\": \"^1.0.0\",\r\n    \"react-native-vector-icons\": \"^6.6.0\",\r\n    \"react-viro\": \"2.17.0\",\r\n    \"satellite.js\": \"^4.0.0\",\r\n    \"timetravel\": \"^0.1.1\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@babel/core\": \"^7.8.7\",\r\n    \"@babel/runtime\": \"^7.8.7\",\r\n    \"babel-jest\": \"^25.1.0\",\r\n    \"jest\": \"^25.1.0\",\r\n    \"metro-react-native-babel-preset\": \"^0.58.0\",\r\n    \"react-test-renderer\": \"16.8.3\"\r\n  },\r\n  \"jest\": {\r\n    \"preset\": \"react-native\"\r\n  }\r\n}\r\n",
+    "content": "{\r\n  \"name\": \"satviz\",\r\n  \"version\": \"0.0.1\",\r\n  \"private\": true,\r\n  \"scripts\": {\r\n    \"start\": \"node node_modules/react-native/local-cli/cli.js start\",\r\n    \"test\": \"jest\"\r\n  },\r\n  \"dependencies\": {\r\n    \"@react-native-community/async-storage\": \"^1.9.0\",\r\n    \"@react-native-community/slider\": \"^1.1.4\",\r\n    \"esdoc\": \"^1.1.0\",\r\n    \"esdoc-ecmascript-proposal-plugin\": \"^1.0.0\",\r\n    \"esdoc-jsx-plugin\": \"^1.0.0\",\r\n    \"esdoc-standard-plugin\": \"^1.0.0\",\r\n    \"jetifier\": \"^1.6.5\",\r\n    \"react\": \"16.8.3\",\r\n    \"react-native\": \"0.59.3\",\r\n    \"react-native-flash-message\": \"^0.1.15\",\r\n    \"react-native-modal\": \"^11.5.4\",\r\n    \"react-native-sectioned-multi-select\": \"^0.7.6\",\r\n    \"react-native-sliding-up-down-panels\": \"^1.0.0\",\r\n    \"react-native-vector-icons\": \"^6.6.0\",\r\n    \"react-viro\": \"2.17.0\",\r\n    \"satellite.js\": \"^4.0.0\",\r\n    \"timetravel\": \"^0.1.1\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"@babel/core\": \"^7.8.7\",\r\n    \"@babel/runtime\": \"^7.8.7\",\r\n    \"babel-jest\": \"^25.1.0\",\r\n    \"jest\": \"^25.1.0\",\r\n    \"metro-react-native-babel-preset\": \"^0.58.0\",\r\n    \"react-test-renderer\": \"16.8.3\"\r\n  },\r\n  \"jest\": {\r\n    \"preset\": \"react-native\"\r\n  }\r\n}\r\n",
     "longname": "C:\\Users\\Vojcek\\Desktop\\BP\\CODES\\satviz\\package.json",
     "name": "package.json",
     "static": true,

@@ -810,6 +810,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "satviz/js/components/globe.js~globe#formattlefromasyncstorage",
+    "class/satviz/js/components/Globe.js~Globe.html#instance-member-formatTLEFromAsyncStorage",
+    "satviz/js/components/Globe.js~Globe#formatTLEFromAsyncStorage",
+    "member"
+  ],
+  [
     "satviz/js/components/globe.js~globe#getgroundsegmenttorender",
     "class/satviz/js/components/Globe.js~Globe.html#instance-member-getGroundSegmentToRender",
     "satviz/js/components/Globe.js~Globe#getGroundSegmentToRender",
@@ -837,6 +843,12 @@ window.esdocSearchIndex = [
     "satviz/js/components/globe.js~globe#getsatellitestorender",
     "class/satviz/js/components/Globe.js~Globe.html#instance-member-getSatellitesToRender",
     "satviz/js/components/Globe.js~Globe#getSatellitesToRender",
+    "member"
+  ],
+  [
+    "satviz/js/components/globe.js~globe#gettlesfromwebandstorage",
+    "class/satviz/js/components/Globe.js~Globe.html#instance-member-getTLEsFromWebAndStorage",
+    "satviz/js/components/Globe.js~Globe#getTLEsFromWebAndStorage",
     "member"
   ],
   [
@@ -927,6 +939,12 @@ window.esdocSearchIndex = [
     "satviz/js/components/globe.js~globe#rotationtimer",
     "class/satviz/js/components/Globe.js~Globe.html#instance-member-rotationTimer",
     "satviz/js/components/Globe.js~Globe#rotationTimer",
+    "member"
+  ],
+  [
+    "satviz/js/components/globe.js~globe#savetlestoasyncstorage",
+    "class/satviz/js/components/Globe.js~Globe.html#instance-member-saveTLEsToAsyncStorage",
+    "satviz/js/components/Globe.js~Globe#saveTLEsToAsyncStorage",
     "member"
   ],
   [
