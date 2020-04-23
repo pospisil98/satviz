@@ -116,33 +116,41 @@ export default class Globe extends Component {
                 // Call ST funtion to get data according to newly added IDs
                 this.loading = true;
 
-
                 // Get date of satellite tle storage
                 let datePairs;
+                let additionDateKeys = addition.map(key => key + "Date");
                 try {
-                    datePairs = await AsyncStorage.multiGet(addition);
+                    datePairs = await AsyncStorage.multiGet(additionDateKeys);
                 } catch(e) {
                     console.log("Error happened when retrieving dates of TLEs");
                     console.log(e);
                 }
-
-                console.log("Date pairs");
-                console.log(datePairs);
 
                 let idtoGetFromStorage = [];
                 let idToGetFromWeb = [];
 
                 // When date is udefined ->value is not in storage 
                 // pair[0] is key, pair[1] is value
+                let dateNow = new Date();
+                const dayLenghtInMS = 86400000;
                 datePairs.forEach(pair => {
                     if (pair[1] === null) {
                         idToGetFromWeb.push(pair[0]);
                     } else {
-                        // TODO: check date older than 1 day
+                        let num = Number(pair[1]);
+                        let dateFromStorage = new Date(num);
+                        let diff = dateNow.getTime() - dateFromStorage.getTime();
 
-                        idtoGetFromStorage.push(pair[0]);
+                        if (diff > dayLenghtInMS) {
+                            idToGetFromWeb.push(pair[0]);
+                        } else {
+                            idtoGetFromStorage.push(pair[0]);
+                        }
                     }
                 });
+
+                idToGetFromWeb = idToGetFromWeb.map(id => id.substring(0, 5))
+                idtoGetFromStorage = idtoGetFromStorage.map(id => id.substring(0, 5))
 
                 let storageTLEPairs;
                 let storageTLE = [];
@@ -237,7 +245,8 @@ export default class Globe extends Component {
         }
 
         let datePairs;
-        let currentTimestamp = Math.round((new Date()).getTime() / 1000).toString();
+        // Timestamp in js is in ms 
+        let currentTimestamp = Math.round((new Date()).getTime()).toString();
 
         datePairs = pairsToSave.map(pair => {
             return ([pair[0] + "Date", currentTimestamp]);
