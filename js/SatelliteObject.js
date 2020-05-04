@@ -66,7 +66,7 @@ const models = {
 * @type {Object<string, NodeRequire>}
 */
 const materials = {
-    "GPS": require('./res/models/gps/gps.mtl'),
+    "GPS": require('./res/models/gps/gps_mat.mtl'),
 }
 
 /**
@@ -76,7 +76,7 @@ const materials = {
  * @type {Object<string, NodeRequire>}
  */
 const textures = {
-    "GPS": require('./res/models/Satellite.mtl'),
+    "GPS": require('./res/models/Satellite_mat.mtl'),
 }
 
 /**

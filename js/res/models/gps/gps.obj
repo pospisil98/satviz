@@ -1,6 +1,6 @@
 # Blender v2.81 (sub 16) OBJ File: ''
 # www.blender.org
-mtllib gps.mtl
+mtllib gps_mat.mtl
 o Bracket.001_Cube.025
 v -3.011992 -0.550948 -0.009389
 v -3.011995 -0.549656 -0.009391

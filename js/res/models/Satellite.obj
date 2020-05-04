@@ -1,6 +1,6 @@
 # Blender v2.79 (sub 0) OBJ File: 'Satellite.blend'
 # www.blender.org
-mtllib Satellite.mtl
+mtllib Satellite_mtl.mtl
 o Antenna_Cube
 v 3.907678 -0.034757 0.020191
 v 3.907678 -0.020232 0.034716

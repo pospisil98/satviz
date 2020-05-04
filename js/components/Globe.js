@@ -592,7 +592,7 @@ export default class Globe extends Component {
                 <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000} />
 
                 <Viro3DObject source={require('../res/earth.obj')}
-                    resources={[require('../res/earth.mtl'),
+                    resources={[require('../res/earth_mat.mtl'),
                     require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.04, 0.04, 0.04]}
@@ -621,7 +621,7 @@ export default class Globe extends Component {
         if (this.props.renderVirtualGlobe) {
             return (
                 <Viro3DObject source={require('../res/earth.obj')}
-                    resources={[require('../res/earth.mtl'),
+                    resources={[require('../res/earth_mat.mtl'),
                     require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.08, 0.08, 0.08]}
@@ -643,7 +643,7 @@ export default class Globe extends Component {
                     />
 
                     <Viro3DObject source={require('../res/ghostEarth/untitled.obj')}
-                        resources={[require('../res/ghostEarth/untitled.mtl'),
+                        resources={[require('../res/ghostEarth/untitled_mat.mtl'),
                         require('../res/ghostEarth/untitled.png')]}
                         position={[0.0, 0.0, 0.0]}
                         scale={[0.18, 0.18, 0.18]}
