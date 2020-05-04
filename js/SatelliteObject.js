@@ -272,7 +272,7 @@ export default class SatelliteObject {
         value.z < 0 ? z = -z : z = z; */
 
         // conversion from eci to viro coords
-        return [y, z, x];
+        return [x, z, -y];
     }
 
     /**
