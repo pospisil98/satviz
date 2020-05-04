@@ -203,8 +203,27 @@ export default class satviz extends Component {
      * Adds satellite manually with ID in manualSatSelectTextInput.
      */
     addManual = () => {
-        if (this.state.selectedItemsManual.includes(this.manualSatSelectTextInput.current._lastNativeText) === false) {
-            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText) });
+        // Check whether user added valid input
+        if (this.manualSatSelectTextInput.current._lastNativeText === undefined ||
+            isNaN(this.manualSatSelectTextInput.current._lastNativeText) ||
+            this.manualSatSelectTextInput.current._lastNativeText.trim() == "") {
+                showMessage({
+                    message: "Satellite ID is 5 digit number only.",
+                    type: "danger",
+                })
+
+                this.manualSatSelectTextInput.current.clear();
+                return;
+        }
+
+        // Add trailing zeros where the number is shorter than 5 chars
+        let userInput = this.manualSatSelectTextInput.current._lastNativeText;
+        if (userInput.length < 5) {
+            userInput = ("00000" + userInput).slice(-5);
+        }
+
+        if (this.state.selectedItemsManual.includes(userInput) === false) {
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(userInput) });
         } else {
             showMessage({
                 message: "Satellite with this ID is already selected!",
