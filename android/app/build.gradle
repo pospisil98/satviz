@@ -134,6 +134,14 @@ android {
             buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file('satviz-key.keystore')
+            storePassword 'keystore'
+            keyAlias 'satviz-key-alias'
+            keyPassword 'keystore'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled enableProguardInReleaseBuilds
