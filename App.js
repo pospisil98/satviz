@@ -403,25 +403,6 @@ export default class satviz extends Component {
                         <View style={styles.slidingPanelLayoutStyle}>
                             <View style={{ flex: 1 }}>
                                 <ScrollView style={{ flex: 1 }}>
-                                    <View style={{ flex: 1, justifyContent: 'center' }}>
-                                        <SectionedMultiSelect
-                                            items={satelliteSelectItems.default}
-                                            uniqueKey="id"
-                                            subKey="children"
-                                            selectText="Choose satellites from catogories"
-                                            searchPlaceholderText="Search by name..."
-                                            showDropDowns={true}
-                                            readOnlyHeadings={false}
-                                            selectChildren={true}
-                                            showRemoveAll={true}
-                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
-                                            selectedItems={this.state.selectedItems}
-                                            confirmText={`${this.state.maxItems ? 'Max satellites selected' : 'Confirm'}`}
-                                        />
-                                    </View>
-
-                                    <View style={[styles.hairlineSplitLine]} />
-
                                     <View
                                         style={{
                                             flex: 1,
@@ -551,6 +532,25 @@ export default class satviz extends Component {
                                     </View>
 
                                     <View style={styles.hairlineSplitLine} />
+
+                                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                                        <SectionedMultiSelect
+                                            items={satelliteSelectItems.default}
+                                            uniqueKey="id"
+                                            subKey="children"
+                                            selectText="Choose satellites from catogories"
+                                            searchPlaceholderText="Search by name..."
+                                            showDropDowns={true}
+                                            readOnlyHeadings={false}
+                                            selectChildren={true}
+                                            showRemoveAll={true}
+                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
+                                            selectedItems={this.state.selectedItems}
+                                            confirmText={`${this.state.maxItems ? 'Max satellites selected' : 'Confirm'}`}
+                                        />
+                                    </View>
+
+                                    <View style={[styles.hairlineSplitLine]} />
 
                                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <View style={{ width: '80%' }}>
