@@ -408,7 +408,8 @@ export default class satviz extends Component {
                                             items={satelliteSelectItems.default}
                                             uniqueKey="id"
                                             subKey="children"
-                                            selectText="Choose from catogories.."
+                                            selectText="Choose satellites from catogories"
+                                            searchPlaceholderText="Search by name..."
                                             showDropDowns={true}
                                             readOnlyHeadings={false}
                                             selectChildren={true}
@@ -557,7 +558,8 @@ export default class satviz extends Component {
                                                 items={groundSegmentSelectItems.default}
                                                 uniqueKey="id"
                                                 subKey="children"
-                                                selectText="Choose from ground segments..."
+                                                selectText="Choose ground segments"
+                                                searchPlaceholderText="Search by name..."
                                                 showDropDowns={false}
                                                 readOnlyHeadings={true}
                                                 selectChildren={true}
