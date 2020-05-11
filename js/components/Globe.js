@@ -455,6 +455,22 @@ export default class Globe extends Component {
     }
 
     /**
+     * Returns rotation of Earth according to ECI coordinates.
+     * 
+     * @returns {Array.<number>} Rotation vector
+     */
+    getEarthRotationForSatellites = () => {
+        let gmst = satellite.gstime(new Date(this.clock.time()));
+        let earth_orientation = {'x':6.378, 'y': 0, 'z': 0 };
+        let earth_orientation_ECI = satellite.ecfToEci(earth_orientation, gmst)
+        let earth_angle = Math.atan2(earth_orientation_ECI.y, earth_orientation_ECI.x);
+
+        let angleDeg = earth_angle * (180/Math.PI);
+        
+        return [0, angleDeg, 0];
+    }
+
+    /**
      * Maps selected ground segment IDs to models for render.
      * 
      * @returns {Array.<ViroSphere>} Array of 3D spheres as position visualization
@@ -587,6 +603,9 @@ export default class Globe extends Component {
         let groundSegmentList = this.getGroundSegmentToRender();
         let orbitsList = this.getOrbitsToRender();
 
+        let rot = this.getEarthRotationForSatellites();
+        //<ViroNode rotation={this.state.groundRotationCompensation}></ViroNode>
+
         return (
             <ViroNode position={[0, 0.2, 0]}>
                 <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000} />
@@ -596,17 +615,17 @@ export default class Globe extends Component {
                     require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.04, 0.04, 0.04]}
-                    rotation={[180, 180, -180]}
+                    rotation={[0, 0, 0]}
                     type="OBJ"
                 />
 
                 <ViroNode rotation={this.modelListRotation}>
-                    {groundSegmentList}
-
-                    <ViroNode rotation={this.state.groundRotationCompensation}>
+                    <ViroNode rotation={rot}>
                         {modelList}
                         {orbitsList}
                     </ViroNode>
+
+                    {groundSegmentList}
                 </ViroNode>
             </ViroNode>
         );
@@ -666,6 +685,8 @@ export default class Globe extends Component {
         let groundSegmentList = this.getGroundSegmentToRender();
         let orbitsList = this.getOrbitsToRender();
 
+        let rot = this.getEarthRotationForSatellites();
+
         return (
             <ViroNode>
                 <ViroAmbientLight color="#FFFFFF" />
@@ -675,7 +696,7 @@ export default class Globe extends Component {
                 <ViroNode rotation={this.modelListRotation}>
                     {groundSegmentList}
 
-                    <ViroNode rotation={this.state.groundRotationCompensation}>
+                    <ViroNode rotation={rot}>
                         {modelList}
                         {orbitsList}
                     </ViroNode>
