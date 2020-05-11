@@ -6,7 +6,7 @@
 
 "use strict";
 
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import {
     StyleSheet,
     Text,
@@ -24,6 +24,7 @@ import {
     ViroARSceneNavigator
 } from 'react-viro';
 
+import SplashScreen from 'react-native-splash-screen';
 import SlidingPanel from 'react-native-sliding-up-down-panels';
 import SectionedMultiSelect from 'react-native-sectioned-multi-select';
 import Modal from "react-native-modal";
@@ -118,6 +119,12 @@ export default class satviz extends Component {
         /** Maximum number of selected items in satellite multiselect 
          * @type {number} */
         this.maxSelectedItems = 50;
+    }
+
+    componentDidMount = () => {
+        // Do stuff while splash screen is shown
+        // After having done stuff (such as async tasks) hide the splash screen
+        SplashScreen.hide();
     }
 
     /**
