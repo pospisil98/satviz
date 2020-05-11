@@ -274,6 +274,7 @@ export default class ARScene extends Component {
                     removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
                     orbitIDs={this.state.orbitIDs}
                     orbitOpacity={this.state.orbitOpacity}
+                    setDateTimeCallback={this.props.arSceneNavigator.viroAppProps.setDateTimeCallback}
                 />
             </ViroNode>
         );

@@ -319,6 +319,9 @@ export default class Globe extends Component {
                 cleaned = cleaned.filter(sat => sat.id !== id);
             });
 
+            // Update time of application
+            this.props.setDateTimeCallback(new Date(this.clock.time()));
+
             this.setState({ satellites: cleaned });
         }
     }

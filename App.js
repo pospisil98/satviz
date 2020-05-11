@@ -105,6 +105,10 @@ export default class satviz extends Component {
             /** Value of time speed slider
              * @type {number} */
             timeSpeedSliderValue: 1,
+
+            /** Application own time
+             * @type {Date} */
+            appDateTime: new Date(),
         };
 
         /** Timeout for opacity slider 
@@ -166,6 +170,25 @@ export default class satviz extends Component {
         });
 
         this.toggleSatelliteModal();
+    }
+
+    setDateTimeCallback = (datetime) => {
+        this.setState({
+            appDateTime: datetime
+        });
+    }
+
+    getDateForDisplay = () => {
+        let year = this.state.appDateTime.getFullYear();
+        let month = (1 + this.state.appDateTime.getMonth()).toString().padStart(2, '0');
+        let day = this.state.appDateTime.getDate().toString().padStart(2, '0');
+        let date =  month + '/' + day + '/' + year;
+
+        let hours = this.state.appDateTime.getHours();
+        let minutes = this.state.appDateTime.getMinutes();
+        let time = hours + ":"+ minutes;
+
+        return date + " " + time;
     }
 
     /**
@@ -335,6 +358,7 @@ export default class satviz extends Component {
                         orbitOpacity: this.state.orbitOpacity,
                         timeScale: this.state.timeSpeedSliderValue,
                         removeSatelliteCallback: this.removeSatelliteWithError,
+                        setDateTimeCallback: this.setDateTimeCallback,
                     }}
                 />
 
@@ -610,14 +634,30 @@ export default class satviz extends Component {
 
                                     <View style={[styles.hairlineSplitLine]} />
 
-                                    <View style={{ marginHorizontal: 10, marginTop: 10 }}>
-                                        <Text>Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)</Text>
-                                        <Slider
-                                            value={this.state.timeSpeedSliderValue}
-                                            minimumValue={1}
-                                            maximumValue={10000}
-                                            onValueChange={(val) => this.setState({ timeSpeedSliderValue: val })}
-                                        />
+                                    <View style={{ marginHorizontal: 10, marginTop: 10}}>
+                                        
+                                        <View style={{flex: 1, flexDirection: "row"}}>
+                                            <View style={{width: "80%"}}>
+                                                <Text style={{paddingBottom: 5, color: "black"}}>Current date: <Text style={{fontWeight: "bold"}}>{this.getDateForDisplay()}</Text></Text>
+                                                <Text style={{color: "black"}}>Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)</Text>
+                                        
+                                                <Slider
+                                                    value={this.state.timeSpeedSliderValue}
+                                                    minimumValue={-10000}
+                                                    maximumValue={10000}
+                                                    step={500}
+                                                    onValueChange={(val) => this.setState({ timeSpeedSliderValue: val })}
+                                                />
+                                            </View>
+                                            
+                                            <View style={{height: "50%", marginTop: 15}}>
+                                                <Button 
+                                                    title="Reset"
+                                                    onPress={() => this.setState({ timeSpeedSliderValue: 1 })}
+                                                />
+                                            </View>
+                                        </View>
+                                        
                                     </View>
 
                                     <View style={{ paddingBottom: 400 }}></View>
