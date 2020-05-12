@@ -94,8 +94,8 @@ def enableSeparateBuildPerCPUArchitecture = false
 def enableProguardInReleaseBuilds = false
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
     flavorDimensions "platform"
 
     compileOptions {
@@ -105,8 +105,8 @@ android {
 
     defaultConfig {
         applicationId "com.satviz"
-		minSdkVersion 23
-        targetSdkVersion 28
+		minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
         versionCode 1
         versionName "1.0"
@@ -174,7 +174,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.facebook.react:react-native:+'
+    implementation 'com.facebook.react:react-native:'
     implementation project(':arcore_client') // remove this if AR not required
     implementation project(':gvr_common')
     implementation project(path: ':viro_renderer')
