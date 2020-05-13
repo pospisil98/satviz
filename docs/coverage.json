@@ -1,19 +1,20 @@
 {
-  "coverage": "74.82%",
-  "expectCount": 139,
-  "actualCount": 104,
+  "coverage": "75.52%",
+  "expectCount": 143,
+  "actualCount": 108,
   "files": {
     "satviz/App.js": {
-      "expectCount": 24,
-      "actualCount": 17,
+      "expectCount": 27,
+      "actualCount": 19,
       "undocumentLines": [
-        46,
-        52,
-        60,
-        350,
-        621,
-        623,
-        627
+        47,
+        53,
+        61,
+        124,
+        410,
+        699,
+        701,
+        705
       ]
     },
     "satviz/js/ARScene.js": {
@@ -39,17 +40,16 @@
       ]
     },
     "satviz/js/components/Globe.js": {
-      "expectCount": 38,
-      "actualCount": 30,
+      "expectCount": 39,
+      "actualCount": 32,
       "undocumentLines": [
         27,
         28,
         34,
         37,
         57,
-        98,
-        119,
-        749
+        102,
+        781
       ]
     },
     "satviz/js/SatelliteObject.js": {

@@ -288,7 +288,7 @@ export default class ARScene extends Component {
     }
 
     /**
-     * Returns Globe component with everything setu up to visualization
+     * Returns Globe component with everything set up to visualization
      * 
      * @returns {ViroNode} Globe with all properties set
      */
@@ -317,6 +317,7 @@ export default class ARScene extends Component {
                     removeSatelliteCallback={this.props.arSceneNavigator.viroAppProps.removeSatelliteCallback}
                     orbitIDs={this.state.orbitIDs}
                     orbitOpacity={this.state.orbitOpacity}
+                    setDateTimeCallback={this.props.arSceneNavigator.viroAppProps.setDateTimeCallback}
                 /&gt;
             &lt;/ViroNode&gt;
         );

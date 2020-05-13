@@ -53,7 +53,7 @@ export default class Globe extends Component {
         }
 
         /** Compensation of model rotation on different targets
-         *  @type {Array.<number>} */
+         * @type {Array.<number>} */
         this.modelListRotation = [0, 0, 0];
         if (this.props.flatTarget) {
             this.modelListRotation = [0, -143, 0];
@@ -64,6 +64,10 @@ export default class Globe extends Component {
         /** SpaceTrack object for getting data from Satellite Catalog
          * @type {SpaceTrack} */
         this.ST = new SpaceTrack();
+
+        /** Container for getting TLE records from async function
+         * @type {Array.<string>} */
+        this.tle = null;
 
         /** State of globe data loading
          * @type {boolean} */

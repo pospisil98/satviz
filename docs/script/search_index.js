@@ -336,10 +336,22 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "satviz/app.js~satviz#componentdidmount",
+    "class/satviz/App.js~satviz.html#instance-member-componentDidMount",
+    "satviz/App.js~satviz#componentDidMount",
+    "member"
+  ],
+  [
     "satviz/app.js~satviz#constructor",
     "class/satviz/App.js~satviz.html#instance-constructor-constructor",
     "satviz/App.js~satviz#constructor",
     "method"
+  ],
+  [
+    "satviz/app.js~satviz#getdatefordisplay",
+    "class/satviz/App.js~satviz.html#instance-member-getDateForDisplay",
+    "satviz/App.js~satviz#getDateForDisplay",
+    "member"
   ],
   [
     "satviz/app.js~satviz#isorbitenabledforsatelliteinmodal",
@@ -408,6 +420,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "satviz/app.js~satviz#setdatetimecallback",
+    "class/satviz/App.js~satviz.html#instance-member-setDateTimeCallback",
+    "satviz/App.js~satviz#setDateTimeCallback",
+    "member"
+  ],
+  [
     "satviz/app.js~satviz#state",
     "class/satviz/App.js~satviz.html#instance-member-state",
     "satviz/App.js~satviz#state",
@@ -442,6 +460,54 @@ window.esdocSearchIndex = [
     "class/satviz/App.js~satviz.html#instance-member-toggleSlidePanel",
     "satviz/App.js~satviz#toggleSlidePanel",
     "member"
+  ],
+  [
+    "satviz/docs/script/inherited-summary.js",
+    "file/satviz/docs/script/inherited-summary.js.html",
+    "satviz/docs/script/inherited-summary.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/inner-link.js",
+    "file/satviz/docs/script/inner-link.js.html",
+    "satviz/docs/script/inner-link.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/manual.js",
+    "file/satviz/docs/script/manual.js.html",
+    "satviz/docs/script/manual.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/patch-for-local.js",
+    "file/satviz/docs/script/patch-for-local.js.html",
+    "satviz/docs/script/patch-for-local.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/prettify/prettify.js",
+    "file/satviz/docs/script/prettify/prettify.js.html",
+    "satviz/docs/script/prettify/prettify.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/pretty-print.js",
+    "file/satviz/docs/script/pretty-print.js.html",
+    "satviz/docs/script/pretty-print.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/search.js",
+    "file/satviz/docs/script/search.js.html",
+    "satviz/docs/script/search.js",
+    "file"
+  ],
+  [
+    "satviz/docs/script/test-summary.js",
+    "file/satviz/docs/script/test-summary.js.html",
+    "satviz/docs/script/test-summary.js",
+    "file"
   ],
   [
     "satviz/js/arscene.js",
@@ -813,6 +879,12 @@ window.esdocSearchIndex = [
     "satviz/js/components/globe.js~globe#formattlefromasyncstorage",
     "class/satviz/js/components/Globe.js~Globe.html#instance-member-formatTLEFromAsyncStorage",
     "satviz/js/components/Globe.js~Globe#formatTLEFromAsyncStorage",
+    "member"
+  ],
+  [
+    "satviz/js/components/globe.js~globe#getearthrotationforsatellites",
+    "class/satviz/js/components/Globe.js~Globe.html#instance-member-getEarthRotationForSatellites",
+    "satviz/js/components/Globe.js~Globe#getEarthRotationForSatellites",
     "member"
   ],
   [

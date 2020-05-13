@@ -49,7 +49,7 @@
 
 &quot;use strict&quot;;
 
-import React, { Component } from &apos;react&apos;;
+import React, { Component, useEffect } from &apos;react&apos;;
 import {
     StyleSheet,
     Text,
@@ -67,6 +67,7 @@ import {
     ViroARSceneNavigator
 } from &apos;react-viro&apos;;
 
+import SplashScreen from &apos;react-native-splash-screen&apos;;
 import SlidingPanel from &apos;react-native-sliding-up-down-panels&apos;;
 import SectionedMultiSelect from &apos;react-native-sectioned-multi-select&apos;;
 import Modal from &quot;react-native-modal&quot;;
@@ -148,6 +149,10 @@ export default class satviz extends Component {
             /** Value of time speed slider
              * @type {number} */
             timeSpeedSliderValue: 1,
+
+            /** Application own time
+             * @type {Date} */
+            appDateTime: new Date(),
         };
 
         /** Timeout for opacity slider 
@@ -157,6 +162,12 @@ export default class satviz extends Component {
         /** Maximum number of selected items in satellite multiselect 
          * @type {number} */
         this.maxSelectedItems = 50;
+    }
+
+    componentDidMount = () =&gt; {
+        // Do stuff while splash screen is shown
+        // After having done stuff (such as async tasks) hide the splash screen
+        SplashScreen.hide();
     }
 
     /**
@@ -212,6 +223,35 @@ export default class satviz extends Component {
     }
 
     /**
+     * Callback function for setting current app time in this class.
+     * 
+     * @param {Date} datetime JS Date object
+     */
+    setDateTimeCallback = (datetime) =&gt; {
+        this.setState({
+            appDateTime: datetime
+        });
+    }
+
+    /**
+     * Function for getting current app date in format for display.
+     * 
+     * @returns {string} Current app date and time
+     */
+    getDateForDisplay = () =&gt; {
+        let year = this.state.appDateTime.getFullYear();
+        let month = (1 + this.state.appDateTime.getMonth()).toString().padStart(2, &apos;0&apos;);
+        let day = this.state.appDateTime.getDate().toString().padStart(2, &apos;0&apos;);
+        let date =  month + &apos;/&apos; + day + &apos;/&apos; + year;
+
+        let hours = this.state.appDateTime.getHours();
+        let minutes = this.state.appDateTime.getMinutes();
+        let time = hours + &quot;:&quot;+ minutes;
+
+        return date + &quot; &quot; + time;
+    }
+
+    /**
      * Change visibility of satellite modal.
      */
     toggleSatelliteModal = () =&gt; {
@@ -246,8 +286,27 @@ export default class satviz extends Component {
      * Adds satellite manually with ID in manualSatSelectTextInput.
      */
     addManual = () =&gt; {
-        if (this.state.selectedItemsManual.includes(this.manualSatSelectTextInput.current._lastNativeText) === false) {
-            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(this.manualSatSelectTextInput.current._lastNativeText) });
+        // Check whether user added valid input
+        if (this.manualSatSelectTextInput.current._lastNativeText === undefined ||
+            isNaN(this.manualSatSelectTextInput.current._lastNativeText) ||
+            this.manualSatSelectTextInput.current._lastNativeText.trim() == &quot;&quot;) {
+                showMessage({
+                    message: &quot;Satellite ID is 5 digit number only.&quot;,
+                    type: &quot;danger&quot;,
+                })
+
+                this.manualSatSelectTextInput.current.clear();
+                return;
+        }
+
+        // Add trailing zeros where the number is shorter than 5 chars
+        let userInput = this.manualSatSelectTextInput.current._lastNativeText;
+        if (userInput.length &lt; 5) {
+            userInput = (&quot;00000&quot; + userInput).slice(-5);
+        }
+
+        if (this.state.selectedItemsManual.includes(userInput) === false) {
+            this.setState({ selectedItemsManual: [].concat(this.state.selectedItemsManual).concat(userInput) });
         } else {
             showMessage({
                 message: &quot;Satellite with this ID is already selected!&quot;,
@@ -359,6 +418,7 @@ export default class satviz extends Component {
                         orbitOpacity: this.state.orbitOpacity,
                         timeScale: this.state.timeSpeedSliderValue,
                         removeSatelliteCallback: this.removeSatelliteWithError,
+                        setDateTimeCallback: this.setDateTimeCallback,
                     }}
                 /&gt;
 
@@ -427,24 +487,6 @@ export default class satviz extends Component {
                         &lt;View style={styles.slidingPanelLayoutStyle}&gt;
                             &lt;View style={{ flex: 1 }}&gt;
                                 &lt;ScrollView style={{ flex: 1 }}&gt;
-                                    &lt;View style={{ flex: 1, justifyContent: &apos;center&apos; }}&gt;
-                                        &lt;SectionedMultiSelect
-                                            items={satelliteSelectItems.default}
-                                            uniqueKey=&quot;id&quot;
-                                            subKey=&quot;children&quot;
-                                            selectText=&quot;Choose from catogories..&quot;
-                                            showDropDowns={true}
-                                            readOnlyHeadings={false}
-                                            selectChildren={true}
-                                            showRemoveAll={true}
-                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
-                                            selectedItems={this.state.selectedItems}
-                                            confirmText={`${this.state.maxItems ? &apos;Max satellites selected&apos; : &apos;Confirm&apos;}`}
-                                        /&gt;
-                                    &lt;/View&gt;
-
-                                    &lt;View style={[styles.hairlineSplitLine]} /&gt;
-
                                     &lt;View
                                         style={{
                                             flex: 1,
@@ -575,13 +617,33 @@ export default class satviz extends Component {
 
                                     &lt;View style={styles.hairlineSplitLine} /&gt;
 
+                                    &lt;View style={{ flex: 1, justifyContent: &apos;center&apos; }}&gt;
+                                        &lt;SectionedMultiSelect
+                                            items={satelliteSelectItems.default}
+                                            uniqueKey=&quot;id&quot;
+                                            subKey=&quot;children&quot;
+                                            selectText=&quot;Choose satellites from catogories&quot;
+                                            searchPlaceholderText=&quot;Search by name...&quot;
+                                            showDropDowns={true}
+                                            readOnlyHeadings={false}
+                                            selectChildren={true}
+                                            showRemoveAll={true}
+                                            onSelectedItemsChange={this.onSatelliteSelectedItemsChange}
+                                            selectedItems={this.state.selectedItems}
+                                            confirmText={`${this.state.maxItems ? &apos;Max satellites selected&apos; : &apos;Confirm&apos;}`}
+                                        /&gt;
+                                    &lt;/View&gt;
+
+                                    &lt;View style={[styles.hairlineSplitLine]} /&gt;
+
                                     &lt;View style={{ flex: 1, flexDirection: &apos;row&apos;, alignItems: &apos;center&apos;, justifyContent: &apos;space-between&apos; }}&gt;
                                         &lt;View style={{ width: &apos;80%&apos; }}&gt;
                                             &lt;SectionedMultiSelect
                                                 items={groundSegmentSelectItems.default}
                                                 uniqueKey=&quot;id&quot;
                                                 subKey=&quot;children&quot;
-                                                selectText=&quot;Choose from ground segments...&quot;
+                                                selectText=&quot;Choose ground segments&quot;
+                                                searchPlaceholderText=&quot;Search by name...&quot;
                                                 showDropDowns={false}
                                                 readOnlyHeadings={true}
                                                 selectChildren={true}
@@ -632,14 +694,30 @@ export default class satviz extends Component {
 
                                     &lt;View style={[styles.hairlineSplitLine]} /&gt;
 
-                                    &lt;View style={{ marginHorizontal: 10, marginTop: 10 }}&gt;
-                                        &lt;Text&gt;Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)&lt;/Text&gt;
-                                        &lt;Slider
-                                            value={this.state.timeSpeedSliderValue}
-                                            minimumValue={1}
-                                            maximumValue={10000}
-                                            onValueChange={(val) =&gt; this.setState({ timeSpeedSliderValue: val })}
-                                        /&gt;
+                                    &lt;View style={{ marginHorizontal: 10, marginTop: 10}}&gt;
+                                        
+                                        &lt;View style={{flex: 1, flexDirection: &quot;row&quot;}}&gt;
+                                            &lt;View style={{width: &quot;80%&quot;}}&gt;
+                                                &lt;Text style={{paddingBottom: 5, color: &quot;black&quot;}}&gt;Current date: &lt;Text style={{fontWeight: &quot;bold&quot;}}&gt;{this.getDateForDisplay()}&lt;/Text&gt;&lt;/Text&gt;
+                                                &lt;Text style={{color: &quot;black&quot;}}&gt;Set time speed ({Math.trunc(this.state.timeSpeedSliderValue).toString()}x normal)&lt;/Text&gt;
+                                        
+                                                &lt;Slider
+                                                    value={this.state.timeSpeedSliderValue}
+                                                    minimumValue={-10000}
+                                                    maximumValue={10000}
+                                                    step={500}
+                                                    onValueChange={(val) =&gt; this.setState({ timeSpeedSliderValue: val })}
+                                                /&gt;
+                                            &lt;/View&gt;
+                                            
+                                            &lt;View style={{height: &quot;50%&quot;, marginTop: 15}}&gt;
+                                                &lt;Button 
+                                                    title=&quot;Reset&quot;
+                                                    onPress={() =&gt; this.setState({ timeSpeedSliderValue: 1 })}
+                                                /&gt;
+                                            &lt;/View&gt;
+                                        &lt;/View&gt;
+                                        
                                     &lt;/View&gt;
 
                                     &lt;View style={{ paddingBottom: 400 }}&gt;&lt;/View&gt;

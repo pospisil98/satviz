@@ -179,12 +179,22 @@ export default class satviz extends Component {
         this.toggleSatelliteModal();
     }
 
+    /**
+     * Callback function for setting current app time in this class.
+     * 
+     * @param {Date} datetime JS Date object
+     */
     setDateTimeCallback = (datetime) => {
         this.setState({
             appDateTime: datetime
         });
     }
 
+    /**
+     * Function for getting current app date in format for display.
+     * 
+     * @returns {string} Current app date and time
+     */
     getDateForDisplay = () => {
         let year = this.state.appDateTime.getFullYear();
         let month = (1 + this.state.appDateTime.getMonth()).toString().padStart(2, '0');

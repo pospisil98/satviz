@@ -141,17 +141,6 @@ export default class CoordConverter {
      * ECI coords and prints them into console.
      */
     convert = () =&gt; {
-        let geodetic = {
-            longitude: satellite.degreesToRadians(),
-            latitude: satellite.degreesToRadians(),
-            height: 0.8
-        };
-
-        let ecf = satellite.geodeticToEcf(geodetic);
-        
-        let gmst = satellite.gstime(new Date());
-        let eci = satellite.ecfToEci(ecf, gmst);
-
         let result = {}
         let date = new Date()
         this.cities.forEach(element =&gt; {
