@@ -1,6 +1,6 @@
 # Satviz
 
-**Multiplatform augmented reality application for Earth satelite visualization** as the title of my bachelor thesis says. After a lot of reasearch and experiments it is React Native app with usage of Viro React AR & VR framework.
+**Multiplatform augmented reality application for Earth satelite visualization** as the title of my bachelor thesis says. After a long analysis and several experiments, it is a React Native app with usage of Viro React AR & VR framework.
 
 ## Install guide
 1. Set up React Native development environment (https://reactnative.dev/docs/environment-setup - React Native CLI Quickstart)
