@@ -245,7 +245,7 @@ export default class ARScene extends Component {
     }
 
     /**
-     * Returns Globe component with everything setu up to visualization
+     * Returns Globe component with everything set up to visualization
      * 
      * @returns {ViroNode} Globe with all properties set
      */

@@ -309,6 +309,8 @@ export default class Globe extends Component {
                 try {
                     sat.updatePosition(new Date(this.clock.time()));
                 } catch (error) {
+                    console.log("ERROR");
+                    console.log(error);
                     removeIDs.push(sat.id);
                     this.props.removeSatelliteCallback(sat.id);
                 }
@@ -319,11 +321,11 @@ export default class Globe extends Component {
                 cleaned = cleaned.filter(sat => sat.id !== id);
             });
 
-            // Update time of application
-            this.props.setDateTimeCallback(new Date(this.clock.time()));
-
             this.setState({ satellites: cleaned });
         }
+
+        // Update time of application
+        this.props.setDateTimeCallback(new Date(this.clock.time()));
     }
 
     /**
@@ -418,7 +420,7 @@ export default class Globe extends Component {
         let denominator;
 
         if (this.props.flatTarget) {
-            denominator = 80000;
+            denominator = 52000;
         } else {
             denominator = 38500;
         }
@@ -459,18 +461,19 @@ export default class Globe extends Component {
 
     /**
      * Returns rotation of Earth according to ECI coordinates.
+     * (Angle between ECI and ECEF x axis)
      * 
      * @returns {Array.<number>} Rotation vector
      */
     getEarthRotationForSatellites = () => {
         let gmst = satellite.gstime(new Date(this.clock.time()));
-        let earth_orientation = {'x':6.378, 'y': 0, 'z': 0 };
-        let earth_orientation_ECI = satellite.ecfToEci(earth_orientation, gmst)
+        let earth_orientation = {'x':1, 'y': 0, 'z': 0 };
+        let earth_orientation_ECI = satellite.ecfToEci(earth_orientation, gmst);
         let earth_angle = Math.atan2(earth_orientation_ECI.y, earth_orientation_ECI.x);
 
         let angleDeg = earth_angle * (180/Math.PI);
         
-        return [0, angleDeg, 0];
+        return [0, -angleDeg, 0];
     }
 
     /**
@@ -607,7 +610,6 @@ export default class Globe extends Component {
         let orbitsList = this.getOrbitsToRender();
 
         let rot = this.getEarthRotationForSatellites();
-        //<ViroNode rotation={this.state.groundRotationCompensation}></ViroNode>
 
         return (
             <ViroNode position={[0, 0.2, 0]}>
@@ -617,17 +619,19 @@ export default class Globe extends Component {
                     resources={[require('../res/earth_mat.mtl'),
                     require('../res/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
-                    scale={[0.04, 0.04, 0.04]}
+                    scale={[0.06, 0.06, 0.06]}
                     rotation={[0, 0, 0]}
                     type="OBJ"
-                />
+                />  
 
-                <ViroNode rotation={this.modelListRotation}>
+                <ViroNode rotation={[0, 0, 0]}>
                     <ViroNode rotation={rot}>
                         {modelList}
                         {orbitsList}
                     </ViroNode>
-
+                </ViroNode>
+                
+                <ViroNode rotation={this.modelListRotation}>
                     {groundSegmentList}
                 </ViroNode>
             </ViroNode>
@@ -696,13 +700,13 @@ export default class Globe extends Component {
 
                 {this.renderVirtualGlobe()}
 
+                <ViroNode rotation={rot}>
+                    {modelList}
+                    {orbitsList}
+                </ViroNode>
+
                 <ViroNode rotation={this.modelListRotation}>
                     {groundSegmentList}
-
-                    <ViroNode rotation={rot}>
-                        {modelList}
-                        {orbitsList}
-                    </ViroNode>
                 </ViroNode>
             </ViroNode>
         );

@@ -160,7 +160,7 @@ export default class SatelliteObject {
         this.position = [0.0, 0.0, 0.0];
         /** Position of satellite in ECI coords 
          * @type {Array<number>} */
-        this.positionEci = null;
+        this.positionEci = [0, 0, 0];
         /** Scale of satellite model 
          * @type {Array<number>} */
         this.scale = scales[this.description];
@@ -256,23 +256,13 @@ export default class SatelliteObject {
      */
     mapPositionToRange = (value) => {
         const denominator = 25000;
-        const base = 10000;
 
         let x = value.x / denominator;
         let y = value.y / denominator;
         let z = value.z / denominator;
 
-        /*
-        x = Math.log(Math.abs(value.x)) / Math.log(base);
-        y = Math.log(Math.abs(value.y)) / Math.log(base);
-        z = Math.log(Math.abs(value.z)) / Math.log(base);
-
-        value.x < 0 ? x = -x : x = x;
-        value.y < 0 ? y = -y : y = y;
-        value.z < 0 ? z = -z : z = z; */
-
         // conversion from eci to viro coords
-        return [x, z, -y];
+        return [y, z, x];
     }
 
     /**
