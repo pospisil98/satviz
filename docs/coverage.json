@@ -1,7 +1,7 @@
 {
-  "coverage": "75.52%",
+  "coverage": "76.22%",
   "expectCount": 143,
-  "actualCount": 108,
+  "actualCount": 109,
   "files": {
     "satviz/App.js": {
       "expectCount": 27,
@@ -54,15 +54,14 @@
     },
     "satviz/js/SatelliteObject.js": {
       "expectCount": 36,
-      "actualCount": 29,
+      "actualCount": 30,
       "undocumentLines": [
         57,
         68,
         78,
-        88,
-        100,
-        112,
-        117
+        99,
+        111,
+        116
       ]
     },
     "satviz/js/SpaceTrack.js": {

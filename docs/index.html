@@ -40,7 +40,23 @@
 </div>
 </nav>
 
-<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="satviz">satviz</h1></div>
+<div class="content" data-ice="content"><div data-ice="index" class="github-markdown"><h1 id="satviz">Satviz</h1><p><strong>Multiplatform augmented reality application for Earth satelite visualization</strong> as the title of my bachelor thesis says. After a long analysis and several experiments, it is a React Native app with usage of Viro React AR &amp; VR framework.</p>
+<h2 id="install-guide">Install guide</h2><ol>
+<li><p>Set up React Native development environment (<a href="https://reactnative.dev/docs/environment-setup">https://reactnative.dev/docs/environment-setup</a> - React Native CLI Quickstart)</p>
+</li>
+<li><p>Clone this repository</p>
+</li>
+<li><p><code>npm install</code> in project folder to install all project dependecies</p>
+</li>
+<li><p>Connect Android device with Developer mode enabled via USB to the development PC</p>
+</li>
+<li><p><code>npx react-native run-android --variant=arDebug</code> in project folder to run the project</p>
+</li>
+</ol>
+<h3 id="documentation-generation">Documentation generation</h3><p>Run the ESDoc documentation tool by <code>./node_modules/.bin/esdoc</code> command in root of project.</p>
+<h3 id="compilation">Compilation</h3><p>Run <code>./android/gradlew assebleRelease</code> command in root of project. Generated .apk will be in .\android\app\build\outputs\apk\gvr\release folder.</p>
+<p>Compilation for iOS devices is not verified because of lack of testing devices, but probably it will not work - more details in thesis text.</p>
+</div>
 </div>
 
 <footer class="footer">
