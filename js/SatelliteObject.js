@@ -76,7 +76,6 @@ const materials = {
  * @type {Object<string, NodeRequire>}
  */
 const textures = {
-    "GPS": require('./res/models/Satellite_mat.mtl'),
 }
 
 /**

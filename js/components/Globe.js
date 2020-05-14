@@ -619,9 +619,9 @@ export default class Globe extends Component {
             <ViroNode position={[0, 0.2, 0]}>
                 <ViroAmbientLight color="#FFFFFF" intensity={2000} temperature={4000} />
 
-                <Viro3DObject source={require('../res/earth.obj')}
-                    resources={[require('../res/earth_mat.mtl'),
-                    require('../res/earth_texture.png')]}
+                <Viro3DObject source={require('../res/models/baseEarth/earth.obj')}
+                    resources={[require('../res/models/baseEarth/earth_mat.mtl'),
+                    require('../res/models/baseEarth/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.06, 0.06, 0.06]}
                     rotation={[0, 0, 0]}
@@ -650,9 +650,9 @@ export default class Globe extends Component {
     renderVirtualGlobe = () => {
         if (this.props.renderVirtualGlobe) {
             return (
-                <Viro3DObject source={require('../res/earth.obj')}
-                    resources={[require('../res/earth_mat.mtl'),
-                    require('../res/earth_texture.png')]}
+                <Viro3DObject source={require('../res/models/baseEarth/earth.obj')}
+                    resources={[require('../res/models/baseEarth/earth_mat.mtl'),
+                    require('../res/models/baseEarth/earth_texture.png')]}
                     position={[0.0, 0.0, 0.0]}
                     scale={[0.08, 0.08, 0.08]}
                     rotation={[180, -150, -180]}  // Rotated that africa is towards camera
@@ -672,9 +672,9 @@ export default class Globe extends Component {
                         renderingOrder={-1}
                     />
 
-                    <Viro3DObject source={require('../res/ghostEarth/untitled.obj')}
-                        resources={[require('../res/ghostEarth/untitled_mat.mtl'),
-                        require('../res/ghostEarth/untitled.png')]}
+                    <Viro3DObject source={require('../res/models/ghostEarth/earth.obj')}
+                        resources={[require('../res/models/ghostEarth/mat.mtl'),
+                        require('../res/models/ghostEarth/blank.png')]}
                         position={[0.0, 0.0, 0.0]}
                         scale={[0.18, 0.18, 0.18]}
                         rotation={[0, -175, 0]}  // rotated that africa is towards camera
@@ -822,7 +822,7 @@ ViroMaterials.createMaterials({
     },
     earth: {
         lightingModel: "Blinn",
-        diffuseTexture: require('../res/earth_texture.png'),
+        diffuseTexture: require('../res/models/baseEarth/earth_texture.png'),
     },
     iss: {
         lightingModel: "Blinn",
