@@ -9,9 +9,11 @@
 
 3. `npm install` in project folder to install all project dependecies
 
-4. Connect Android device with Developer mode enabled via USB to the development PC
+4. `npx jetify` in project folder to migrate to AndroidX
 
-5. `npx react-native run-android --variant=arDebug` in project folder to run the project
+5. Connect Android device with Developer mode enabled via USB to the development PC
+
+6. `npx react-native run-android --variant=arDebug` in project folder to run the project
 
 ### Documentation generation
 Run the ESDoc documentation tool by `./node_modules/.bin/esdoc` command in root of project.
