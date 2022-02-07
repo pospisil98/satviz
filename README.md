@@ -21,4 +21,4 @@ Run the ESDoc documentation tool by `./node_modules/.bin/esdoc` command in root 
 ### Compilation
 Run `./android/gradlew assebleRelease` command in root of project. Generated .apk will be in .\android\app\build\outputs\apk\gvr\release folder.
 
-Compilation for iOS devices is not verified because of lack of testing devices, but probably it will not work - more details in thesis text.
+Compilation for iOS devices is not verified because of lack of testing devices, but probably it will not work - more details in thesis text (only in Czech https://dspace.cvut.cz/handle/10467/87721).
